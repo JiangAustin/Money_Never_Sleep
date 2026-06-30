@@ -46,6 +46,7 @@
 3. 新增标准库 `run_http_server(host="127.0.0.1", port=8000)` 启动入口。
 4. Web 工作台支持 `index.html?api=http://127.0.0.1:8000` 调用真实后端。
 5. Web 默认仍可离线打开，HTTP 请求失败时回退 mock。
+6. HTTP 响应包含基础 CORS headers，并支持 `OPTIONS` 预检。
 
 离线验证命令：
 
@@ -53,7 +54,7 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`66 passed, 2 skipped`。
+离线结果：`68 passed, 2 skipped`。
 
 Web 打开方式：`apps/web/index.html`。
 

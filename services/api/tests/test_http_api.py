@@ -57,5 +57,18 @@ def test_http_returns_404_for_missing_report() -> None:
     assert response.status == 404
 
 
+def test_http_responses_include_cors_headers() -> None:
+    response = build_app().handle("GET", "/health", b"")
+
+    assert response.headers["Access-Control-Allow-Origin"] == "*"
+
+
+def test_http_options_preflight() -> None:
+    response = build_app().handle("OPTIONS", "/analysis", b"")
+
+    assert response.status == 204
+    assert "POST" in response.headers["Access-Control-Allow-Methods"]
+
+
 def test_run_http_server_is_exported() -> None:
     assert callable(run_http_server)

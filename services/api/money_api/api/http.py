@@ -27,6 +27,8 @@ class HttpApiApp:
         query = parse_qs(parsed.query)
         method = method.upper()
 
+        if method == "OPTIONS":
+            return self._json(204, {})
         if method == "GET" and path == "/health":
             return self._json(200, health())
         if method == "POST" and path == "/analysis":
@@ -67,7 +69,12 @@ class HttpApiApp:
         return HttpResponse(
             status=status,
             body=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
-            headers={"Content-Type": "application/json; charset=utf-8"},
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+            },
         )
 
 
@@ -82,6 +89,9 @@ def run_http_server(host: str = "127.0.0.1", port: int = 8000, app: HttpApiApp |
             length = int(self.headers.get("Content-Length", "0"))
             body = self.rfile.read(length) if length else b""
             self._send(api_app.handle("POST", self.path, body))
+
+        def do_OPTIONS(self) -> None:
+            self._send(api_app.handle("OPTIONS", self.path, b""))
 
         def log_message(self, format: str, *args: object) -> None:
             return
