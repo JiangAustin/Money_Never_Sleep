@@ -27,7 +27,7 @@
 | 0. 项目边界与设计 | 已完成 | 明确 Money_Never_sleep 不直接 fork 参考项目，而是自建平台骨架 | 设计规格、实现计划、README 初始说明 | 设计文档和实现计划已提交 |
 | 1. 单股分析后端契约 | 已完成 | 建立可测试的单股深度分析 dry-run 后端闭环 | 领域契约、股票解析、数据上下文、Agent 适配器、分析服务、Python API | `services/api/tests` 全部通过 |
 | 2. 真实 A 股数据层 | 已完成 | 用真实 provider 替换当前离线 fixture，并保留 fallback 和数据缺口语义 | ProviderResult 契约、DataContext diagnostics、腾讯 quote parser/provider、可选 network smoke | 离线测试通过，至少一个真实样例可手动验证 |
-| 3. TradingAgents 深度引擎接入 | 进行中 | 将 TradingAgents-astock 作为 DeepResearchEngine 的真实实现接入 | 引擎适配器、配置入口、超时/成本控制、失败降级 | mock 与真实引擎可切换，失败时可返回 partial report |
+| 3. TradingAgents 深度引擎接入 | 已完成 | 将 TradingAgents-astock 作为 DeepResearchEngine 的真实实现接入 | TradingAgents adapter、runner 协议、真实 runner 壳、配置入口、可选 smoke | mock 与真实引擎可切换，失败时可返回 failed report |
 | 4. 报告、历史与复盘 | 待计划 | 保存报告和分析上下文，支持历史查询、复盘和追问 | 报告 schema、存储层、历史查询 API、复盘元数据 | 报告可重复读取，关键证据和 data gaps 可追溯 |
 | 5. Web 工作台 | 待计划 | 提供用户可操作的单股分析入口和报告阅读体验 | Web 页面、任务状态、报告详情、追问入口 | 用户可从 Web 发起分析并查看结构化报告 |
 | 6. 桌面端与本地体验 | 待决策 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | 桌面壳、配置管理、本地缓存、打包脚本 | macOS 版本可构建并能访问核心分析能力 |
@@ -35,14 +35,14 @@
 
 ## 当前阶段结论
 
-阶段 2 已完成。当前系统已在保持默认离线测试稳定的前提下，接入最小真实 A 股 quote 路径：
+阶段 3 已完成。当前系统已在保持默认离线测试稳定的前提下，接入 TradingAgents 深度引擎边界：
 
-1. 引入 `ProviderResult` / `ProviderDiagnostic` 契约。
-2. `DataContext` 增加 diagnostics，并在报告输出 `data_diagnostics`。
-3. `DataContextBuilder` 统一消费 provider result，稳定产出 data/gaps/diagnostics。
-4. 新增腾讯行情 parser 与 `TencentQuoteProvider`（可注入 transport）。
-5. 默认 API 服务继续使用 static provider，另提供可选腾讯 quote 服务工厂。
-6. 新增可选网络 smoke（默认不跑），用于手动验证真实行情链路。
+1. 新增 `TradingAgentsRunRequest` / `TradingAgentsRunResult` 契约。
+2. 新增 `TradingAgentsRunner` 协议和 deterministic `FakeTradingAgentsRunner`。
+3. 新增 `TradingAgentsDeepResearchEngine`，将 runner 结果映射为 `AnalysisReport`。
+4. 新增 `TradingAgentsGraphRunner` 壳，真实 TradingAgentsGraph 只在显式启用时懒加载。
+5. 默认 API 服务继续使用 mock deep engine，新增可选 TradingAgents 服务工厂。
+6. 新增可选 TradingAgents smoke（默认不跑），用于手动验证真实深度引擎链路。
 
 离线验证命令：
 
@@ -50,22 +50,17 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`35 passed, 1 skipped`。
+离线结果：`42 passed, 2 skipped`。
 
-腾讯网络 smoke 命令：
+TradingAgents smoke 命令：
 
 ```bash
-MNS_RUN_NETWORK_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests/test_tencent_quote_smoke.py -v
+MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests/test_tradingagents_smoke.py -v
 ```
 
 ## 下一阶段建议
 
-阶段 3“TradingAgents 深度引擎接入”已完成设计规格和实现计划，正在进入实现。第一版采用 adapter + runner 协议：默认 API 继续使用 mock deep engine，真实 TradingAgents-astock 调用只通过显式工厂和 opt-in smoke 启用。
-
-阶段 3 文档：
-
-- 设计规格：`docs/superpowers/specs/2026-07-01-stage-3-tradingagents-engine-design.md`
-- 实现计划：`docs/superpowers/plans/2026-07-01-stage-3-tradingagents-engine.md`
+建议进入阶段 4“报告、历史与复盘”。在接入 Web 工作台前，先保存分析输入、runner diagnostics、agent views 和最终报告，确保真实引擎结果可以追溯、复盘和重新读取。
 
 ## 想法池
 
