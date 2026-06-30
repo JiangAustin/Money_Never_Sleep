@@ -28,7 +28,7 @@
 | 1. 单股分析后端契约 | 已完成 | 建立可测试的单股深度分析 dry-run 后端闭环 | 领域契约、股票解析、数据上下文、Agent 适配器、分析服务、Python API | `services/api/tests` 全部通过 |
 | 2. 真实 A 股数据层 | 已完成 | 用真实 provider 替换当前离线 fixture，并保留 fallback 和数据缺口语义 | ProviderResult 契约、DataContext diagnostics、腾讯 quote parser/provider、可选 network smoke | 离线测试通过，至少一个真实样例可手动验证 |
 | 3. TradingAgents 深度引擎接入 | 已完成 | 将 TradingAgents-astock 作为 DeepResearchEngine 的真实实现接入 | TradingAgents adapter、runner 协议、真实 runner 壳、配置入口、可选 smoke | mock 与真实引擎可切换，失败时可返回 failed report |
-| 4. 报告、历史与复盘 | 待计划 | 保存报告和分析上下文，支持历史查询、复盘和追问 | 报告 schema、存储层、历史查询 API、复盘元数据 | 报告可重复读取，关键证据和 data gaps 可追溯 |
+| 4. 报告、历史与复盘 | 进行中 | 保存报告和分析上下文，支持历史查询、复盘和追问 | 报告 schema、存储层、历史查询 API、复盘元数据 | 报告可重复读取，关键证据和 data gaps 可追溯 |
 | 5. Web 工作台 | 待计划 | 提供用户可操作的单股分析入口和报告阅读体验 | Web 页面、任务状态、报告详情、追问入口 | 用户可从 Web 发起分析并查看结构化报告 |
 | 6. 桌面端与本地体验 | 待决策 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | 桌面壳、配置管理、本地缓存、打包脚本 | macOS 版本可构建并能访问核心分析能力 |
 | 7. 风控、回测与组合 | 待计划 | 从单股建议扩展到纪律、验证和组合层面 | 风控规则、回测接口、组合视图、绩效归因 | 建议可被复盘验证，不只输出买卖结论 |
@@ -60,7 +60,12 @@ MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_
 
 ## 下一阶段建议
 
-建议进入阶段 4“报告、历史与复盘”。在接入 Web 工作台前，先保存分析输入、runner diagnostics、agent views 和最终报告，确保真实引擎结果可以追溯、复盘和重新读取。
+阶段 4“报告、历史与复盘”已完成设计规格和实现计划，正在进入实现。第一版采用 repository 协议 + JSON 文件持久化，先保证报告、输入上下文、diagnostics 和 agent views 可保存、读取、列出。
+
+阶段 4 文档：
+
+- 设计规格：`docs/superpowers/specs/2026-07-01-stage-4-report-history-design.md`
+- 实现计划：`docs/superpowers/plans/2026-07-01-stage-4-report-history.md`
 
 ## 想法池
 
