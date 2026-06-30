@@ -8,3 +8,4 @@
 - Update `README.md` when a completed stage changes project positioning, user-visible capabilities, setup/usage commands, API entrypoints, Web/Desktop workflows, packaging, or major architecture direction.
 - Keep `README.md` default-facing content in Chinese. When English is useful, provide an English option such as a linked English document or clearly separated English section, while preserving Chinese as the default entry.
 - Local superpowers-zh skills are installed under `.github/superpowers/`. Use the relevant skill instructions there when the task matches a listed workflow, such as brainstorming, planning, TDD, systematic debugging, verification, or code review.
+- The agent may proactively use any relevant skills when they help the current goal. For example, before starting stage 2 "真实 A 股数据层", use brainstorming to refine the design and writing-plans to create the implementation plan. Still obey each skill's approval gates and repository safety rules.

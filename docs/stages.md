@@ -11,6 +11,7 @@
 - 当新增想法影响阶段范围、顺序或验收标准时，先更新本文档，再拆分实现计划。
 - 当阶段改变项目定位、用户可见能力、安装/使用命令、API 入口、Web/Desktop 工作流、打包方式或重大架构方向时，同步更新 `README.md`。
 - README 默认使用中文；需要英文时提供英文 section 或英文文档链接。
+- 可以主动调用任何对当前目标有帮助的 skills，例如在进入阶段 2“真实 A 股数据层”前，先使用 brainstorming 完成设计规格，再使用 writing-plans 形成实现计划；仍需遵守各 skill 的用户批准关卡和仓库安全规则。
 
 ## 状态说明
 
@@ -68,6 +69,13 @@ PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pyte
 4. 基础财务/估值摘要。
 5. 新闻或公告占位 provider。
 6. provider 失败时的 data gaps 和诊断信息。
+
+阶段 2 执行前流程：
+
+1. 使用 brainstorming 梳理真实 A 股数据层的目标、范围、数据源优先级、fallback 语义和验收标准。
+2. 形成并提交阶段 2 设计规格。
+3. 使用 writing-plans 拆分阶段 2 的实现任务。
+4. 用户批准计划后，再进入实现。
 
 ## 想法池
 
