@@ -82,9 +82,13 @@ def test_report_to_dict_contains_required_sections() -> None:
 
     payload = report.to_dict()
 
+    assert payload["task_id"] == "task-1"
     assert payload["stock"] == {"code": "600519", "name": "贵州茅台", "market": "cn"}
     assert payload["status"] == "report_ready"
     assert payload["action"] == "watch"
     assert payload["confidence"] == "medium"
+    assert payload["summary"] == "等待回踩确认"
+    assert payload["reasons"] == ["趋势仍在"]
+    assert payload["agent_views"] == [{"agent": "Market Analyst", "conclusion": "趋势偏强"}]
     assert payload["data_gaps"] == ["资金流不可用"]
     assert payload["risks"] == [{"level": "medium", "message": "短期偏离 MA5"}]
