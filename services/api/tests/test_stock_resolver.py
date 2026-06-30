@@ -10,6 +10,11 @@ def test_normalize_a_share_code_formats() -> None:
     assert normalize_stock_code("sz000001") == "000001"
 
 
+def test_reject_mixed_market_markers() -> None:
+    with pytest.raises(ValueError, match="市场标记不一致"):
+        normalize_stock_code("SH600519.SZ")
+
+
 def test_resolve_chinese_name_from_injected_map() -> None:
     resolver = StockResolver(name_map={"贵州茅台": "600519"})
 

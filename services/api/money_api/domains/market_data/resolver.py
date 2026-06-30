@@ -7,6 +7,10 @@ from money_api.domains.analysis.contracts import StockIdentity
 
 def normalize_stock_code(raw_symbol: str) -> str:
     symbol = raw_symbol.strip().upper()
+    prefix_marker = next((prefix for prefix in ("SH", "SZ", "BJ") if symbol.startswith(prefix)), None)
+    suffix_marker = next((suffix[1:] for suffix in (".SH", ".SZ", ".BJ") if symbol.endswith(suffix)), None)
+    if prefix_marker and suffix_marker and prefix_marker != suffix_marker:
+        raise ValueError(f"市场标记不一致: {raw_symbol}")
     for suffix in (".SH", ".SZ", ".BJ"):
         if symbol.endswith(suffix):
             symbol = symbol[: -len(suffix)]
