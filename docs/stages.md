@@ -50,7 +50,7 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`30 passed, 1 skipped`。
+离线结果：`35 passed, 1 skipped`。
 
 腾讯网络 smoke 命令：
 
