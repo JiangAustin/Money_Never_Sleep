@@ -33,3 +33,13 @@ Money_Never_sleep/
 2. Build a minimal API service boundary under `services/api`.
 3. Decide whether the desktop shell should be Wails, Electron, or another wrapper after the product workflow is clearer.
 4. Add real dependencies only when a concrete feature slice needs them.
+
+## Current Planning Slice
+
+The first implementation slice is the backend contract for a single-stock deep analysis loop:
+
+1. Resolve an A-share symbol or Chinese stock name.
+2. Build a normalized data context with explicit data gaps.
+3. Route quick questions separately from deep analysis requests.
+4. Generate a structured dry-run report through an Agent engine adapter.
+5. Expose Python-level API functions for tests and early integration.
