@@ -7,3 +7,6 @@ dependencies = []
 
 [tool.pytest.ini_options]
 testpaths = ["services/api/tests"]
+markers = [
+	"network: tests requiring external network access",
+]
