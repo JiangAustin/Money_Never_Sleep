@@ -1,5 +1,18 @@
 from money_api.domains.analysis.context_builder import DataContextBuilder, StaticMarketDataProvider
 from money_api.domains.analysis.contracts import StockIdentity
+from money_api.domains.market_data.provider_results import ProviderResult
+
+
+class FailingProvider(StaticMarketDataProvider):
+    def get_quote(self, stock: StockIdentity) -> ProviderResult:
+        return ProviderResult(
+            kind="quote",
+            source="failing",
+            ok=False,
+            data={},
+            error_type="RuntimeError",
+            error_message="boom",
+        )
 
 
 def test_build_context_collects_available_data() -> None:
@@ -19,6 +32,12 @@ def test_build_context_collects_available_data() -> None:
     assert context.fundamentals["pe_ttm"] == 28.5
     assert context.news == [{"title": "业绩稳定"}]
     assert context.gaps == []
+    assert context.diagnostics == [
+        {"kind": "quote", "source": "static", "ok": True, "error_type": None, "error_message": None, "fetched_at": None, "is_stale": False},
+        {"kind": "technicals", "source": "static", "ok": True, "error_type": None, "error_message": None, "fetched_at": None, "is_stale": False},
+        {"kind": "fundamentals", "source": "static", "ok": True, "error_type": None, "error_message": None, "fetched_at": None, "is_stale": False},
+        {"kind": "news", "source": "static", "ok": True, "error_type": None, "error_message": None, "fetched_at": None, "is_stale": False},
+    ]
 
 
 def test_build_context_records_data_gaps() -> None:
@@ -37,6 +56,15 @@ def test_build_context_records_all_data_gaps() -> None:
     context = DataContextBuilder(provider).build(stock)
 
     assert context.gaps == ["quote", "technicals", "fundamentals", "news"]
+
+
+def test_context_builder_records_provider_diagnostics() -> None:
+    stock = StockIdentity(code="600519", name="贵州茅台")
+    context = DataContextBuilder(FailingProvider()).build(stock)
+
+    assert "quote" in context.gaps
+    assert context.diagnostics[0]["source"] == "failing"
+    assert context.diagnostics[0]["error_message"] == "boom"
 
 
 def test_static_provider_returns_shallow_copies() -> None:
