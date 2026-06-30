@@ -12,6 +12,11 @@ from money_api.domains.analysis.contracts import (
     DecisionAction,
     RiskFinding,
 )
+from money_api.domains.analysis.report_repository import (
+    AnalysisReportRecord,
+    AnalysisReportRepository,
+    InMemoryAnalysisReportRepository,
+)
 from money_api.domains.market_data.resolver import StockResolver
 
 
@@ -22,12 +27,13 @@ class AnalysisService:
         context_builder: DataContextBuilder,
         quick_router: QuickAgentRouter,
         deep_engine: DeepResearchEngine,
+        report_repository: AnalysisReportRepository | None = None,
     ):
         self.resolver = resolver
         self.context_builder = context_builder
         self.quick_router = quick_router
         self.deep_engine = deep_engine
-        self._reports: dict[str, AnalysisReport] = {}
+        self.report_repository = report_repository or InMemoryAnalysisReportRepository()
 
     def create_single_stock_analysis(self, symbol: str, message: str) -> AnalysisReport:
         task_id = f"analysis-{uuid4().hex}"
@@ -48,8 +54,11 @@ class AnalysisService:
                 agent_views=[AgentView(agent="Quick Agent", conclusion="返回轻量分析摘要")],
                 data_context=context,
             )
-        self._reports[report.task_id] = report
+        self.report_repository.save(report)
         return report
 
     def get_report(self, task_id: str) -> AnalysisReport | None:
-        return self._reports.get(task_id)
+        return self.report_repository.get(task_id)
+
+    def list_reports(self, limit: int = 20) -> list[AnalysisReportRecord]:
+        return self.report_repository.list_recent(limit=limit)

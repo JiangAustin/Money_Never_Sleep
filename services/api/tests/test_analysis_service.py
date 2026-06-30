@@ -1,10 +1,11 @@
 from money_api.domains.analysis.agent_engine import MockDeepResearchEngine, QuickAgentRouter
 from money_api.domains.analysis.context_builder import DataContextBuilder, StaticMarketDataProvider
+from money_api.domains.analysis.report_repository import InMemoryAnalysisReportRepository
 from money_api.domains.analysis.service import AnalysisService
 from money_api.domains.market_data.resolver import StockResolver
 
 
-def build_service() -> AnalysisService:
+def build_service(repository=None) -> AnalysisService:
     return AnalysisService(
         resolver=StockResolver(name_map={"贵州茅台": "600519"}),
         context_builder=DataContextBuilder(
@@ -17,6 +18,7 @@ def build_service() -> AnalysisService:
         ),
         quick_router=QuickAgentRouter(),
         deep_engine=MockDeepResearchEngine(),
+        report_repository=repository,
     )
 
 
@@ -43,3 +45,23 @@ def test_lightweight_question_uses_quick_summary() -> None:
     assert report.task_id.startswith("analysis-")
     assert report.agent_views[0].agent == "Quick Agent"
     assert service.get_report(report.task_id) == report
+
+
+def test_create_single_stock_analysis_saves_report_to_repository() -> None:
+    repository = InMemoryAnalysisReportRepository()
+    service = build_service(repository=repository)
+
+    report = service.create_single_stock_analysis("贵州茅台", "请全面分析并给出投资建议")
+
+    assert repository.get(report.task_id) == report
+    assert service.get_report(report.task_id) == report
+
+
+def test_list_reports_returns_repository_records() -> None:
+    repository = InMemoryAnalysisReportRepository()
+    service = build_service(repository=repository)
+    report = service.create_single_stock_analysis("贵州茅台", "请全面分析并给出投资建议")
+
+    records = service.list_reports(limit=10)
+
+    assert records[0].task_id == report.task_id
