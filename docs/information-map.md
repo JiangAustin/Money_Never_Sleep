@@ -30,6 +30,7 @@
 | 已完成阶段摘要 | `docs/agent-handoff.md` | `docs/stages.md` |
 | 验证命令 | `docs/agent-handoff.md` | `docs/stages.md`、对应 plan |
 | API / 后端入口 | `services/api/money_api/main.py` | `services/api/money_api/api/v1/router.py` |
+| HTTP API 边界 | `services/api/money_api/api/http.py` | `services/api/tests/test_http_api.py` |
 | 分析领域契约 | `services/api/money_api/domains/analysis/contracts.py` | `services/api/tests/test_analysis_contracts.py` |
 | 数据 provider 契约 | `services/api/money_api/domains/market_data/provider_results.py` | `services/api/tests/test_provider_results.py` |
 | TradingAgents adapter | `services/api/money_api/domains/analysis/tradingagents_engine.py` | `services/api/money_api/integrations/tradingagents_runner.py` |

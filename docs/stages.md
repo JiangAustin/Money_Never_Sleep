@@ -33,20 +33,19 @@
 | 3. TradingAgents 深度引擎接入 | 已完成 | 将 TradingAgents-astock 作为 DeepResearchEngine 的真实实现接入 | TradingAgents adapter、runner 协议、真实 runner 壳、配置入口、可选 smoke | mock 与真实引擎可切换，失败时可返回 failed report |
 | 4. 报告、历史与复盘 | 已完成 | 保存报告和分析上下文，支持历史查询、复盘和追问 | 报告 round-trip 契约、repository、JSON 持久化、历史查询 API | 报告可重复读取，关键证据和 data gaps 可追溯 |
 | 5. Web 工作台 | 已完成 | 提供用户可操作的单股分析入口和报告阅读体验 | 静态 Web 工作台、离线 mock 分析、最近报告、报告详情、数据诊断 | 用户可从 Web 发起 mock 分析并查看结构化报告 |
-| 5.5 HTTP API 层 | 进行中 | 为 Web 和桌面提供真实 JSON HTTP 边界 | HTTP dispatcher、标准库 server、Web API mode | 客户端可通过 HTTP 发起分析、读取报告和最近报告 |
+| 5.5 HTTP API 层 | 已完成 | 为 Web 和桌面提供真实 JSON HTTP 边界 | HTTP dispatcher、标准库 server、Web API mode | 客户端可通过 HTTP 发起分析、读取报告和最近报告 |
 | 6. 桌面端与本地体验 | 待决策 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | 桌面壳、配置管理、本地缓存、打包脚本 | macOS 版本可构建并能访问核心分析能力 |
 | 7. 风控、回测与组合 | 待计划 | 从单股建议扩展到纪律、验证和组合层面 | 风控规则、回测接口、组合视图、绩效归因 | 建议可被复盘验证，不只输出买卖结论 |
 
 ## 当前阶段结论
 
-阶段 5 已完成。当前系统已具备第一版 Web 工作台：
+阶段 5.5 已完成。当前系统已具备最小 JSON HTTP API 层：
 
-1. `apps/web/index.html` 可直接打开，无需 Node 依赖或构建步骤。
-2. 页面支持输入股票和问题，生成离线 mock 分析报告。
-3. 页面支持查看最近报告列表并切换报告详情。
-4. 报告详情展示 summary、reasons、risks、agent views、data gaps、diagnostics 和 data context。
-5. Web mock 数据字段与后端 `AnalysisReport.to_dict()` 保持兼容。
-6. Web README 记录静态打开方式和后续 HTTP API 接入方向。
+1. 新增 dependency-free `HttpApiApp` dispatcher。
+2. 支持 `GET /health`、`POST /analysis`、`GET /reports`、`GET /reports/{task_id}`。
+3. 新增标准库 `run_http_server(host="127.0.0.1", port=8000)` 启动入口。
+4. Web 工作台支持 `index.html?api=http://127.0.0.1:8000` 调用真实后端。
+5. Web 默认仍可离线打开，HTTP 请求失败时回退 mock。
 
 离线验证命令：
 
@@ -54,13 +53,15 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`59 passed, 2 skipped`。
+离线结果：`66 passed, 2 skipped`。
 
 Web 打开方式：`apps/web/index.html`。
 
+HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.0.1:8000`。
+
 ## 下一阶段建议
 
-阶段 5.5“HTTP API 层”已完成设计规格和实现计划，正在进入实现。第一版采用无外部依赖的 JSON HTTP dispatcher 和标准库 server，先让 Web/桌面具备真实后端调用边界。
+建议进入阶段 6“桌面端与本地体验”。下一步先确定 Electron、Tauri 或 Wails，然后把 Web 工作台作为桌面壳的第一屏，补齐 macOS 构建入口。
 
 ## 想法池
 

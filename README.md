@@ -46,7 +46,7 @@ Money_Never_sleep/
 4. 通过 Agent 引擎适配器生成结构化 dry-run 报告。
 5. 暴露 Python 级 API 函数，供测试和早期集成使用。
 
-当前阶段已经完成真实 A 股数据层、TradingAgents 深度引擎边界、报告历史能力，并新增 Web 工作台第一版：可直接打开静态页面进行离线 mock 分析、查看最近报告和结构化报告详情。
+当前阶段已经完成真实 A 股数据层、TradingAgents 深度引擎边界、报告历史能力、Web 工作台第一版，并新增 JSON HTTP API 层：Web 可通过 `?api=http://127.0.0.1:8000` 调用真实后端。
 
 阶段拆分和后续计划见 [docs/stages.md](docs/stages.md)。该文件是活文档，会随阶段完成、新想法和优先级变化持续更新。
 
