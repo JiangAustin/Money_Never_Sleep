@@ -26,7 +26,7 @@
 
 | ID | 状态 | 优先级 | 主题 | 为什么第一版没做 | 继续做的收益 | 推荐下一步 | 关联 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| MNS-BL-001 | 待设计 | P0 | Web 接真实 HTTP API | 阶段 5 选择零依赖静态工作台，避免同时引入 HTTP 服务和前端联调 | 用户可从浏览器真实发起分析、读取历史报告 | 设计 FastAPI/HTTP 路由：analyze、report detail、recent reports；再替换 `apps/web/src/app.js` 本地 service | 阶段 5、`apps/web/`、`services/api/money_api/api/v1/router.py` |
+| MNS-BL-001 | 进行中 | P0 | Web 接真实 HTTP API | 阶段 5 选择零依赖静态工作台，避免同时引入 HTTP 服务和前端联调 | 用户可从浏览器真实发起分析、读取历史报告 | 阶段 5.5 正在实现 dependency-free HTTP dispatcher、server 入口和 Web `?api=` 模式 | 阶段 5.5、`apps/web/`、`services/api/money_api/api/` |
 | MNS-BL-002 | 待设计 | P0 | 桌面端技术选型与 macOS 构建入口 | `apps/desktop` 仍是预留目录，没有 Electron/Tauri/Wails 配置 | 满足本地桌面体验和用户偏好的每阶段 macOS 构建验证 | 阶段 6 先比较 Electron/Tauri/Wails，并把 Web 工作台作为第一屏 | 阶段 6、`apps/desktop/` |
 | MNS-BL-003 | 待实现 | P1 | 真实 TradingAgents smoke | 阶段 3 只提供 opt-in smoke，默认测试不能依赖 LLM/API key | 验证真实多 Agent 投研链路可被 Money_Never_sleep 调起 | 准备本地密钥和可控样例，运行 `MNS_RUN_TRADINGAGENTS_SMOKE=1 ...test_tradingagents_smoke.py`，记录结果 | 阶段 3、`services/api/tests/test_tradingagents_smoke.py` |
 | MNS-BL-004 | 待设计 | P1 | JSON 报告仓储升级为 SQLite 或可迁移仓储 | 阶段 4 为降低复杂度先使用 JSON 文件 | 提升查询、筛选、分页和并发写入能力 | 在 Web API 接入后评估 SQLite schema 和迁移策略 | 阶段 4、`report_repository.py` |
