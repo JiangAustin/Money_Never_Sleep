@@ -50,8 +50,12 @@ Money_Never_sleep/
 
 阶段拆分和后续计划见 [docs/stages.md](docs/stages.md)。该文件是活文档，会随阶段完成、新想法和优先级变化持续更新。
 
+后续改进和交接上下文集中记录在 [docs/improvement-backlog.md](docs/improvement-backlog.md) 与 [docs/agent-handoff.md](docs/agent-handoff.md)。前者记录第一版未做和待改进事项，后者帮助后续 agent 或模型理解项目演进、设计取舍、验证方式和下一步建议。
+
 ## 文档规则
 
 - 完成阶段后，如果改变了项目定位、用户可见能力、安装/使用命令、API 入口、Web/Desktop 工作流、打包方式或重大架构方向，需要同步更新 `README.md`。
 - `README.md` 默认使用中文展示。
 - 需要英文说明时，提供英文选项，例如单独英文 section 或链接到英文文档，但中文仍作为默认入口。
+- 第一版暂时未做、需要改进、未来要回来补齐的事项，统一写入 `docs/improvement-backlog.md`。
+- 为方便更换 agent 或模型继续开发，阶段完成或架构变化时同步维护 `docs/agent-handoff.md`。
