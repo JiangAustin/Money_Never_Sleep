@@ -1,9 +1,11 @@
 """Dependency-free JSON HTTP API boundary."""
 
 from dataclasses import dataclass
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from urllib.parse import parse_qs, urlparse
 
+from money_api.api.v1.router import build_default_analysis_service
 from money_api.domains.analysis.service import AnalysisService
 from money_api.main import health
 
@@ -67,3 +69,33 @@ class HttpApiApp:
             body=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
             headers={"Content-Type": "application/json; charset=utf-8"},
         )
+
+
+def run_http_server(host: str = "127.0.0.1", port: int = 8000, app: HttpApiApp | None = None) -> None:
+    api_app = app or HttpApiApp(service=build_default_analysis_service())
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:
+            self._send(api_app.handle("GET", self.path, b""))
+
+        def do_POST(self) -> None:
+            length = int(self.headers.get("Content-Length", "0"))
+            body = self.rfile.read(length) if length else b""
+            self._send(api_app.handle("POST", self.path, body))
+
+        def log_message(self, format: str, *args: object) -> None:
+            return
+
+        def _send(self, response: HttpResponse) -> None:
+            self.send_response(response.status)
+            for name, value in response.headers.items():
+                self.send_header(name, value)
+            self.send_header("Content-Length", str(len(response.body)))
+            self.end_headers()
+            self.wfile.write(response.body)
+
+    server = ThreadingHTTPServer((host, port), Handler)
+    try:
+        server.serve_forever()
+    finally:
+        server.server_close()

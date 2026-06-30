@@ -24,5 +24,11 @@ def list_analysis_reports(limit: int = 20) -> list[dict[str, object]]:
     return list_analysis_reports_v1(limit=limit)
 
 
+def run_http_server(host: str = "127.0.0.1", port: int = 8000) -> None:
+    from money_api.api.http import run_http_server as run_http_server_v1
+
+    return run_http_server_v1(host=host, port=port)
+
+
 if __name__ == "__main__":
     print(health())

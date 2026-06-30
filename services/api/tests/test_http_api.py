@@ -3,6 +3,7 @@ import json
 from money_api.api.http import HttpApiApp
 from money_api.api.v1.router import build_default_analysis_service
 from money_api.domains.analysis.report_repository import InMemoryAnalysisReportRepository
+from money_api.main import run_http_server
 
 
 def build_app() -> HttpApiApp:
@@ -54,3 +55,7 @@ def test_http_returns_404_for_missing_report() -> None:
     response = build_app().handle("GET", "/reports/missing", b"")
 
     assert response.status == 404
+
+
+def test_run_http_server_is_exported() -> None:
+    assert callable(run_http_server)
