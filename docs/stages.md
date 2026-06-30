@@ -34,19 +34,19 @@
 | 4. 报告、历史与复盘 | 已完成 | 保存报告和分析上下文，支持历史查询、复盘和追问 | 报告 round-trip 契约、repository、JSON 持久化、历史查询 API | 报告可重复读取，关键证据和 data gaps 可追溯 |
 | 5. Web 工作台 | 已完成 | 提供用户可操作的单股分析入口和报告阅读体验 | 静态 Web 工作台、离线 mock 分析、最近报告、报告详情、数据诊断 | 用户可从 Web 发起 mock 分析并查看结构化报告 |
 | 5.5 HTTP API 层 | 已完成 | 为 Web 和桌面提供真实 JSON HTTP 边界 | HTTP dispatcher、标准库 server、Web API mode | 客户端可通过 HTTP 发起分析、读取报告和最近报告 |
-| 6. 桌面端与本地体验 | 进行中 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | 桌面壳、配置管理、本地缓存、打包脚本 | macOS 版本可构建并能访问核心分析能力 |
+| 6. 桌面端与本地体验 | 已完成 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | Electron 桌面壳、macOS 构建入口、Web 工作台资源打包 | macOS `.app` 可构建并能承载 Web 工作台 |
 | 7. 风控、回测与组合 | 待计划 | 从单股建议扩展到纪律、验证和组合层面 | 风控规则、回测接口、组合视图、绩效归因 | 建议可被复盘验证，不只输出买卖结论 |
 
 ## 当前阶段结论
 
-阶段 5.5 已完成。当前系统已具备最小 JSON HTTP API 层：
+阶段 6 已完成。当前系统已具备第一版桌面端本地体验：
 
-1. 新增 dependency-free `HttpApiApp` dispatcher。
-2. 支持 `GET /health`、`POST /analysis`、`GET /reports`、`GET /reports/{task_id}`。
-3. 新增标准库 `run_http_server(host="127.0.0.1", port=8000)` 启动入口。
-4. Web 工作台支持 `index.html?api=http://127.0.0.1:8000` 调用真实后端。
-5. Web 默认仍可离线打开，HTTP 请求失败时回退 mock。
-6. HTTP 响应包含基础 CORS headers，并支持 `OPTIONS` 预检。
+1. 第一版桌面壳选型为 Electron。
+2. `apps/desktop` 新增 `npm start` 和 `npm run build:mac`。
+3. Electron main 进程在开发和打包模式都能加载 Web 工作台。
+4. 打包时通过 `extraResources` 携带 `apps/web` 静态资源。
+5. 支持 `MNS_DESKTOP_API_URL`，可把桌面壳切到 Web `?api=` 模式。
+6. macOS `.app` 可构建，产物位于 `apps/desktop/dist/mac-arm64/Money Never Sleep.app`。
 
 离线验证命令：
 
@@ -54,15 +54,19 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`68 passed, 2 skipped`。
+离线结果：`72 passed, 2 skipped`。
+
+macOS 构建结果：`apps/desktop/dist/mac-arm64/Money Never Sleep.app`。
 
 Web 打开方式：`apps/web/index.html`。
 
 HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.0.1:8000`。
 
+桌面构建命令：`cd apps/desktop && npm run build:mac`。
+
 ## 下一阶段建议
 
-阶段 6“桌面端与本地体验”已完成设计规格和实现计划，正在进入实现。第一版选择 Electron，把 Web 工作台作为桌面壳第一屏，并补齐 macOS `.app` 构建入口。
+建议进入阶段 7“风控、回测与组合”，或先执行真实链路验证与桌面体验补强：签名/图标/DMG/自动更新仍在 backlog 中。
 
 ## 想法池
 

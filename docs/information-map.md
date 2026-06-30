@@ -36,7 +36,7 @@
 | TradingAgents adapter | `services/api/money_api/domains/analysis/tradingagents_engine.py` | `services/api/money_api/integrations/tradingagents_runner.py` |
 | 报告历史仓储 | `services/api/money_api/domains/analysis/report_repository.py` | `services/api/tests/test_report_repository.py` |
 | Web 工作台 | `apps/web/index.html` | `apps/web/src/`、`services/api/tests/test_web_workbench.py` |
-| 桌面端现状 | `apps/desktop/README.md` | `docs/improvement-backlog.md` |
+| 桌面端现状 | `apps/desktop/README.md` | `apps/desktop/package.json`、`apps/desktop/src/`、`services/api/tests/test_desktop_shell.py` |
 
 ## 做完之后写哪里
 
