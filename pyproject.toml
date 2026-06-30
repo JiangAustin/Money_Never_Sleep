@@ -1,0 +1,9 @@
+[project]
+name = "money"
+version = "0.1.0"
+description = "Finance and stock analysis workspace"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.pytest.ini_options]
+testpaths = ["services/api/tests"]

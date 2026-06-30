@@ -1,0 +1,27 @@
+{
+  "folders": [
+    {
+      "name": "Money",
+      "path": "."
+    },
+    {
+      "name": "TradingAgents-astock",
+      "path": "../TradingAgents-astock"
+    },
+    {
+      "name": "go-stock",
+      "path": "../go-stock"
+    },
+    {
+      "name": "daily_stock_analysis",
+      "path": "../daily_stock_analysis"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/.pytest_cache": true,
+      "**/node_modules": true
+    }
+  }
+}

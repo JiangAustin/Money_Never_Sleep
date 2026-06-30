@@ -1,0 +1,10 @@
+{
+  "python.analysis.extraPaths": [
+    "services/api"
+  ],
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/node_modules": true
+  }
+}
