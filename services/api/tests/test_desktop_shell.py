@@ -22,3 +22,19 @@ def test_desktop_package_includes_web_resources() -> None:
     extra_resources = package["build"]["extraResources"]
 
     assert {"from": "../web", "to": "web", "filter": ["**/*"]} in extra_resources
+
+
+def test_desktop_main_loads_web_workbench() -> None:
+    main_js = (DESKTOP_ROOT / "src/main.js").read_text(encoding="utf-8")
+
+    assert "BrowserWindow" in main_js
+    assert "index.html" in main_js
+    assert "MNS_DESKTOP_API_URL" in main_js
+    assert "process.resourcesPath" in main_js
+
+
+def test_desktop_preload_exposes_versions() -> None:
+    preload_js = (DESKTOP_ROOT / "src/preload.js").read_text(encoding="utf-8")
+
+    assert "contextBridge" in preload_js
+    assert "moneyNeverSleep" in preload_js
