@@ -4,7 +4,6 @@ from money_api.domains.analysis.agent_engine import MockDeepResearchEngine, Quic
 from money_api.domains.analysis.context_builder import DataContextBuilder, StaticMarketDataProvider
 from money_api.domains.analysis.service import AnalysisService
 from money_api.domains.market_data.resolver import StockResolver
-from money_api.main import health
 
 
 def build_default_analysis_service() -> AnalysisService:
@@ -36,4 +35,6 @@ def get_analysis_report(task_id: str) -> dict[str, object] | None:
 
 
 def routes() -> dict[str, object]:
+    from money_api.main import health
+
     return {"health": health()}
