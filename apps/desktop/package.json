@@ -2,6 +2,7 @@
   "name": "money-never-sleep-desktop",
   "version": "0.1.0",
   "description": "Desktop shell for Money_Never_sleep",
+  "author": "JiangAustin",
   "private": true,
   "main": "src/main.js",
   "scripts": {
@@ -9,8 +10,8 @@
     "build:mac": "electron-builder --mac dir"
   },
   "devDependencies": {
-    "electron": "^31.7.7",
-    "electron-builder": "^24.13.3"
+    "electron": "^43.0.0",
+    "electron-builder": "^26.0.12"
   },
   "build": {
     "appId": "dev.moneyneversleep.desktop",
