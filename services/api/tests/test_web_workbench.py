@@ -55,3 +55,20 @@ def test_app_js_exposes_service_and_render_boundaries() -> None:
     assert "function renderReportDetail" in app_js
     assert "function renderDiagnostics" in app_js
     assert "analysis-form" in app_js
+
+
+def test_web_styles_define_workbench_layout() -> None:
+    css = read_web_file("src/styles.css")
+
+    assert ".workbench-shell" in css
+    assert ".side-panel" in css
+    assert ".report-detail" in css
+    assert "@media" in css
+
+
+def test_web_readme_documents_static_open_flow() -> None:
+    readme = read_web_file("README.md")
+
+    assert "index.html" in readme
+    assert "离线 mock" in readme
+    assert "HTTP API" in readme
