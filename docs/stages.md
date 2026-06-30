@@ -12,6 +12,7 @@
 - 当阶段改变项目定位、用户可见能力、安装/使用命令、API 入口、Web/Desktop 工作流、打包方式或重大架构方向时，同步更新 `README.md`。
 - README 默认使用中文；需要英文时提供英文 section 或英文文档链接。
 - 可以主动调用任何对当前目标有帮助的 skills，例如在进入阶段 2“真实 A 股数据层”前，先使用 brainstorming 完成设计规格，再使用 writing-plans 形成实现计划；仍需遵守各 skill 的用户批准关卡和仓库安全规则。
+- `docs/information-map.md` 是后续 agent 的信息地图；它必须说明去哪里找什么，以及完成工作后去哪里留下什么信息。
 - 所有第一版暂时没做、需要改进、后续必须回来补齐的事项，统一记录到 `docs/improvement-backlog.md`，不要只留在对话或 commit message 中。
 - 每完成阶段、改变架构方向或留下重要限制时，同步更新 `docs/agent-handoff.md`，让后续 agent 能理解之前做了什么、为什么做、收益是什么、还没做什么、下一步建议怎么做。
 

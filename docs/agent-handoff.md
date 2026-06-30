@@ -3,7 +3,17 @@
 状态：活文档
 最近更新：2026-07-01
 
-本文档给后续 agent 或模型快速理解 Money_Never_sleep 已做什么、为什么这么做、收益是什么、哪些没做、下一步怎么接。它不是阶段计划的替代品；详细阶段状态看 `docs/stages.md`，未完成事项看 `docs/improvement-backlog.md`。
+本文档给后续 agent 或模型快速理解 Money_Never_sleep 已做什么、为什么这么做、收益是什么、哪些没做、下一步怎么接。它不是阶段计划的替代品；如果你刚接手，先读 `docs/information-map.md`，再读本文档。详细阶段状态看 `docs/stages.md`，未完成事项看 `docs/improvement-backlog.md`。
+
+## 接手导航
+
+后续 agent 或模型变更后，推荐先读：
+
+1. `docs/information-map.md`：知道去哪里找什么、做完后写回哪里。
+2. `README.md`：了解项目定位和当前能力。
+3. `docs/stages.md`：确认当前阶段和下一阶段建议。
+4. `docs/improvement-backlog.md`：确认第一版未做事项和优先级。
+5. 本文档：理解阶段 0-5 已完成内容、设计取舍、收益和限制。
 
 ## 项目方向
 
@@ -167,5 +177,6 @@ MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_
 - 不要直接复制参考项目的大块源码。
 - 不要把 secrets、模型名、绝对路径或本机端口写死进代码。
 - 完成任何阶段时，必须更新 `README.md`、`docs/stages.md`、`docs/improvement-backlog.md` 和本文件中相关部分。
+- 如果新增信息入口、文档职责或写回规则，必须更新 `docs/information-map.md`。
 - 如果第一版推迟了某个功能，必须把原因和下一步写入 `docs/improvement-backlog.md`。
 - 如果新增验证命令或构建入口，必须写到本文件和对应阶段文档。
