@@ -1,6 +1,7 @@
 from money_api.domains.analysis.contracts import DataContext, StockIdentity
 from money_api.domains.analysis.tradingagents_engine import (
     FakeTradingAgentsRunner,
+    TradingAgentsDeepResearchEngine,
     TradingAgentsRunRequest,
     TradingAgentsRunResult,
 )
@@ -45,3 +46,18 @@ def test_fake_runner_returns_success_result() -> None:
     assert result.source == "fake-tradingagents"
     assert result.final_decision == "WATCH"
     assert result.agent_reports["market"]
+
+
+def test_tradingagents_engine_maps_success_result_to_report() -> None:
+    stock = StockIdentity(code="600519", name="贵州茅台")
+    context = DataContext(stock=stock, quote={"price": 1688.0})
+
+    report = TradingAgentsDeepResearchEngine(FakeTradingAgentsRunner()).analyze("task-1", context)
+
+    assert report.task_id == "task-1"
+    assert report.status.value == "report_ready"
+    assert report.action.value == "watch"
+    assert report.confidence.value == "medium"
+    assert report.summary == "贵州茅台 fake TradingAgents 分析完成。"
+    assert report.agent_views[0].agent == "TradingAgents market"
+    assert report.data_context.diagnostics[-1]["source"] == "fake-tradingagents"

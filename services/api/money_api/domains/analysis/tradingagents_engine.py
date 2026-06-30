@@ -4,7 +4,24 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Any, Protocol
 
-from money_api.domains.analysis.contracts import DataContext
+from money_api.domains.analysis.contracts import (
+    AgentView,
+    AnalysisReport,
+    AnalysisStatus,
+    ConfidenceLevel,
+    DataContext,
+    DecisionAction,
+    RiskFinding,
+)
+
+
+_ACTION_MAP = {
+    "BUY": DecisionAction.BUY,
+    "WATCH": DecisionAction.WATCH,
+    "HOLD": DecisionAction.WATCH,
+    "WAIT": DecisionAction.WAIT,
+    "SELL": DecisionAction.SELL,
+}
 
 
 @dataclass(frozen=True)
@@ -66,4 +83,52 @@ class FakeTradingAgentsRunner:
                 "risk": "离线风险辩论结果",
             },
             diagnostics=[{"kind": "deep_engine", "source": "fake-tradingagents", "ok": True}],
+        )
+
+
+class TradingAgentsDeepResearchEngine:
+    def __init__(self, runner: TradingAgentsRunner, trade_date: str | None = None):
+        self.runner = runner
+        self.trade_date = trade_date
+
+    def analyze(self, task_id: str, context: DataContext) -> AnalysisReport:
+        request = TradingAgentsRunRequest.from_context(task_id, context, self.trade_date)
+        result = self.runner.run(request)
+        diagnostics = list(context.diagnostics) + list(result.diagnostics)
+        report_context = DataContext(
+            stock=context.stock,
+            quote=dict(context.quote),
+            technicals=dict(context.technicals),
+            fundamentals=dict(context.fundamentals),
+            news=list(context.news),
+            gaps=list(context.gaps),
+            diagnostics=diagnostics,
+        )
+        if result.ok:
+            return AnalysisReport(
+                task_id=task_id,
+                stock=context.stock,
+                status=AnalysisStatus.REPORT_READY,
+                action=_ACTION_MAP.get(result.final_decision.upper(), DecisionAction.WATCH),
+                confidence=ConfidenceLevel.LOW if context.gaps else ConfidenceLevel.MEDIUM,
+                summary=result.summary,
+                reasons=["TradingAgents 深度投研引擎已返回结果"],
+                risks=[RiskFinding(level="low", message="真实引擎输出仍需人工复核")],
+                agent_views=[
+                    AgentView(agent=f"TradingAgents {name}", conclusion=report)
+                    for name, report in result.agent_reports.items()
+                ],
+                data_context=report_context,
+            )
+        return AnalysisReport(
+            task_id=task_id,
+            stock=context.stock,
+            status=AnalysisStatus.FAILED,
+            action=DecisionAction.WATCH,
+            confidence=ConfidenceLevel.LOW,
+            summary="TradingAgents 深度投研引擎执行失败。",
+            reasons=["TradingAgents runner 返回失败结果"],
+            risks=[RiskFinding(level="high", message="TradingAgents 执行失败: unknown error")],
+            agent_views=[AgentView(agent="TradingAgents", conclusion="真实深度投研未完成")],
+            data_context=report_context,
         )
