@@ -45,3 +45,13 @@ def test_mock_data_matches_report_contract() -> None:
         assert field in mock_data
 
     assert "window.MNS_MOCK_REPORTS" in mock_data
+
+
+def test_app_js_exposes_service_and_render_boundaries() -> None:
+    app_js = read_web_file("src/app.js")
+
+    assert "function createLocalAnalysis" in app_js
+    assert "function renderReportList" in app_js
+    assert "function renderReportDetail" in app_js
+    assert "function renderDiagnostics" in app_js
+    assert "analysis-form" in app_js
