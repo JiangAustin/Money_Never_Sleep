@@ -92,3 +92,43 @@ def test_report_to_dict_contains_required_sections() -> None:
     assert payload["agent_views"] == [{"agent": "Market Analyst", "conclusion": "趋势偏强"}]
     assert payload["data_gaps"] == ["资金流不可用"]
     assert payload["risks"] == [{"level": "medium", "message": "短期偏离 MA5"}]
+
+
+def test_data_context_round_trip_preserves_payloads() -> None:
+    stock = StockIdentity(code="600519", name="贵州茅台")
+    context = DataContext(
+        stock=stock,
+        quote={"price": 1688.0},
+        technicals={"ma5": 1660.0},
+        fundamentals={"pe_ttm": 28.5},
+        news=[{"title": "业绩稳定"}],
+        gaps=["news"],
+        diagnostics=[{"kind": "quote", "source": "tencent", "ok": True}],
+    )
+
+    restored = DataContext.from_dict(context.to_dict())
+
+    assert restored == context
+
+
+def test_analysis_report_round_trip_preserves_data_context() -> None:
+    stock = StockIdentity(code="600519", name="贵州茅台")
+    context = DataContext(stock=stock, quote={"price": 1688.0}, diagnostics=[{"kind": "quote", "ok": True}])
+    report = AnalysisReport(
+        task_id="task-1",
+        stock=stock,
+        status=AnalysisStatus.REPORT_READY,
+        action=DecisionAction.WATCH,
+        confidence=ConfidenceLevel.MEDIUM,
+        summary="summary",
+        reasons=["reason"],
+        risks=[RiskFinding(level="low", message="risk")],
+        agent_views=[AgentView(agent="agent", conclusion="view")],
+        data_context=context,
+    )
+
+    payload = report.to_dict()
+    restored = AnalysisReport.from_dict(payload)
+
+    assert payload["data_context"]["quote"]["price"] == 1688.0
+    assert restored == report

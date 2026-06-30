@@ -80,6 +80,35 @@ class DataContext:
     gaps: list[str] = field(default_factory=list)
     diagnostics: list[dict[str, Any]] = field(default_factory=list)
 
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "stock": self.stock.to_dict(),
+            "quote": dict(self.quote),
+            "technicals": dict(self.technicals),
+            "fundamentals": dict(self.fundamentals),
+            "news": list(self.news),
+            "gaps": list(self.gaps),
+            "diagnostics": list(self.diagnostics),
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "DataContext":
+        stock_payload = payload.get("stock", {})
+        stock = StockIdentity(
+            code=str(stock_payload.get("code", "")),
+            name=str(stock_payload.get("name", "")),
+            market=str(stock_payload.get("market", "cn")),
+        )
+        return cls(
+            stock=stock,
+            quote=dict(payload.get("quote", {})),
+            technicals=dict(payload.get("technicals", {})),
+            fundamentals=dict(payload.get("fundamentals", {})),
+            news=list(payload.get("news", [])),
+            gaps=list(payload.get("gaps", [])),
+            diagnostics=list(payload.get("diagnostics", [])),
+        )
+
 
 @dataclass(frozen=True)
 class AnalysisReport:
@@ -109,4 +138,37 @@ class AnalysisReport:
             "agent_views": [view.to_dict() for view in self.agent_views],
             "data_gaps": list(self.data_context.gaps),
             "data_diagnostics": list(self.data_context.diagnostics),
+            "data_context": self.data_context.to_dict(),
         }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "AnalysisReport":
+        stock_payload = payload.get("stock", {})
+        stock = StockIdentity(
+            code=str(stock_payload.get("code", "")),
+            name=str(stock_payload.get("name", "")),
+            market=str(stock_payload.get("market", "cn")),
+        )
+        context_payload = payload.get("data_context") or {
+            "stock": stock.to_dict(),
+            "gaps": list(payload.get("data_gaps", [])),
+            "diagnostics": list(payload.get("data_diagnostics", [])),
+        }
+        return cls(
+            task_id=str(payload["task_id"]),
+            stock=stock,
+            status=AnalysisStatus(str(payload["status"])),
+            action=DecisionAction(str(payload["action"])),
+            confidence=ConfidenceLevel(str(payload["confidence"])),
+            summary=str(payload.get("summary", "")),
+            reasons=list(payload.get("reasons", [])),
+            risks=[
+                RiskFinding(level=str(item.get("level", "")), message=str(item.get("message", "")))
+                for item in payload.get("risks", [])
+            ],
+            agent_views=[
+                AgentView(agent=str(item.get("agent", "")), conclusion=str(item.get("conclusion", "")))
+                for item in payload.get("agent_views", [])
+            ],
+            data_context=DataContext.from_dict(context_payload),
+        )
