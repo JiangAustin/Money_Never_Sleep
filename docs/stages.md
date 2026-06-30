@@ -29,7 +29,7 @@
 | 2. 真实 A 股数据层 | 已完成 | 用真实 provider 替换当前离线 fixture，并保留 fallback 和数据缺口语义 | ProviderResult 契约、DataContext diagnostics、腾讯 quote parser/provider、可选 network smoke | 离线测试通过，至少一个真实样例可手动验证 |
 | 3. TradingAgents 深度引擎接入 | 已完成 | 将 TradingAgents-astock 作为 DeepResearchEngine 的真实实现接入 | TradingAgents adapter、runner 协议、真实 runner 壳、配置入口、可选 smoke | mock 与真实引擎可切换，失败时可返回 failed report |
 | 4. 报告、历史与复盘 | 已完成 | 保存报告和分析上下文，支持历史查询、复盘和追问 | 报告 round-trip 契约、repository、JSON 持久化、历史查询 API | 报告可重复读取，关键证据和 data gaps 可追溯 |
-| 5. Web 工作台 | 待计划 | 提供用户可操作的单股分析入口和报告阅读体验 | Web 页面、任务状态、报告详情、追问入口 | 用户可从 Web 发起分析并查看结构化报告 |
+| 5. Web 工作台 | 进行中 | 提供用户可操作的单股分析入口和报告阅读体验 | Web 页面、任务状态、报告详情、追问入口 | 用户可从 Web 发起分析并查看结构化报告 |
 | 6. 桌面端与本地体验 | 待决策 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | 桌面壳、配置管理、本地缓存、打包脚本 | macOS 版本可构建并能访问核心分析能力 |
 | 7. 风控、回测与组合 | 待计划 | 从单股建议扩展到纪律、验证和组合层面 | 风控规则、回测接口、组合视图、绩效归因 | 建议可被复盘验证，不只输出买卖结论 |
 
@@ -54,7 +54,12 @@ PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pyte
 
 ## 下一阶段建议
 
-建议进入阶段 5“Web 工作台”。下一步先做最小可用页面：发起单股分析、查看报告详情、查看最近报告列表，并保持后端 API 与历史 repository 的契约稳定。
+阶段 5“Web 工作台”已完成设计规格和实现计划，正在进入实现。第一版采用零依赖静态页面，先完成离线 mock 分析、最近报告列表和结构化报告详情，后续再替换为 HTTP API。
+
+阶段 5 文档：
+
+- 设计规格：`docs/superpowers/specs/2026-07-01-stage-5-web-workbench-design.md`
+- 实现计划：`docs/superpowers/plans/2026-07-01-stage-5-web-workbench.md`
 
 ## 想法池
 
