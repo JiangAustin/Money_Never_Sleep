@@ -29,20 +29,20 @@
 | 2. 真实 A 股数据层 | 已完成 | 用真实 provider 替换当前离线 fixture，并保留 fallback 和数据缺口语义 | ProviderResult 契约、DataContext diagnostics、腾讯 quote parser/provider、可选 network smoke | 离线测试通过，至少一个真实样例可手动验证 |
 | 3. TradingAgents 深度引擎接入 | 已完成 | 将 TradingAgents-astock 作为 DeepResearchEngine 的真实实现接入 | TradingAgents adapter、runner 协议、真实 runner 壳、配置入口、可选 smoke | mock 与真实引擎可切换，失败时可返回 failed report |
 | 4. 报告、历史与复盘 | 已完成 | 保存报告和分析上下文，支持历史查询、复盘和追问 | 报告 round-trip 契约、repository、JSON 持久化、历史查询 API | 报告可重复读取，关键证据和 data gaps 可追溯 |
-| 5. Web 工作台 | 进行中 | 提供用户可操作的单股分析入口和报告阅读体验 | Web 页面、任务状态、报告详情、追问入口 | 用户可从 Web 发起分析并查看结构化报告 |
+| 5. Web 工作台 | 已完成 | 提供用户可操作的单股分析入口和报告阅读体验 | 静态 Web 工作台、离线 mock 分析、最近报告、报告详情、数据诊断 | 用户可从 Web 发起 mock 分析并查看结构化报告 |
 | 6. 桌面端与本地体验 | 待决策 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | 桌面壳、配置管理、本地缓存、打包脚本 | macOS 版本可构建并能访问核心分析能力 |
 | 7. 风控、回测与组合 | 待计划 | 从单股建议扩展到纪律、验证和组合层面 | 风控规则、回测接口、组合视图、绩效归因 | 建议可被复盘验证，不只输出买卖结论 |
 
 ## 当前阶段结论
 
-阶段 4 已完成。当前系统已具备最小报告历史能力：
+阶段 5 已完成。当前系统已具备第一版 Web 工作台：
 
-1. `DataContext` 和 `AnalysisReport` 支持完整 round-trip 序列化。
-2. 新增 `AnalysisReportRepository` 协议和内存实现。
-3. 新增 `JsonFileAnalysisReportRepository`，默认目录为 `data/cache/reports`。
-4. `AnalysisService` 通过 repository 保存、读取和列出报告。
-5. Python API 新增 `list_analysis_reports(limit=20)`。
-6. 历史报告保留完整 data context、data gaps、diagnostics 和 agent views。
+1. `apps/web/index.html` 可直接打开，无需 Node 依赖或构建步骤。
+2. 页面支持输入股票和问题，生成离线 mock 分析报告。
+3. 页面支持查看最近报告列表并切换报告详情。
+4. 报告详情展示 summary、reasons、risks、agent views、data gaps、diagnostics 和 data context。
+5. Web mock 数据字段与后端 `AnalysisReport.to_dict()` 保持兼容。
+6. Web README 记录静态打开方式和后续 HTTP API 接入方向。
 
 离线验证命令：
 
@@ -50,16 +50,13 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`53 passed, 2 skipped`。
+离线结果：`59 passed, 2 skipped`。
+
+Web 打开方式：`apps/web/index.html`。
 
 ## 下一阶段建议
 
-阶段 5“Web 工作台”已完成设计规格和实现计划，正在进入实现。第一版采用零依赖静态页面，先完成离线 mock 分析、最近报告列表和结构化报告详情，后续再替换为 HTTP API。
-
-阶段 5 文档：
-
-- 设计规格：`docs/superpowers/specs/2026-07-01-stage-5-web-workbench-design.md`
-- 实现计划：`docs/superpowers/plans/2026-07-01-stage-5-web-workbench.md`
+建议进入阶段 6“桌面端与本地体验”。下一步先确定 Electron、Tauri 或 Wails，然后把 Web 工作台作为桌面壳的第一屏，补齐 macOS 构建入口。
 
 ## 想法池
 
