@@ -72,3 +72,12 @@ def test_web_readme_documents_static_open_flow() -> None:
     assert "index.html" in readme
     assert "离线 mock" in readme
     assert "HTTP API" in readme
+
+
+def test_app_js_exposes_http_service_boundary() -> None:
+    app_js = read_web_file("src/app.js")
+
+    assert "function getApiBaseUrl" in app_js
+    assert "async function createHttpAnalysis" in app_js
+    assert "fetch(`${apiBaseUrl}/analysis`" in app_js
+    assert "createLocalAnalysis" in app_js

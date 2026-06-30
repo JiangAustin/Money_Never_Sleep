@@ -2,6 +2,7 @@ const reports = Array.isArray(window.MNS_MOCK_REPORTS) ? [...window.MNS_MOCK_REP
 const state = {
   reports,
   selectedTaskId: reports[0]?.task_id || null,
+  apiBaseUrl: getApiBaseUrl(),
 };
 
 const elements = {
@@ -40,6 +41,12 @@ function normalizeSymbol(symbol) {
   return { code: known[value] || value, name: value, market: "cn" };
 }
 
+function getApiBaseUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const api = params.get("api");
+  return api ? api.replace(/\/$/, "") : "";
+}
+
 function createLocalAnalysis(symbol, message) {
   const stock = normalizeSymbol(symbol);
   const createdAt = new Date().toISOString();
@@ -71,6 +78,35 @@ function createLocalAnalysis(symbol, message) {
       diagnostics: [],
     },
   };
+}
+
+function createFallbackAnalysis(symbol, message, error) {
+  const report = createLocalAnalysis(symbol, message);
+  report.summary = `${report.summary} HTTP API 暂不可用，已回退到离线 mock。`;
+  report.confidence = "low";
+  report.data_diagnostics.push({
+    kind: "http_api",
+    source: "web",
+    ok: false,
+    error_type: error.name || "Error",
+    error_message: error.message || "HTTP API request failed",
+    fetched_at: new Date().toISOString(),
+    is_stale: false,
+  });
+  return report;
+}
+
+async function createHttpAnalysis(apiBaseUrl, symbol, message) {
+  const response = await fetch(`${apiBaseUrl}/analysis`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ symbol, message }),
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || `HTTP ${response.status}`);
+  }
+  return payload;
 }
 
 function getSelectedReport() {
@@ -212,9 +248,18 @@ function render() {
   renderDiagnostics();
 }
 
-function handleSubmit(event) {
+async function handleSubmit(event) {
   event.preventDefault();
-  const report = createLocalAnalysis(elements.symbol.value, elements.message.value);
+  let report;
+  if (state.apiBaseUrl) {
+    try {
+      report = await createHttpAnalysis(state.apiBaseUrl, elements.symbol.value, elements.message.value);
+    } catch (error) {
+      report = createFallbackAnalysis(elements.symbol.value, elements.message.value, error);
+    }
+  } else {
+    report = createLocalAnalysis(elements.symbol.value, elements.message.value);
+  }
   state.reports.unshift(report);
   state.selectedTaskId = report.task_id;
   render();
