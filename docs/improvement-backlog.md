@@ -27,7 +27,7 @@
 | ID | 状态 | 优先级 | 主题 | 为什么第一版没做 | 继续做的收益 | 推荐下一步 | 关联 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | MNS-BL-001 | 已完成 | P0 | Web 接真实 HTTP API | 阶段 5 选择零依赖静态工作台，避免同时引入 HTTP 服务和前端联调 | 用户可从浏览器真实发起分析、读取历史报告 | 已在阶段 5.5 完成 dependency-free HTTP dispatcher、server 入口、基础 CORS/OPTIONS 和 Web `?api=` 模式；验证：`68 passed, 2 skipped` | 阶段 5.5、`apps/web/`、`services/api/money_api/api/http.py` |
-| MNS-BL-002 | 待设计 | P0 | 桌面端技术选型与 macOS 构建入口 | `apps/desktop` 仍是预留目录，没有 Electron/Tauri/Wails 配置 | 满足本地桌面体验和用户偏好的每阶段 macOS 构建验证 | 阶段 6 先比较 Electron/Tauri/Wails，并把 Web 工作台作为第一屏 | 阶段 6、`apps/desktop/` |
+| MNS-BL-002 | 进行中 | P0 | 桌面端技术选型与 macOS 构建入口 | `apps/desktop` 仍是预留目录，没有 Electron/Tauri/Wails 配置 | 满足本地桌面体验和用户偏好的每阶段 macOS 构建验证 | 阶段 6 正在实现 Electron 桌面壳和 macOS `.app` 构建入口 | 阶段 6、`apps/desktop/` |
 | MNS-BL-013 | 待设计 | P1 | FastAPI/OpenAPI 升级 | 阶段 5.5 为避免新增依赖，先使用标准库 HTTP dispatcher | 获得 OpenAPI、自动文档、中间件和更成熟的服务化能力 | 在桌面壳或 Web 真联调稳定后，评估将 dispatcher 外层替换为 FastAPI | 阶段 5.5、`services/api/money_api/api/http.py` |
 | MNS-BL-014 | 待设计 | P1 | 异步任务队列与状态轮询 | 阶段 5.5 只做同步 HTTP 调用，避免一次性引入队列和 worker | 长耗时 TradingAgents 分析可被 Web/桌面稳定轮询和恢复 | 设计 task repository、worker、`GET /tasks/{id}` 和超时/取消语义 | 阶段 5.5/6、`AnalysisStatus` |
 | MNS-BL-003 | 待实现 | P1 | 真实 TradingAgents smoke | 阶段 3 只提供 opt-in smoke，默认测试不能依赖 LLM/API key | 验证真实多 Agent 投研链路可被 Money_Never_sleep 调起 | 准备本地密钥和可控样例，运行 `MNS_RUN_TRADINGAGENTS_SMOKE=1 ...test_tradingagents_smoke.py`，记录结果 | 阶段 3、`services/api/tests/test_tradingagents_smoke.py` |
