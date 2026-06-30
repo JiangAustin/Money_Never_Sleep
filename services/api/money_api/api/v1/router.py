@@ -35,6 +35,12 @@ def get_analysis_report(task_id: str) -> dict[str, object] | None:
 
 
 def routes() -> dict[str, object]:
+    """Return an early scaffold snapshot of v1 route payloads.
+
+    This is not a web-framework route table. It preserves the original scaffold
+    behavior by returning the current health payload until a real API router is
+    introduced.
+    """
     from money_api.main import health
 
     return {"health": health()}
