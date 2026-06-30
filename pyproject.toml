@@ -9,4 +9,5 @@ dependencies = []
 testpaths = ["services/api/tests"]
 markers = [
 	"network: tests requiring external network access",
+	"external_engine: tests requiring optional external analysis engines",
 ]
