@@ -61,3 +61,27 @@ def test_tradingagents_engine_maps_success_result_to_report() -> None:
     assert report.summary == "贵州茅台 fake TradingAgents 分析完成。"
     assert report.agent_views[0].agent == "TradingAgents market"
     assert report.data_context.diagnostics[-1]["source"] == "fake-tradingagents"
+
+
+class FailingTradingAgentsRunner:
+    def run(self, request: TradingAgentsRunRequest) -> TradingAgentsRunResult:
+        return TradingAgentsRunResult(
+            ok=False,
+            source="tradingagents",
+            diagnostics=[{"kind": "deep_engine", "source": "tradingagents", "ok": False}],
+            error_type="RuntimeError",
+            error_message="boom",
+        )
+
+
+def test_tradingagents_engine_maps_failure_to_failed_report() -> None:
+    stock = StockIdentity(code="600519", name="贵州茅台")
+    context = DataContext(stock=stock, quote={"price": 1688.0})
+
+    report = TradingAgentsDeepResearchEngine(FailingTradingAgentsRunner()).analyze("task-1", context)
+
+    assert report.status.value == "failed"
+    assert report.action.value == "watch"
+    assert report.confidence.value == "low"
+    assert report.risks[0].message == "TradingAgents 执行失败: boom"
+    assert report.data_context.diagnostics[-1]["ok"] is False

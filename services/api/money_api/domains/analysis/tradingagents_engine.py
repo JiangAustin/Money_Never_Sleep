@@ -120,6 +120,16 @@ class TradingAgentsDeepResearchEngine:
                 ],
                 data_context=report_context,
             )
+        return self._failed_report(task_id, context, result, report_context)
+
+    def _failed_report(
+        self,
+        task_id: str,
+        context: DataContext,
+        result: TradingAgentsRunResult,
+        report_context: DataContext,
+    ) -> AnalysisReport:
+        message = result.error_message or "unknown error"
         return AnalysisReport(
             task_id=task_id,
             stock=context.stock,
@@ -128,7 +138,7 @@ class TradingAgentsDeepResearchEngine:
             confidence=ConfidenceLevel.LOW,
             summary="TradingAgents 深度投研引擎执行失败。",
             reasons=["TradingAgents runner 返回失败结果"],
-            risks=[RiskFinding(level="high", message="TradingAgents 执行失败: unknown error")],
+            risks=[RiskFinding(level="high", message=f"TradingAgents 执行失败: {message}")],
             agent_views=[AgentView(agent="TradingAgents", conclusion="真实深度投研未完成")],
             data_context=report_context,
         )
