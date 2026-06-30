@@ -1,9 +1,34 @@
 """Version 1 route functions for the Money_Never_sleep API."""
 
+from collections.abc import Callable
+
 from money_api.domains.analysis.agent_engine import MockDeepResearchEngine, QuickAgentRouter
 from money_api.domains.analysis.context_builder import DataContextBuilder, StaticMarketDataProvider
+from money_api.domains.analysis.contracts import StockIdentity
 from money_api.domains.analysis.service import AnalysisService
+from money_api.domains.market_data.provider_results import ProviderResult
 from money_api.domains.market_data.resolver import StockResolver
+from money_api.domains.market_data.tencent_quote import TencentQuoteProvider
+
+
+class QuoteOverrideProvider:
+    """Compose Tencent quote with static offline payloads for other data kinds."""
+
+    def __init__(self, quote_provider: TencentQuoteProvider, fallback: StaticMarketDataProvider):
+        self.quote_provider = quote_provider
+        self.fallback = fallback
+
+    def get_quote(self, stock: StockIdentity) -> ProviderResult:
+        return self.quote_provider.get_quote(stock)
+
+    def get_technicals(self, stock: StockIdentity) -> ProviderResult:
+        return self.fallback.get_technicals(stock)
+
+    def get_fundamentals(self, stock: StockIdentity) -> ProviderResult:
+        return self.fallback.get_fundamentals(stock)
+
+    def get_news(self, stock: StockIdentity) -> ProviderResult:
+        return self.fallback.get_news(stock)
 
 
 def build_default_analysis_service() -> AnalysisService:
@@ -17,6 +42,24 @@ def build_default_analysis_service() -> AnalysisService:
                 news=[{"title": "示例新闻：业绩保持稳定"}],
             )
         ),
+        quick_router=QuickAgentRouter(),
+        deep_engine=MockDeepResearchEngine(),
+    )
+
+
+def build_tencent_quote_analysis_service(transport: Callable[[str], str] | None = None) -> AnalysisService:
+    fallback_provider = StaticMarketDataProvider(
+        technicals={"ma5": 1660.0, "ma10": 1625.0, "ma20": 1588.0},
+        fundamentals={"pe_ttm": 28.5, "pb": 9.1},
+        news=[{"title": "示例新闻：业绩保持稳定"}],
+    )
+    provider = QuoteOverrideProvider(
+        quote_provider=TencentQuoteProvider(transport=transport),
+        fallback=fallback_provider,
+    )
+    return AnalysisService(
+        resolver=StockResolver(name_map={"贵州茅台": "600519", "平安银行": "000001"}),
+        context_builder=DataContextBuilder(provider),
         quick_router=QuickAgentRouter(),
         deep_engine=MockDeepResearchEngine(),
     )
