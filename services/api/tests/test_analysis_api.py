@@ -1,4 +1,9 @@
-from money_api.api.v1.router import build_default_analysis_service, build_tencent_quote_analysis_service
+from money_api.api.v1.router import (
+    build_default_analysis_service,
+    build_tencent_quote_analysis_service,
+    build_tradingagents_analysis_service,
+)
+from money_api.domains.analysis.tradingagents_engine import FakeTradingAgentsRunner
 from money_api.main import analyze_stock, get_analysis_report, health
 
 
@@ -40,3 +45,11 @@ def test_tencent_quote_service_factory_accepts_transport() -> None:
     payload = service.create_single_stock_analysis("贵州茅台", "请全面分析").to_dict()
 
     assert payload["data_diagnostics"][0]["source"] == "tencent"
+
+
+def test_tradingagents_service_factory_accepts_runner() -> None:
+    service = build_tradingagents_analysis_service(runner=FakeTradingAgentsRunner())
+    payload = service.create_single_stock_analysis("贵州茅台", "请全面分析并给出投资建议").to_dict()
+
+    assert payload["status"] == "report_ready"
+    assert payload["data_diagnostics"][-1]["source"] == "fake-tradingagents"
