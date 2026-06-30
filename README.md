@@ -46,6 +46,8 @@ Money_Never_sleep/
 4. 通过 Agent 引擎适配器生成结构化 dry-run 报告。
 5. 暴露 Python 级 API 函数，供测试和早期集成使用。
 
+阶段拆分和后续计划见 [docs/stages.md](docs/stages.md)。该文件是活文档，会随阶段完成、新想法和优先级变化持续更新。
+
 ## 文档规则
 
 - 完成阶段后，如果改变了项目定位、用户可见能力、安装/使用命令、API 入口、Web/Desktop 工作流、打包方式或重大架构方向，需要同步更新 `README.md`。

@@ -1,5 +1,7 @@
 # Roadmap
 
+阶段路线图活文档见 [`docs/stages.md`](stages.md)。当阶段范围、顺序或验收标准变化时，优先更新该文档。
+
 ## Step 1: Workspace Shape
 
 - Define project boundaries.
