@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Money_Never_sleep Web 工作台</title>
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Money_Never_sleep</p>
+      <h1>单股投研工作台</h1>
+    </div>
+    <div class="mode-pill">离线 Mock / API 契约预览</div>
+  </header>
+
+  <main class="workbench-shell">
+    <aside class="side-panel">
+      <form id="analysis-form" class="analysis-form">
+        <label>
+          股票
+          <input id="symbol-input" name="symbol" value="贵州茅台" autocomplete="off">
+        </label>
+        <label>
+          问题
+          <textarea id="message-input" name="message" rows="4">请全面分析并给出投资建议</textarea>
+        </label>
+        <button type="submit">开始分析</button>
+      </form>
+
+      <section class="report-list-section">
+        <div class="section-heading">
+          <h2>最近报告</h2>
+          <span id="report-count">0</span>
+        </div>
+        <div id="report-list" class="report-list"></div>
+      </section>
+    </aside>
+
+    <section id="report-detail" class="report-detail" aria-live="polite"></section>
+
+    <aside id="diagnostics-panel" class="diagnostics-panel"></aside>
+  </main>
+
+  <script src="src/mockData.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>
