@@ -78,6 +78,7 @@ class DataContext:
     fundamentals: dict[str, Any] = field(default_factory=dict)
     news: list[dict[str, Any]] = field(default_factory=list)
     gaps: list[str] = field(default_factory=list)
+    diagnostics: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -107,4 +108,5 @@ class AnalysisReport:
             "risks": [risk.to_dict() for risk in self.risks],
             "agent_views": [view.to_dict() for view in self.agent_views],
             "data_gaps": list(self.data_context.gaps),
+            "data_diagnostics": list(self.data_context.diagnostics),
         }
