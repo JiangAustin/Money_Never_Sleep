@@ -23,3 +23,25 @@ def test_web_workbench_has_core_regions() -> None:
     assert 'id="report-list"' in html
     assert 'id="report-detail"' in html
     assert 'id="diagnostics-panel"' in html
+
+
+def test_mock_data_matches_report_contract() -> None:
+    mock_data = read_web_file("src/mockData.js")
+
+    for field in (
+        "task_id",
+        "stock",
+        "status",
+        "action",
+        "confidence",
+        "summary",
+        "reasons",
+        "risks",
+        "agent_views",
+        "data_gaps",
+        "data_diagnostics",
+        "data_context",
+    ):
+        assert field in mock_data
+
+    assert "window.MNS_MOCK_REPORTS" in mock_data
