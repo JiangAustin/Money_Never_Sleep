@@ -1,4 +1,4 @@
-"""Analysis domain contracts for Money_Never_sleep."""
+"""Stable analysis domain contracts for Money_Never_sleep workflows."""
 
 from dataclasses import dataclass, field
 from enum import Enum
@@ -6,6 +6,8 @@ from typing import Any
 
 
 class AnalysisStatus(str, Enum):
+    """Lifecycle states for an analysis task as it moves toward a report."""
+
     QUEUED = "queued"
     COLLECTING_DATA = "collecting_data"
     QUICK_SCREENING = "quick_screening"
@@ -16,6 +18,8 @@ class AnalysisStatus(str, Enum):
 
 
 class DecisionAction(str, Enum):
+    """Recommended report actions produced by the analysis workflow."""
+
     BUY = "buy"
     WATCH = "watch"
     SELL = "sell"
@@ -23,6 +27,8 @@ class DecisionAction(str, Enum):
 
 
 class ConfidenceLevel(str, Enum):
+    """Confidence levels attached to an analysis recommendation."""
+
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
@@ -30,6 +36,8 @@ class ConfidenceLevel(str, Enum):
 
 @dataclass(frozen=True)
 class StockIdentity:
+    """Identifies the stock being analyzed across market-specific workflows."""
+
     code: str
     name: str
     market: str = "cn"
@@ -40,6 +48,8 @@ class StockIdentity:
 
 @dataclass(frozen=True)
 class RiskFinding:
+    """Describes a risk note; level is currently a string whose values are refined by later risk controls."""
+
     level: str
     message: str
 
@@ -49,6 +59,8 @@ class RiskFinding:
 
 @dataclass(frozen=True)
 class AgentView:
+    """Captures one analysis agent's conclusion for the final report."""
+
     agent: str
     conclusion: str
 
@@ -58,6 +70,8 @@ class AgentView:
 
 @dataclass(frozen=True)
 class DataContext:
+    """Carries collected analysis data, with gaps explicitly recording missing inputs."""
+
     stock: StockIdentity
     quote: dict[str, Any] = field(default_factory=dict)
     technicals: dict[str, Any] = field(default_factory=dict)
@@ -68,6 +82,8 @@ class DataContext:
 
 @dataclass(frozen=True)
 class AnalysisReport:
+    """Aggregates the final recommendation, evidence, risks, and source data context."""
+
     task_id: str
     stock: StockIdentity
     status: AnalysisStatus

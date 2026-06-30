@@ -38,6 +38,18 @@ def test_analysis_contract_enum_values() -> None:
     assert ConfidenceLevel.MEDIUM.value == "medium"
 
 
+def test_data_context_defaults_are_empty_collections() -> None:
+    stock = StockIdentity(code="600519", name="贵州茅台")
+
+    context = DataContext(stock=stock)
+
+    assert context.quote == {}
+    assert context.technicals == {}
+    assert context.fundamentals == {}
+    assert context.news == []
+    assert context.gaps == []
+
+
 def test_frozen_dataclasses_reject_mutation() -> None:
     stock = StockIdentity(code="600519", name="贵州茅台", market="cn")
 
