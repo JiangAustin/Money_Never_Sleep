@@ -1,45 +1,53 @@
 # Money_Never_sleep
 
-Money_Never_sleep is a finance and stock analysis workspace that will integrate ideas from three reference projects:
+Money_Never_sleep 是一个面向 A 股智能投研的平台型工作区，目标是在自有架构边界内吸收三个参考项目的优点：
 
-- `TradingAgents-astock`: multi-agent A-share research workflow.
-- `go-stock`: desktop application and local data/application packaging patterns.
-- `daily_stock_analysis`: Python service layering, API, reports, Web, and Desktop boundaries.
+- `TradingAgents-astock`：多 Agent A 股投研流程。
+- `go-stock`：桌面应用、本地数据和应用打包经验。
+- `daily_stock_analysis`：Python 服务分层、API、报告、Web 和桌面边界。
 
-This first scaffold intentionally defines project boundaries before copying or porting implementation code.
+当前阶段先明确 Money_Never_sleep 自己的项目边界，再按小切片吸收参考项目能力，避免直接复制或整体 fork。
 
-## Project Layout
+English option: concise English notes can be added as a separate section or linked document when useful, while this README keeps Chinese as the default entry.
+
+## 项目结构
 
 ```text
 Money_Never_sleep/
   apps/
-    web/              # Web client shell
-    desktop/          # Desktop client shell
+    web/              # Web 客户端壳
+    desktop/          # 桌面客户端壳
   services/
-    api/              # Python API service
+    api/              # Python API 服务
   packages/
-    shared/           # Shared contracts and generated clients
+    shared/           # 共享契约和生成客户端
   data/
-    raw/              # Unmodified local input data
-    processed/        # Derived local datasets
-    cache/            # Runtime cache, safe to recreate
-  docs/               # Architecture, references, roadmap
-  scripts/            # Local developer scripts
+    raw/              # 原始本地输入数据
+    processed/        # 派生本地数据集
+    cache/            # 运行缓存，可安全重建
+  docs/               # 架构、参考和路线图
+  scripts/            # 本地开发脚本
 ```
 
-## First Milestone
+## 第一阶段里程碑
 
-1. Keep reference projects external and document their integration points.
-2. Build a minimal API service boundary under `services/api`.
-3. Decide whether the desktop shell should be Wails, Electron, or another wrapper after the product workflow is clearer.
-4. Add real dependencies only when a concrete feature slice needs them.
+1. 将参考项目保持为外部参考，并记录集成点。
+2. 在 `services/api` 下建立最小 API 服务边界。
+3. 在产品工作流更清晰后，再决定桌面壳使用 Wails、Electron 还是其他方案。
+4. 只有当具体功能切片需要时，才引入真实依赖。
 
-## Current Planning Slice
+## 当前实现切片
 
-The first implementation slice is the backend contract for a single-stock deep analysis loop:
+第一个实现切片是“单股深度分析闭环”的后端契约：
 
-1. Resolve an A-share symbol or Chinese stock name.
-2. Build a normalized data context with explicit data gaps.
-3. Route quick questions separately from deep analysis requests.
-4. Generate a structured dry-run report through an Agent engine adapter.
-5. Expose Python-level API functions for tests and early integration.
+1. 解析 A 股代码或中文股票名。
+2. 构建标准化数据上下文，并显式记录数据缺口。
+3. 区分快速问题和深度分析请求。
+4. 通过 Agent 引擎适配器生成结构化 dry-run 报告。
+5. 暴露 Python 级 API 函数，供测试和早期集成使用。
+
+## 文档规则
+
+- 完成阶段后，如果改变了项目定位、用户可见能力、安装/使用命令、API 入口、Web/Desktop 工作流、打包方式或重大架构方向，需要同步更新 `README.md`。
+- `README.md` 默认使用中文展示。
+- 需要英文说明时，提供英文选项，例如单独英文 section 或链接到英文文档，但中文仍作为默认入口。
