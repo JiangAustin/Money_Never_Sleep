@@ -1,6 +1,6 @@
-# Money
+# Money_Never_sleep
 
-Money is a finance and stock analysis workspace that will integrate ideas from three reference projects:
+Money_Never_sleep is a finance and stock analysis workspace that will integrate ideas from three reference projects:
 
 - `TradingAgents-astock`: multi-agent A-share research workflow.
 - `go-stock`: desktop application and local data/application packaging patterns.
@@ -11,7 +11,7 @@ This first scaffold intentionally defines project boundaries before copying or p
 ## Project Layout
 
 ```text
-Money/
+Money_Never_sleep/
   apps/
     web/              # Web client shell
     desktop/          # Desktop client shell

@@ -1,7 +1,7 @@
 [project]
-name = "money"
+name = "money-never-sleep"
 version = "0.1.0"
-description = "Finance and stock analysis workspace"
+description = "Finance and stock analysis workspace for Money_Never_sleep"
 requires-python = ">=3.10"
 dependencies = []
 

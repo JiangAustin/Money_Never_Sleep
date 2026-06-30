@@ -1,4 +1,4 @@
-"""Configuration placeholders for the Money API service."""
+"""Configuration placeholders for the Money_Never_sleep API service."""
 
 from dataclasses import dataclass
 

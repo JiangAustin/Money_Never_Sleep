@@ -1,6 +1,6 @@
 # Architecture
 
-Money starts as a modular finance analysis workspace with explicit boundaries:
+Money_Never_sleep starts as a modular finance analysis workspace with explicit boundaries:
 
 - API service: backend contracts, orchestration, analysis workflows, provider adapters.
 - Web app: browser-based research and portfolio workflows.
