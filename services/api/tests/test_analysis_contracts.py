@@ -1,3 +1,7 @@
+from dataclasses import FrozenInstanceError
+
+import pytest
+
 from money_api.domains.analysis.contracts import (
     AgentView,
     AnalysisReport,
@@ -8,6 +12,37 @@ from money_api.domains.analysis.contracts import (
     RiskFinding,
     StockIdentity,
 )
+
+
+def test_stock_identity_to_dict() -> None:
+    stock = StockIdentity(code="600519", name="贵州茅台", market="cn")
+
+    assert stock.to_dict() == {"code": "600519", "name": "贵州茅台", "market": "cn"}
+
+
+def test_risk_finding_to_dict() -> None:
+    risk = RiskFinding(level="medium", message="短期偏离 MA5")
+
+    assert risk.to_dict() == {"level": "medium", "message": "短期偏离 MA5"}
+
+
+def test_agent_view_to_dict() -> None:
+    view = AgentView(agent="Market Analyst", conclusion="趋势偏强")
+
+    assert view.to_dict() == {"agent": "Market Analyst", "conclusion": "趋势偏强"}
+
+
+def test_analysis_contract_enum_values() -> None:
+    assert AnalysisStatus.REPORT_READY.value == "report_ready"
+    assert DecisionAction.WATCH.value == "watch"
+    assert ConfidenceLevel.MEDIUM.value == "medium"
+
+
+def test_frozen_dataclasses_reject_mutation() -> None:
+    stock = StockIdentity(code="600519", name="贵州茅台", market="cn")
+
+    with pytest.raises(FrozenInstanceError):
+        stock.code = "000001"  # type: ignore[misc]
 
 
 def test_report_to_dict_contains_required_sections() -> None:
