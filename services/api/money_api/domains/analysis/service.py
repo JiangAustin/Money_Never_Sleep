@@ -43,7 +43,7 @@ class AnalysisService:
                 action=DecisionAction.WATCH,
                 confidence=ConfidenceLevel.LOW if context.gaps else ConfidenceLevel.MEDIUM,
                 summary="轻量查询已完成，未触发完整深度投研流程。",
-                reasons=["问题未命中深度分析关键词", "已复用统一数据上下文"],
+                reasons=["问题属于轻量查询，无需完整投研", "已获取统一数据上下文"],
                 risks=[RiskFinding(level="low", message="轻量结论不构成完整投资建议")],
                 agent_views=[AgentView(agent="Quick Agent", conclusion="返回轻量分析摘要")],
                 data_context=context,

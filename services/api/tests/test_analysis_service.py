@@ -36,5 +36,10 @@ def test_lightweight_question_uses_quick_summary() -> None:
 
     report = service.create_single_stock_analysis("600519", "现在多少钱")
 
+    assert report.status.value == "report_ready"
     assert report.action.value == "watch"
+    assert report.confidence.value == "medium"
+    assert report.summary
+    assert report.task_id.startswith("analysis-")
     assert report.agent_views[0].agent == "Quick Agent"
+    assert service.get_report(report.task_id) == report
