@@ -4,7 +4,7 @@ from money_api.api.v1.router import (
     build_tradingagents_analysis_service,
 )
 from money_api.domains.analysis.tradingagents_engine import FakeTradingAgentsRunner
-from money_api.main import analyze_stock, get_analysis_report, health
+from money_api.main import analyze_stock, get_analysis_report, health, list_analysis_reports
 
 
 def test_analyze_stock_api_returns_serialized_report() -> None:
@@ -53,3 +53,13 @@ def test_tradingagents_service_factory_accepts_runner() -> None:
 
     assert payload["status"] == "report_ready"
     assert payload["data_diagnostics"][-1]["source"] == "fake-tradingagents"
+
+
+def test_list_analysis_reports_returns_recent_records() -> None:
+    payload = analyze_stock("贵州茅台", "请全面分析并给出投资建议")
+
+    records = list_analysis_reports(limit=5)
+
+    assert records
+    assert records[0]["task_id"] == payload["task_id"]
+    assert records[0]["stock"]["code"] == "600519"

@@ -2,9 +2,11 @@
 
 from collections.abc import Callable
 
+from money_api.core.config import settings
 from money_api.domains.analysis.agent_engine import MockDeepResearchEngine, QuickAgentRouter
 from money_api.domains.analysis.context_builder import DataContextBuilder, StaticMarketDataProvider
 from money_api.domains.analysis.contracts import StockIdentity
+from money_api.domains.analysis.report_repository import AnalysisReportRepository, JsonFileAnalysisReportRepository
 from money_api.domains.analysis.service import AnalysisService
 from money_api.domains.analysis.tradingagents_engine import (
     FakeTradingAgentsRunner,
@@ -36,7 +38,7 @@ class QuoteOverrideProvider:
         return self.fallback.get_news(stock)
 
 
-def build_default_analysis_service() -> AnalysisService:
+def build_default_analysis_service(report_repository: AnalysisReportRepository | None = None) -> AnalysisService:
     return AnalysisService(
         resolver=StockResolver(name_map={"贵州茅台": "600519", "平安银行": "000001"}),
         context_builder=DataContextBuilder(
@@ -49,10 +51,14 @@ def build_default_analysis_service() -> AnalysisService:
         ),
         quick_router=QuickAgentRouter(),
         deep_engine=MockDeepResearchEngine(),
+        report_repository=report_repository or JsonFileAnalysisReportRepository(settings.analysis_reports_dir),
     )
 
 
-def build_tencent_quote_analysis_service(transport: Callable[[str], str] | None = None) -> AnalysisService:
+def build_tencent_quote_analysis_service(
+    transport: Callable[[str], str] | None = None,
+    report_repository: AnalysisReportRepository | None = None,
+) -> AnalysisService:
     fallback_provider = StaticMarketDataProvider(
         technicals={"ma5": 1660.0, "ma10": 1625.0, "ma20": 1588.0},
         fundamentals={"pe_ttm": 28.5, "pb": 9.1},
@@ -67,10 +73,14 @@ def build_tencent_quote_analysis_service(transport: Callable[[str], str] | None 
         context_builder=DataContextBuilder(provider),
         quick_router=QuickAgentRouter(),
         deep_engine=MockDeepResearchEngine(),
+        report_repository=report_repository,
     )
 
 
-def build_tradingagents_analysis_service(runner: TradingAgentsRunner | None = None) -> AnalysisService:
+def build_tradingagents_analysis_service(
+    runner: TradingAgentsRunner | None = None,
+    report_repository: AnalysisReportRepository | None = None,
+) -> AnalysisService:
     return AnalysisService(
         resolver=StockResolver(name_map={"贵州茅台": "600519", "平安银行": "000001"}),
         context_builder=DataContextBuilder(
@@ -83,6 +93,7 @@ def build_tradingagents_analysis_service(runner: TradingAgentsRunner | None = No
         ),
         quick_router=QuickAgentRouter(),
         deep_engine=TradingAgentsDeepResearchEngine(runner or FakeTradingAgentsRunner()),
+        report_repository=report_repository,
     )
 
 
@@ -96,6 +107,10 @@ def analyze_stock(symbol: str, message: str) -> dict[str, object]:
 def get_analysis_report(task_id: str) -> dict[str, object] | None:
     report = _analysis_service.get_report(task_id)
     return report.to_dict() if report is not None else None
+
+
+def list_analysis_reports(limit: int = 20) -> list[dict[str, object]]:
+    return [record.to_dict() for record in _analysis_service.list_reports(limit=limit)]
 
 
 def routes() -> dict[str, object]:

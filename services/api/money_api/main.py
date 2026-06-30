@@ -18,5 +18,11 @@ def get_analysis_report(task_id: str) -> dict[str, object] | None:
     return get_analysis_report_v1(task_id)
 
 
+def list_analysis_reports(limit: int = 20) -> list[dict[str, object]]:
+    from money_api.api.v1.router import list_analysis_reports as list_analysis_reports_v1
+
+    return list_analysis_reports_v1(limit=limit)
+
+
 if __name__ == "__main__":
     print(health())
