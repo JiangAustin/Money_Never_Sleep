@@ -47,6 +47,8 @@ class HttpApiApp:
         if method == "POST" and path.startswith("/reports/") and path.endswith("/backtest"):
             task_id = path.removeprefix("/reports/").removesuffix("/backtest")
             return self._backtest_report(task_id, body)
+        if method == "POST" and path == "/portfolio/risk-budget":
+            return self._portfolio_risk_budget(body)
         return self._json(404, {"error": "not found"})
 
     def _create_analysis(self, body: bytes) -> HttpResponse:
@@ -85,6 +87,21 @@ class HttpApiApp:
         if result is None:
             return self._json(404, {"error": "report not found"})
         return self._json(200, result.to_dict())
+
+    def _portfolio_risk_budget(self, body: bytes) -> HttpResponse:
+        try:
+            payload = json.loads(body.decode("utf-8") or "{}")
+        except json.JSONDecodeError:
+            return self._json(400, {"error": "invalid json"})
+        task_ids = payload.get("task_ids")
+        if task_ids is not None and not isinstance(task_ids, list):
+            return self._json(400, {"error": "task_ids must be a list"})
+        limit = self._parse_limit(str(payload.get("limit", "20")))
+        budget = self.service.build_portfolio_risk_budget(
+            task_ids=[str(task_id) for task_id in task_ids] if task_ids is not None else None,
+            limit=limit,
+        )
+        return self._json(200, budget.to_dict())
 
     def _parse_limit(self, value: str) -> int:
         try:

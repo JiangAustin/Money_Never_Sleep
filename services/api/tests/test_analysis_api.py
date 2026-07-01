@@ -5,7 +5,7 @@ from money_api.api.v1.router import (
 )
 from money_api.domains.analysis.contracts import BacktestPricePoint
 from money_api.domains.analysis.tradingagents_engine import FakeTradingAgentsRunner
-from money_api.main import analyze_stock, backtest_analysis_report, get_analysis_report, health, list_analysis_reports
+from money_api.main import analyze_stock, backtest_analysis_report, build_portfolio_risk_budget, get_analysis_report, health, list_analysis_reports
 
 
 def test_analyze_stock_api_returns_serialized_report() -> None:
@@ -99,3 +99,14 @@ def test_backtest_analysis_report_accepts_price_provider() -> None:
     result = service.backtest_report_from_provider(payload["task_id"], FakePriceProvider(), limit=2)
 
     assert result.exit_reason == "take_profit"
+
+
+def test_build_portfolio_risk_budget_returns_serialized_budget() -> None:
+    first = analyze_stock("贵州茅台", "请全面分析并给出投资建议")
+    second = analyze_stock("平安银行", "请全面分析并给出投资建议")
+
+    budget = build_portfolio_risk_budget([first["task_id"], second["task_id"]])
+
+    assert budget["total_position_pct"] > 0
+    assert budget["cash_reserve_pct"] < 1
+    assert [position["stock"]["code"] for position in budget["positions"]] == ["600519", "000001"]

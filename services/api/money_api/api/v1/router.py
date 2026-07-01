@@ -128,6 +128,10 @@ def backtest_analysis_report(
     return result.to_dict() if result is not None else None
 
 
+def build_portfolio_risk_budget(task_ids: list[str] | None = None, limit: int = 20) -> dict[str, object]:
+    return _analysis_service.build_portfolio_risk_budget(task_ids=task_ids, limit=limit).to_dict()
+
+
 def routes() -> dict[str, object]:
     """Return an early scaffold snapshot of v1 route payloads.
 

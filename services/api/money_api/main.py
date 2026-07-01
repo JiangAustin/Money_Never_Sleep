@@ -35,6 +35,12 @@ def backtest_analysis_report(
     return backtest_analysis_report_v1(task_id=task_id, prices=prices, source=source, limit=limit)
 
 
+def build_portfolio_risk_budget(task_ids: list[str] | None = None, limit: int = 20) -> dict[str, object]:
+    from money_api.api.v1.router import build_portfolio_risk_budget as build_portfolio_risk_budget_v1
+
+    return build_portfolio_risk_budget_v1(task_ids=task_ids, limit=limit)
+
+
 def run_http_server(host: str = "127.0.0.1", port: int = 8000) -> None:
     from money_api.api.http import run_http_server as run_http_server_v1
 

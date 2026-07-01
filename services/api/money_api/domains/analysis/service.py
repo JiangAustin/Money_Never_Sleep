@@ -13,8 +13,10 @@ from money_api.domains.analysis.contracts import (
     BacktestResult,
     ConfidenceLevel,
     DecisionAction,
+    PortfolioRiskBudget,
     RiskFinding,
 )
+from money_api.domains.analysis.portfolio_risk import PortfolioRiskBudgeter
 from money_api.domains.analysis.report_repository import (
     AnalysisReportRecord,
     AnalysisReportRepository,
@@ -35,6 +37,7 @@ class AnalysisService:
         report_repository: AnalysisReportRepository | None = None,
         risk_policy: DefaultRiskPolicy | None = None,
         backtest_engine: SimpleBacktestEngine | None = None,
+        portfolio_budgeter: PortfolioRiskBudgeter | None = None,
     ):
         self.resolver = resolver
         self.context_builder = context_builder
@@ -43,6 +46,7 @@ class AnalysisService:
         self.report_repository = report_repository or InMemoryAnalysisReportRepository()
         self.risk_policy = risk_policy or DefaultRiskPolicy()
         self.backtest_engine = backtest_engine or SimpleBacktestEngine()
+        self.portfolio_budgeter = portfolio_budgeter or PortfolioRiskBudgeter()
 
     def create_single_stock_analysis(self, symbol: str, message: str) -> AnalysisReport:
         task_id = f"analysis-{uuid4().hex}"
@@ -87,3 +91,10 @@ class AnalysisService:
         if not result.ok:
             raise ValueError(result.error_message or "price series provider failed")
         return self.backtest_engine.run(report, list(result.data))
+
+    def build_portfolio_risk_budget(self, task_ids: list[str] | None = None, limit: int = 20) -> PortfolioRiskBudget:
+        if task_ids:
+            reports = [report for task_id in task_ids if (report := self.get_report(task_id)) is not None]
+        else:
+            reports = [AnalysisReport.from_dict(record.report) for record in self.list_reports(limit=limit)]
+        return self.portfolio_budgeter.build(reports)

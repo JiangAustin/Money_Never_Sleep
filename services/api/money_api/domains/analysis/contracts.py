@@ -163,6 +163,79 @@ class BacktestResult:
 
 
 @dataclass(frozen=True)
+class PortfolioPositionBudget:
+    task_id: str
+    stock: StockIdentity
+    action: DecisionAction
+    confidence: ConfidenceLevel
+    budget_position_pct: float
+    source_position_pct: float
+    rules: list[RiskControlRule]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "task_id": self.task_id,
+            "stock": self.stock.to_dict(),
+            "action": self.action.value,
+            "confidence": self.confidence.value,
+            "budget_position_pct": self.budget_position_pct,
+            "source_position_pct": self.source_position_pct,
+            "rules": [rule.to_dict() for rule in self.rules],
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "PortfolioPositionBudget":
+        stock_payload = payload.get("stock", {})
+        return cls(
+            task_id=str(payload.get("task_id", "")),
+            stock=StockIdentity(
+                code=str(stock_payload.get("code", "")),
+                name=str(stock_payload.get("name", "")),
+                market=str(stock_payload.get("market", "cn")),
+            ),
+            action=DecisionAction(str(payload.get("action", DecisionAction.WATCH.value))),
+            confidence=ConfidenceLevel(str(payload.get("confidence", ConfidenceLevel.LOW.value))),
+            budget_position_pct=float(payload.get("budget_position_pct", 0)),
+            source_position_pct=float(payload.get("source_position_pct", 0)),
+            rules=[RiskControlRule.from_dict(item) for item in payload.get("rules", [])],
+        )
+
+
+@dataclass(frozen=True)
+class PortfolioRiskBudget:
+    total_position_pct: float
+    cash_reserve_pct: float
+    max_total_position_pct: float
+    max_single_position_pct: float
+    positions: list[PortfolioPositionBudget]
+    rules: list[RiskControlRule]
+    disclaimer: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "total_position_pct": self.total_position_pct,
+            "cash_reserve_pct": self.cash_reserve_pct,
+            "max_total_position_pct": self.max_total_position_pct,
+            "max_single_position_pct": self.max_single_position_pct,
+            "positions": [position.to_dict() for position in self.positions],
+            "rules": [rule.to_dict() for rule in self.rules],
+            "disclaimer": self.disclaimer,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "PortfolioRiskBudget":
+        return cls(
+            total_position_pct=float(payload.get("total_position_pct", 0)),
+            cash_reserve_pct=float(payload.get("cash_reserve_pct", 1)),
+            max_total_position_pct=float(payload.get("max_total_position_pct", 0)),
+            max_single_position_pct=float(payload.get("max_single_position_pct", 0)),
+            positions=[PortfolioPositionBudget.from_dict(item) for item in payload.get("positions", [])],
+            rules=[RiskControlRule.from_dict(item) for item in payload.get("rules", [])],
+            disclaimer=str(payload.get("disclaimer", "")),
+        )
+
+
+@dataclass(frozen=True)
 class AgentView:
     """Captures one analysis agent's conclusion for the final report."""
 

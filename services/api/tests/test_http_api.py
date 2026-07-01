@@ -98,6 +98,23 @@ def test_http_backtest_report_with_sina_source() -> None:
     assert decode(backtest_response)["exit_reason"] == "take_profit"
 
 
+def test_http_portfolio_risk_budget() -> None:
+    app = build_app()
+    first = decode(app.handle("POST", "/analysis", json.dumps({"symbol": "贵州茅台", "message": "请全面分析"}).encode("utf-8")))
+    second = decode(app.handle("POST", "/analysis", json.dumps({"symbol": "平安银行", "message": "请全面分析"}).encode("utf-8")))
+
+    response = app.handle(
+        "POST",
+        "/portfolio/risk-budget",
+        json.dumps({"task_ids": [first["task_id"], second["task_id"]]}).encode("utf-8"),
+    )
+
+    assert response.status == 200
+    payload = decode(response)
+    assert payload["total_position_pct"] > 0
+    assert [position["stock"]["code"] for position in payload["positions"]] == ["600519", "000001"]
+
+
 def test_http_responses_include_cors_headers() -> None:
     response = build_app().handle("GET", "/health", b"")
 

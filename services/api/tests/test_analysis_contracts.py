@@ -11,6 +11,8 @@ from money_api.domains.analysis.contracts import (
     ConfidenceLevel,
     DataContext,
     DecisionAction,
+    PortfolioPositionBudget,
+    PortfolioRiskBudget,
     RiskControlPlan,
     RiskControlRule,
     RiskFinding,
@@ -166,3 +168,29 @@ def test_backtest_result_round_trip() -> None:
     )
 
     assert BacktestResult.from_dict(result.to_dict()) == result
+
+
+def test_portfolio_risk_budget_round_trip() -> None:
+    stock = StockIdentity(code="600519", name="贵州茅台")
+    rule = RiskControlRule(name="confidence", level="medium", message="中等置信度")
+    budget = PortfolioRiskBudget(
+        total_position_pct=0.1,
+        cash_reserve_pct=0.9,
+        max_total_position_pct=0.6,
+        max_single_position_pct=0.2,
+        positions=[
+            PortfolioPositionBudget(
+                task_id="task-1",
+                stock=stock,
+                action=DecisionAction.WATCH,
+                confidence=ConfidenceLevel.MEDIUM,
+                budget_position_pct=0.1,
+                source_position_pct=0.1,
+                rules=[rule],
+            )
+        ],
+        rules=[rule],
+        disclaimer="非投资建议",
+    )
+
+    assert PortfolioRiskBudget.from_dict(budget.to_dict()) == budget
