@@ -10,6 +10,7 @@ from money_api.domains.analysis.contracts import BacktestOptions, BacktestPriceP
 from money_api.domains.analysis.report_repository import AnalysisReportRepository, JsonFileAnalysisReportRepository
 from money_api.domains.analysis.service import AnalysisService
 from money_api.domains.analysis.tradingagents_engine import (
+    AutoFallbackDeepResearchEngine,
     FakeTradingAgentsRunner,
     TradingAgentsDeepResearchEngine,
     TradingAgentsRunner,
@@ -117,7 +118,7 @@ def build_runtime_analysis_service(
     tradingagents_runner: TradingAgentsRunner | None = None,
 ) -> AnalysisService:
     market_data_mode = os.getenv("MONEY_MARKET_DATA_MODE", "tencent").lower()
-    deep_engine_mode = os.getenv("MONEY_DEEP_ENGINE", "mock").lower()
+    deep_engine_mode = os.getenv("MONEY_DEEP_ENGINE", "auto").lower()
 
     static_provider = StaticMarketDataProvider(
         quote={"price": 1688.0},
@@ -140,6 +141,11 @@ def build_runtime_analysis_service(
     deep_engine = MockDeepResearchEngine()
     if deep_engine_mode == "tradingagents":
         deep_engine = TradingAgentsDeepResearchEngine(tradingagents_runner or TradingAgentsGraphRunner())
+    elif deep_engine_mode == "auto":
+        deep_engine = AutoFallbackDeepResearchEngine(
+            primary=TradingAgentsDeepResearchEngine(tradingagents_runner or TradingAgentsGraphRunner()),
+            fallback=MockDeepResearchEngine(),
+        )
 
     return AnalysisService(
         resolver=StockResolver(name_map={"贵州茅台": "600519", "平安银行": "000001"}),

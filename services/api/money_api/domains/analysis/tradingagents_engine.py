@@ -1,9 +1,10 @@
 """TradingAgents engine adapter contracts."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from typing import Any, Protocol
 
+from money_api.domains.analysis.agent_engine import MockDeepResearchEngine
 from money_api.domains.analysis.contracts import (
     AgentView,
     AnalysisReport,
@@ -141,4 +142,43 @@ class TradingAgentsDeepResearchEngine:
             risks=[RiskFinding(level="high", message=f"TradingAgents 执行失败: {message}")],
             agent_views=[AgentView(agent="TradingAgents", conclusion="真实深度投研未完成")],
             data_context=report_context,
+        )
+
+
+class AutoFallbackDeepResearchEngine:
+    def __init__(self, primary: TradingAgentsDeepResearchEngine, fallback: MockDeepResearchEngine | None = None):
+        self.primary = primary
+        self.fallback = fallback or MockDeepResearchEngine()
+
+    def analyze(self, task_id: str, context: DataContext) -> AnalysisReport:
+        primary_report = self.primary.analyze(task_id, context)
+        if primary_report.status != AnalysisStatus.FAILED:
+            return primary_report
+
+        diagnostics = list(primary_report.data_context.diagnostics)
+        diagnostics.append(
+            {
+                "kind": "deep_engine",
+                "source": "mock-fallback",
+                "ok": True,
+                "error_type": primary_report.data_context.diagnostics[-1].get("error_type") if primary_report.data_context.diagnostics else None,
+                "error_message": primary_report.data_context.diagnostics[-1].get("error_message") if primary_report.data_context.diagnostics else None,
+                "fetched_at": None,
+                "is_stale": False,
+            }
+        )
+        fallback_context = DataContext(
+            stock=context.stock,
+            quote=dict(context.quote),
+            technicals=dict(context.technicals),
+            fundamentals=dict(context.fundamentals),
+            news=list(context.news),
+            gaps=list(context.gaps),
+            diagnostics=diagnostics,
+        )
+        fallback_report = self.fallback.analyze(task_id, fallback_context)
+        return replace(
+            fallback_report,
+            summary="TradingAgents 不可用，已回退到 mock 分析。",
+            reasons=["TradingAgents auto 模式失败后已回退到 mock 分析", *fallback_report.reasons],
         )

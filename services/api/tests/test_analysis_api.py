@@ -145,13 +145,19 @@ def test_runtime_analysis_service_uses_tencent_quote_by_default(monkeypatch) -> 
             '"date":"2026-07-01 09:30:00","mediaName":"东方财富","url":"https://example.com/news/1"}]}})'
         )
 
-    service = build_runtime_analysis_service(transport=transport, news_transport=news_transport)
+    service = build_runtime_analysis_service(
+        transport=transport,
+        news_transport=news_transport,
+        tradingagents_runner=FakeTradingAgentsRunner(),
+    )
     payload = service.create_single_stock_analysis("贵州茅台", "请全面分析并给出投资建议").to_dict()
 
     assert payload["data_diagnostics"][0]["source"] == "tencent"
     assert payload["data_diagnostics"][3]["source"] == "eastmoney"
+    assert payload["data_diagnostics"][-1]["source"] == "fake-tradingagents"
+    assert payload["summary"] == "贵州茅台 fake TradingAgents 分析完成。"
     assert payload["data_context"]["news"][0]["title"] == "茅台业绩稳健"
-    assert payload["agent_views"][0]["agent"] == "Mock Research Engine"
+    assert payload["agent_views"][0]["agent"] == "TradingAgents market"
 
 
 def test_runtime_analysis_service_accepts_tradingagents_runner(monkeypatch) -> None:
@@ -167,3 +173,33 @@ def test_runtime_analysis_service_accepts_tradingagents_runner(monkeypatch) -> N
     payload = service.create_single_stock_analysis("贵州茅台", "请全面分析并给出投资建议").to_dict()
 
     assert payload["data_diagnostics"][-1]["source"] == "fake-tradingagents"
+
+
+def test_runtime_analysis_service_auto_mode_falls_back_to_mock(monkeypatch) -> None:
+    monkeypatch.delenv("MONEY_DEEP_ENGINE", raising=False)
+
+    class FailingRunner:
+        def run(self, request):
+            from money_api.domains.analysis.tradingagents_engine import TradingAgentsRunResult
+
+            return TradingAgentsRunResult(
+                ok=False,
+                source="tradingagents",
+                diagnostics=[{"kind": "deep_engine", "source": "tradingagents", "ok": False}],
+                error_type="RuntimeError",
+                error_message="boom",
+            )
+
+    def transport(url: str) -> str:
+        values = [""] * 53
+        values[1] = "贵州茅台"
+        values[3] = "1688.00"
+        return 'v_sh600519="' + "~".join(values) + '";'
+
+    service = build_runtime_analysis_service(transport=transport, tradingagents_runner=FailingRunner())
+    payload = service.create_single_stock_analysis("贵州茅台", "请全面分析并给出投资建议").to_dict()
+
+    assert payload["status"] == "report_ready"
+    assert payload["agent_views"][0]["agent"] == "Mock Research Engine"
+    assert payload["data_diagnostics"][-2]["source"] == "tradingagents"
+    assert payload["data_diagnostics"][-1]["source"] == "mock-fallback"

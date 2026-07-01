@@ -57,7 +57,9 @@ MNS_DESKTOP_PYTHON_BIN=/path/to/python3 npm start
 桌面托管 server 默认使用：
 
 - `MONEY_MARKET_DATA_MODE=tencent`
-- `MONEY_DEEP_ENGINE=mock`
+- `MONEY_DEEP_ENGINE=auto`
+
+`auto` 模式会优先尝试真实 TradingAgents，若导入或运行失败则自动回退到 mock 深度分析。
 
 如需尝试真实 TradingAgents，可显式设置：
 

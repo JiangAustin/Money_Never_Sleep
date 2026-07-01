@@ -55,6 +55,7 @@
 | MNS-BL-032 | 已完成 | P1 | 任务重试策略细化（抖动+超时倍率） | 阶段 5.13 仅有固定指数退避，缺少错误类型差异和抖动能力 | 减少同秒重试集中，并让 timeout 类故障应用更保守重试间隔 | 已在阶段 5.14 完成 `retry_backoff_factor`、`retry_jitter_ratio`、`retry_timeout_multiplier`；验证：`127 passed, 3 skipped` | 阶段 5.14、`services/api/money_api/domains/analysis/task_queue.py` |
 | MNS-BL-033 | 已完成 | P1 | 任务重试策略可观测性 | 阶段 5.14 的策略虽已可配置，但调用方只能看到 `next_retry_at`，无法判断延迟来源与命中的策略 | 让任务历史和 API 能解释“为什么这次要等这么久” | 已在阶段 5.15 完成 `next_retry_delay_s`、`next_retry_policy` 和 Web 历史展示；验证：`128 passed, 3 skipped` | 阶段 5.15、`services/api/money_api/domains/analysis/task_queue.py`、`apps/web/src/app.js` |
 | MNS-BL-034 | 已完成 | P1 | 真实个股新闻数据接入 | runtime service 只有 quote 是真实输入，news 仍是静态示例数据 | 让分析上下文开始具备真实资讯时效性，为后续真实多 Agent 分析提供更可信输入 | 已在阶段 5.16 完成 `EastmoneyNewsProvider` 和 runtime news 装配；验证：`131 passed, 3 skipped` | 阶段 5.16、`services/api/money_api/domains/market_data/eastmoney_news.py` |
+| MNS-BL-035 | 已完成 | P1 | runtime 默认深度引擎 auto 模式 | 虽已具备真实 TradingAgents 集成边界，但默认路径仍固定 mock，无法优先尝试真实引擎 | 让默认链路在环境就绪时优先走真实 TradingAgents，同时保留安全回退 | 已在阶段 5.17 完成 `AutoFallbackDeepResearchEngine`、runtime/desktop 默认 `auto` 和 runner 路径引导；验证：`133 passed, 3 skipped` | 阶段 5.17、`services/api/money_api/domains/analysis/tradingagents_engine.py` |
 | MNS-BL-021 | 已完成 | P2 | 交易成本、滑点和复权参数 | 阶段 7.1 为保持 deterministic 最小闭环，不做成本和复权 | 提高回测结果可信度，避免过度乐观 | 已在阶段 7.4 完成 `BacktestOptions`、净收益/裸收益/成本影响和 Python/HTTP API 参数；真实复权价格转换仍是后续项 | 阶段 7.4 |
 | MNS-BL-019 | 已完成 | P1 | 组合风险预算 | 当前系统仍是单股分析，没有组合层持仓和风险预算 | 支持多标的仓位约束、集中度控制和组合视图 | 已在阶段 7.3 完成组合预算契约、预算器、Python API 和 HTTP API；验证：`100 passed, 3 skipped` | 阶段 7.3 |
 | MNS-BL-010 | 待设计 | P2 | Web 图表和行情可视化 | 阶段 5 静态工作台不做 K 线或图表 | 改善报告阅读和行情理解效率 | 先接真实 API，再选择轻量图表方案 | 阶段 5 后续 |
@@ -89,7 +90,7 @@
 ### 阶段 5：Web 工作台
 
 - Web 是零依赖静态版本，默认使用离线 mock 数据。
-- 阶段 5.16 已支持 `?api=` HTTP 任务模式、任务持久化、cancel/retry、超时回收、带延迟退避的服务端自动重试和最近任务历史，并接入真实个股新闻；但仍未提供公告/资金流、筛选分页、批量控制和完整任务详情页。
+- 阶段 5.17 已支持 `?api=` HTTP 任务模式、任务持久化、cancel/retry、超时回收、带延迟退避的服务端自动重试和最近任务历史，接入真实个股新闻，并让默认深度引擎进入 `auto` 模式；但仍未提供公告/资金流、筛选分页、批量控制和完整任务详情页。
 - 未引入前端框架、路由、状态管理、图表或自动化浏览器截图验证。
 
 ### 阶段 6：桌面端与本地体验

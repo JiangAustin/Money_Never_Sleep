@@ -1,8 +1,11 @@
 """Optional TradingAgents-astock integration runner."""
 
 from collections.abc import Callable
+from pathlib import Path
+import sys
 from typing import Any
 
+from money_api.core.config import settings
 from money_api.domains.analysis.tradingagents_engine import TradingAgentsRunRequest, TradingAgentsRunResult
 
 
@@ -50,6 +53,9 @@ class TradingAgentsGraphRunner:
             )
 
     def _load_graph_factory(self) -> Callable[..., Any]:
+        candidate_path = Path(settings.tradingagents_astock_path).resolve()
+        if candidate_path.exists() and str(candidate_path) not in sys.path:
+            sys.path.insert(0, str(candidate_path))
         from tradingagents.graph.trading_graph import TradingAgentsGraph
 
         return TradingAgentsGraph

@@ -67,7 +67,7 @@ function getManagedApiEnv() {
     MONEY_API_HOST: DEFAULT_API_HOST,
     MONEY_API_PORT: DEFAULT_API_PORT,
     MONEY_MARKET_DATA_MODE: process.env.MONEY_MARKET_DATA_MODE || "tencent",
-    MONEY_DEEP_ENGINE: process.env.MONEY_DEEP_ENGINE || "mock",
+    MONEY_DEEP_ENGINE: process.env.MONEY_DEEP_ENGINE || "auto",
     MONEY_REPORTS_DIR: process.env.MONEY_REPORTS_DIR || path.join(app.getPath("userData"), "reports"),
   };
 }
