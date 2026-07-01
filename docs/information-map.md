@@ -29,6 +29,7 @@
 | 后续推荐怎么做 | `docs/improvement-backlog.md` | `docs/agent-handoff.md` |
 | 已完成阶段摘要 | `docs/agent-handoff.md` | `docs/stages.md` |
 | 验证命令 | `docs/agent-handoff.md` | `docs/stages.md`、对应 plan |
+| 项目本地 skills | `.github/superpowers/` | `.github/copilot-instructions.md` |
 | API / 后端入口 | `services/api/money_api/main.py` | `services/api/money_api/api/v1/router.py` |
 | HTTP API 边界 | `services/api/money_api/api/http.py` | `services/api/tests/test_http_api.py` |
 | 分析领域契约 | `services/api/money_api/domains/analysis/contracts.py` | `services/api/tests/test_analysis_contracts.py` |
@@ -53,6 +54,7 @@
 | 新增验证命令、构建命令或 smoke 命令 | `docs/agent-handoff.md`、`docs/stages.md`、必要时 `README.md` |
 | 新增主要代码入口或目录职责 | `README.md` 或对应子目录 README |
 | 新增后续 agent 必须知道的约束 | `.github/copilot-instructions.md`、`docs/agent-handoff.md` |
+| 发现可复用 workflow 或技巧 | `.github/superpowers/`；若只是项目规则则写 `.github/copilot-instructions.md` |
 | 修复或完成 backlog 项 | `docs/improvement-backlog.md`，状态改为 `已完成` 并写验证依据 |
 
 ## 阶段收尾检查

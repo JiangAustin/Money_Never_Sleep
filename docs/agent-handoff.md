@@ -297,6 +297,8 @@ MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_
 
 - 不要直接复制参考项目的大块源码。
 - 不要把 secrets、模型名、绝对路径或本机端口写死进代码。
+- 本仓库的项目本地 skills 位于 `.github/superpowers/`；阶段、backlog 或第二版功能切片优先使用 `.github/superpowers/mns-stage-delivery/SKILL.md`。
+- 如果重复工作暴露出可复用 workflow 或技巧，不要只留在聊天里；项目特定内容沉淀到 `.github/superpowers/`，规则性约束写入 `.github/copilot-instructions.md` 或对应 docs。
 - 完成任何阶段时，必须更新 `README.md`、`docs/stages.md`、`docs/improvement-backlog.md` 和本文件中相关部分。
 - 如果新增信息入口、文档职责或写回规则，必须更新 `docs/information-map.md`。
 - 如果第一版推迟了某个功能，必须把原因和下一步写入 `docs/improvement-backlog.md`。
