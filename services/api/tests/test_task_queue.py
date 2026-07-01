@@ -183,8 +183,46 @@ def test_task_queue_auto_retries_timed_out_task() -> None:
     assert task is not None
     assert task.status == AnalysisStatus.FAILED.value
     assert task.error == "task timed out after 1s"
-    assert len(retries) == 1
-    assert retries[0].retry_count == 1
+    assert task.next_retry_at == "2026-07-01T00:00:07+00:00"
+    assert len(retries) == 0
+
+
+def test_task_queue_watchdog_dispatches_scheduled_retry_when_due() -> None:
+    service = build_default_analysis_service(report_repository=InMemoryAnalysisReportRepository())
+    repository = InMemoryAnalysisTaskRepository()
+    queue = InMemoryAnalysisTaskQueue(service=service, repository=repository, executor=lambda operation: None)
+    expired = AnalysisTaskRecord(
+        task_id="task-timeout",
+        symbol="600519",
+        message="请全面分析",
+        status=AnalysisStatus.DEEP_ANALYSIS.value,
+        created_at="2026-07-01T00:00:00+00:00",
+        updated_at="2026-07-01T00:00:00+00:00",
+        started_at="2026-07-01T00:00:00+00:00",
+        timeout_s=1,
+        max_retries=1,
+        retry_count=0,
+    )
+    repository.save(expired)
+    queue._records[expired.task_id] = expired
+
+    queue._now = lambda: "2026-07-01T00:00:05+00:00"  # type: ignore[attr-defined]
+    task = queue.get_task("task-timeout")
+    assert task is not None
+    assert task.next_retry_at == "2026-07-01T00:00:07+00:00"
+
+    queue._now = lambda: "2026-07-01T00:00:06+00:00"  # type: ignore[attr-defined]
+    watchdog = queue.start_watchdog(interval_s=0.01, iterations=1)
+    watchdog.join(timeout=1)
+    before_due_retries = [record for record in queue.list_tasks(limit=20) if record.retry_of == "task-timeout"]
+    assert len(before_due_retries) == 0
+
+    queue._now = lambda: "2026-07-01T00:00:08+00:00"  # type: ignore[attr-defined]
+    watchdog = queue.start_watchdog(interval_s=0.01, iterations=1)
+    watchdog.join(timeout=1)
+    due_retries = [record for record in queue.list_tasks(limit=20) if record.retry_of == "task-timeout"]
+    assert len(due_retries) == 1
+    assert due_retries[0].retry_count == 1
 
 
 def test_task_queue_start_watchdog_sweeps_timeouts() -> None:

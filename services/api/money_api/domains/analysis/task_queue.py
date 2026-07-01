@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, replace
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from threading import Lock, Thread
 import time
@@ -27,6 +27,7 @@ class AnalysisTaskRecord:
     timeout_s: int = 300
     retry_count: int = 0
     max_retries: int = 0
+    next_retry_at: str | None = None
     report_id: str | None = None
     error: str | None = None
     retry_of: str | None = None
@@ -43,6 +44,7 @@ class AnalysisTaskRecord:
             "timeout_s": self.timeout_s,
             "retry_count": self.retry_count,
             "max_retries": self.max_retries,
+            "next_retry_at": self.next_retry_at,
             "report_id": self.report_id,
             "error": self.error,
             "retry_of": self.retry_of,
@@ -61,6 +63,7 @@ class AnalysisTaskRecord:
             timeout_s=int(payload.get("timeout_s", 300)),
             retry_count=int(payload.get("retry_count", 0)),
             max_retries=int(payload.get("max_retries", 0)),
+            next_retry_at=str(payload.get("next_retry_at")) if payload.get("next_retry_at") is not None else None,
             report_id=str(payload.get("report_id")) if payload.get("report_id") is not None else None,
             error=str(payload.get("error")) if payload.get("error") is not None else None,
             retry_of=str(payload.get("retry_of")) if payload.get("retry_of") is not None else None,
@@ -178,11 +181,15 @@ class InMemoryAnalysisTaskQueue:
         repository: AnalysisTaskRepository | None = None,
         executor: Callable[[Callable[[], None]], None] | None = None,
         default_timeout_s: int = 300,
+        retry_backoff_base_s: int = 2,
+        retry_backoff_max_s: int = 30,
     ):
         self.service = service
         self.repository = repository or InMemoryAnalysisTaskRepository()
         self.executor = executor or self._default_executor
         self.default_timeout_s = default_timeout_s
+        self.retry_backoff_base_s = retry_backoff_base_s
+        self.retry_backoff_max_s = retry_backoff_max_s
         self._records: dict[str, AnalysisTaskRecord] = {}
         self._lock = Lock()
         for record in self.repository.list_recent(limit=10_000):
@@ -261,6 +268,7 @@ class InMemoryAnalysisTaskQueue:
     def list_tasks(self, limit: int = 20) -> list[AnalysisTaskRecord]:
         for task_id in list(self._records.keys()):
             self._expire_task_if_needed(task_id)
+            self._maybe_retry(task_id)
         with self._lock:
             records = sorted(self._records.values(), key=lambda item: item.updated_at, reverse=True)
         return records[:limit]
@@ -326,6 +334,14 @@ class InMemoryAnalysisTaskQueue:
             return
         if task.retry_count >= task.max_retries:
             return
+        if self._has_retry_child(task.task_id):
+            return
+        if task.next_retry_at is None:
+            delay_s = self._compute_retry_delay_s(task.retry_count)
+            self._update(task_id, next_retry_at=(datetime.fromisoformat(self._now()) + timedelta(seconds=delay_s)).isoformat())
+            return
+        if datetime.fromisoformat(self._now()) < datetime.fromisoformat(task.next_retry_at):
+            return
         self._create_task_record(
             symbol=task.symbol,
             message=task.message,
@@ -334,6 +350,14 @@ class InMemoryAnalysisTaskQueue:
             retry_count=task.retry_count + 1,
             max_retries=task.max_retries,
         )
+
+    def _has_retry_child(self, task_id: str) -> bool:
+        with self._lock:
+            return any(record.retry_of == task_id for record in self._records.values())
+
+    def _compute_retry_delay_s(self, retry_count: int) -> int:
+        delay = self.retry_backoff_base_s * (2 ** retry_count)
+        return min(self.retry_backoff_max_s, delay)
 
     def _run_task(self, task_id: str) -> None:
         record = self.get_task(task_id)
