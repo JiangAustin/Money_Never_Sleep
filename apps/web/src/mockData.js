@@ -16,6 +16,17 @@ window.MNS_MOCK_REPORTS = [
     data_diagnostics: [
       { kind: "quote", source: "tencent", ok: true, error_type: null, error_message: null, fetched_at: null, is_stale: false }
     ],
+    risk_controls: {
+      max_position_pct: 0.05,
+      stop_loss_pct: 0.08,
+      take_profit_pct: 0.15,
+      time_horizon: "5-20 个交易日",
+      rules: [
+        { name: "confidence", level: "medium", message: "中等置信度设定仓位上限" },
+        { name: "data_gaps", level: "medium", message: "存在资金流数据缺口，仓位上限降至 5%" }
+      ],
+      disclaimer: "本报告仅用于研究和复盘，不构成投资建议；任何交易决策需由用户自行承担风险。"
+    },
     data_context: {
       stock: { code: "600519", name: "贵州茅台", market: "cn" },
       quote: { price: 1688, source: "tencent" },
@@ -43,6 +54,17 @@ window.MNS_MOCK_REPORTS = [
     data_diagnostics: [
       { kind: "news", source: "static", ok: false, error_type: "MissingData", error_message: "离线演示新闻不足", fetched_at: null, is_stale: false }
     ],
+    risk_controls: {
+      max_position_pct: 0.05,
+      stop_loss_pct: 0.08,
+      take_profit_pct: 0.15,
+      time_horizon: "5-20 个交易日",
+      rules: [
+        { name: "confidence", level: "low", message: "低置信度限制仓位" },
+        { name: "data_gaps", level: "medium", message: "存在新闻数据缺口，仓位上限降至 5%" }
+      ],
+      disclaimer: "本报告仅用于研究和复盘，不构成投资建议；任何交易决策需由用户自行承担风险。"
+    },
     data_context: {
       stock: { code: "000001", name: "平安银行", market: "cn" },
       quote: { price: 10.8, source: "static" },

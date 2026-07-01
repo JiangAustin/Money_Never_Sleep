@@ -200,7 +200,20 @@ function renderReportDetail() {
   risks.append(createElement("h3", "", "风险提示"));
   appendList(risks, report.risks, "暂无风险提示", "risk-list");
 
-  elements.detail.append(header, badges, reasons, agents, risks);
+  const controls = createElement("section", "detail-section");
+  controls.append(createElement("h3", "", "风控纪律"));
+  if (report.risk_controls) {
+    const plan = report.risk_controls;
+    controls.append(
+      createElement("p", "summary", `仓位上限 ${(plan.max_position_pct * 100).toFixed(1)}% / 止损 ${(plan.stop_loss_pct * 100).toFixed(1)}% / 止盈 ${(plan.take_profit_pct * 100).toFixed(1)}%`)
+    );
+    appendList(controls, plan.rules, "暂无风控规则");
+    controls.append(createElement("p", "empty-state", plan.disclaimer));
+  } else {
+    controls.append(createElement("p", "empty-state", "暂无风控计划"));
+  }
+
+  elements.detail.append(header, badges, reasons, agents, risks, controls);
 }
 
 function renderDiagnostics() {
