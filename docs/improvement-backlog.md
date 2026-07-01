@@ -41,7 +41,7 @@
 | MNS-BL-009 | 待设计 | P2 | 投资免责声明与风险提示治理 | 当前有风险字段，但没有统一产品级免责声明 | 降低误解为自动荐股的风险，统一 Web/API/报告表达 | 增加 report disclaimer 字段或 UI 固定风险说明 | README、Web、报告契约 |
 | MNS-BL-017 | 已完成 | P0 | 风控纪律层 | 此前报告只有 action/confidence/risks，没有统一仓位、止损、止盈和免责声明 | 让每份报告都有可复盘的纪律约束，避免只输出买卖结论 | 已在阶段 7 完成 `RiskControlPlan`、默认风险策略、Service/API 集成和 Web mock 兼容；验证：`79 passed, 2 skipped`，macOS `.app` 构建通过 | 阶段 7、`AnalysisReport` |
 | MNS-BL-018 | 已完成 | P1 | 回测接口 | 阶段 7 第一版先做风控纪律，不做历史行情回放和收益归因 | 验证建议是否能被历史数据复盘，而不是只看当下结论 | 已在阶段 7.1 完成基于传入价格序列的 deterministic backtest request/result、Python API 和 HTTP API；验证：`87 passed, 2 skipped`，macOS `.app` 构建通过 | 阶段 7.1 |
-| MNS-BL-020 | 进行中 | P1 | 真实行情回测数据源 | 阶段 7.1 只接受调用者传入价格序列，不接真实 K 线 provider | 回测可以直接基于真实历史行情运行，减少手工输入 | 阶段 7.2 正在实现 Sina 日线 K 线 provider 并接入 backtest request | 阶段 7.2、`domains/market_data/` |
+| MNS-BL-020 | 已完成 | P1 | 真实行情回测数据源 | 阶段 7.1 只接受调用者传入价格序列，不接真实 K 线 provider | 回测可以直接基于真实历史行情运行，减少手工输入 | 已在阶段 7.2 完成 Sina 日线 K 线 provider 和 provider 回测 API；验证：`93 passed, 2 skipped`，macOS `.app` 构建通过 | 阶段 7.2、`domains/market_data/` |
 | MNS-BL-021 | 待设计 | P2 | 交易成本、滑点和复权 | 阶段 7.1 为保持 deterministic 最小闭环，不做成本和复权 | 提高回测结果可信度，避免过度乐观 | 扩展 BacktestRequest，加入 cost/slippage/adjustment 参数 | 阶段 7.1 后续 |
 | MNS-BL-019 | 待设计 | P1 | 组合风险预算 | 当前系统仍是单股分析，没有组合层持仓和风险预算 | 支持多标的仓位约束、集中度控制和组合视图 | 报告历史和风控计划稳定后设计 portfolio schema | 阶段 7 后续 |
 | MNS-BL-010 | 待设计 | P2 | Web 图表和行情可视化 | 阶段 5 静态工作台不做 K 线或图表 | 改善报告阅读和行情理解效率 | 先接真实 API，再选择轻量图表方案 | 阶段 5 后续 |

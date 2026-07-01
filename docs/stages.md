@@ -56,7 +56,7 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`87 passed, 2 skipped`。
+离线结果：`93 passed, 2 skipped`。
 
 macOS 构建结果：`apps/desktop/dist/mac-arm64/Money Never Sleep.app`。
 
@@ -68,7 +68,7 @@ HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.
 
 ## 下一阶段建议
 
-阶段 7.2“真实 K 线回测数据源”已完成设计规格和实现计划，正在进入实现。第一版使用 Sina 日线 K 线 provider，默认测试仍保持离线。
+建议下一步在两个方向中二选一：为 Sina K 线增加 opt-in 真实网络 smoke，或继续组合风险预算切片。
 
 ## 想法池
 
