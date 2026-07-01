@@ -15,6 +15,7 @@ from money_api.domains.analysis.tradingagents_engine import (
 )
 from money_api.domains.market_data.provider_results import ProviderResult
 from money_api.domains.market_data.resolver import StockResolver
+from money_api.domains.market_data.sina_kline import SinaKLineProvider
 from money_api.domains.market_data.tencent_quote import TencentQuoteProvider
 
 
@@ -113,9 +114,17 @@ def list_analysis_reports(limit: int = 20) -> list[dict[str, object]]:
     return [record.to_dict() for record in _analysis_service.list_reports(limit=limit)]
 
 
-def backtest_analysis_report(task_id: str, prices: list[dict[str, object]]) -> dict[str, object] | None:
-    price_points = [BacktestPricePoint.from_dict(price) for price in prices]
-    result = _analysis_service.backtest_report(task_id, price_points)
+def backtest_analysis_report(
+    task_id: str,
+    prices: list[dict[str, object]] | None = None,
+    source: str | None = None,
+    limit: int = 60,
+) -> dict[str, object] | None:
+    if source == "sina":
+        result = _analysis_service.backtest_report_from_provider(task_id, SinaKLineProvider(), limit=limit)
+    else:
+        price_points = [BacktestPricePoint.from_dict(price) for price in (prices or [])]
+        result = _analysis_service.backtest_report(task_id, price_points)
     return result.to_dict() if result is not None else None
 
 

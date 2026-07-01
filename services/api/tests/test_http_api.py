@@ -2,13 +2,25 @@ import json
 
 from money_api.api.http import HttpApiApp
 from money_api.api.v1.router import build_default_analysis_service
+from money_api.domains.analysis.contracts import BacktestPricePoint
 from money_api.domains.analysis.report_repository import InMemoryAnalysisReportRepository
+from money_api.domains.market_data.provider_results import ProviderResult
 from money_api.main import run_http_server
+
+
+class FakePriceProvider:
+    def get_price_series(self, stock, limit=60):
+        return ProviderResult(
+            kind="price_series",
+            source="fake",
+            ok=True,
+            data=[BacktestPricePoint(date="2026-07-01", close=100.0), BacktestPricePoint(date="2026-07-02", close=116.0)],
+        )
 
 
 def build_app() -> HttpApiApp:
     service = build_default_analysis_service(report_repository=InMemoryAnalysisReportRepository())
-    return HttpApiApp(service=service)
+    return HttpApiApp(service=service, price_providers={"sina": FakePriceProvider()})
 
 
 def decode(response):
@@ -65,6 +77,21 @@ def test_http_backtest_report() -> None:
         "POST",
         f"/reports/{payload['task_id']}/backtest",
         json.dumps({"prices": [{"date": "2026-07-01", "close": 100.0}, {"date": "2026-07-03", "close": 116.0}]}).encode("utf-8"),
+    )
+
+    assert backtest_response.status == 200
+    assert decode(backtest_response)["exit_reason"] == "take_profit"
+
+
+def test_http_backtest_report_with_sina_source() -> None:
+    app = build_app()
+    response = app.handle("POST", "/analysis", json.dumps({"symbol": "贵州茅台", "message": "请全面分析"}).encode("utf-8"))
+    payload = decode(response)
+
+    backtest_response = app.handle(
+        "POST",
+        f"/reports/{payload['task_id']}/backtest",
+        json.dumps({"source": "sina", "limit": 2}).encode("utf-8"),
     )
 
     assert backtest_response.status == 200

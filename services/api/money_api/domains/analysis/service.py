@@ -21,6 +21,7 @@ from money_api.domains.analysis.report_repository import (
     InMemoryAnalysisReportRepository,
 )
 from money_api.domains.analysis.risk_policy import DefaultRiskPolicy
+from money_api.domains.market_data.provider_results import ProviderResult
 from money_api.domains.market_data.resolver import StockResolver
 
 
@@ -77,3 +78,12 @@ class AnalysisService:
         if report is None:
             return None
         return self.backtest_engine.run(report, prices)
+
+    def backtest_report_from_provider(self, task_id: str, provider, limit: int = 60) -> BacktestResult | None:
+        report = self.get_report(task_id)
+        if report is None:
+            return None
+        result: ProviderResult = provider.get_price_series(report.stock, limit=limit)
+        if not result.ok:
+            raise ValueError(result.error_message or "price series provider failed")
+        return self.backtest_engine.run(report, list(result.data))

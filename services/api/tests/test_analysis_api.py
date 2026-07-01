@@ -3,6 +3,7 @@ from money_api.api.v1.router import (
     build_tencent_quote_analysis_service,
     build_tradingagents_analysis_service,
 )
+from money_api.domains.analysis.contracts import BacktestPricePoint
 from money_api.domains.analysis.tradingagents_engine import FakeTradingAgentsRunner
 from money_api.main import analyze_stock, backtest_analysis_report, get_analysis_report, health, list_analysis_reports
 
@@ -79,3 +80,22 @@ def test_backtest_analysis_report_returns_result() -> None:
 
     assert result["task_id"] == payload["task_id"]
     assert result["exit_reason"] == "take_profit"
+
+
+def test_backtest_analysis_report_accepts_price_provider() -> None:
+    class FakePriceProvider:
+        def get_price_series(self, stock, limit=60):
+            from money_api.domains.market_data.provider_results import ProviderResult
+
+            return ProviderResult(
+                kind="price_series",
+                source="fake",
+                ok=True,
+                data=[BacktestPricePoint(date="2026-07-01", close=100.0), BacktestPricePoint(date="2026-07-02", close=116.0)],
+            )
+
+    service = build_default_analysis_service()
+    payload = service.create_single_stock_analysis("贵州茅台", "请全面分析").to_dict()
+    result = service.backtest_report_from_provider(payload["task_id"], FakePriceProvider(), limit=2)
+
+    assert result.exit_reason == "take_profit"
