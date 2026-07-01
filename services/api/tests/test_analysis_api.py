@@ -139,10 +139,18 @@ def test_runtime_analysis_service_uses_tencent_quote_by_default(monkeypatch) -> 
         values[3] = "1688.00"
         return 'v_sh600519="' + "~".join(values) + '";'
 
-    service = build_runtime_analysis_service(transport=transport)
+    def news_transport(url: str) -> str:
+        return (
+            'callback({"result":{"cmsArticleWebOld":[{"title":"茅台业绩稳健","content":"季度表现稳定",'
+            '"date":"2026-07-01 09:30:00","mediaName":"东方财富","url":"https://example.com/news/1"}]}})'
+        )
+
+    service = build_runtime_analysis_service(transport=transport, news_transport=news_transport)
     payload = service.create_single_stock_analysis("贵州茅台", "请全面分析并给出投资建议").to_dict()
 
     assert payload["data_diagnostics"][0]["source"] == "tencent"
+    assert payload["data_diagnostics"][3]["source"] == "eastmoney"
+    assert payload["data_context"]["news"][0]["title"] == "茅台业绩稳健"
     assert payload["agent_views"][0]["agent"] == "Mock Research Engine"
 
 
