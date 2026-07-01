@@ -14,6 +14,7 @@ def test_analyze_stock_api_returns_serialized_report() -> None:
     assert payload["status"] == "report_ready"
     assert payload["summary"]
     assert payload["agent_views"]
+    assert payload["risk_controls"]["max_position_pct"] <= 0.1
 
     loaded = get_analysis_report(payload["task_id"])
     assert loaded == payload

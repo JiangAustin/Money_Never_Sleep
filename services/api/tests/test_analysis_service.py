@@ -30,6 +30,7 @@ def test_create_single_stock_analysis_returns_report() -> None:
     assert report.stock.code == "600519"
     assert report.status.value == "report_ready"
     assert report.summary
+    assert report.risk_controls is not None
     assert service.get_report(report.task_id) == report
 
 
@@ -43,6 +44,7 @@ def test_lightweight_question_uses_quick_summary() -> None:
     assert report.confidence.value == "medium"
     assert report.summary
     assert report.task_id.startswith("analysis-")
+    assert report.risk_controls is not None
     assert report.agent_views[0].agent == "Quick Agent"
     assert service.get_report(report.task_id) == report
 

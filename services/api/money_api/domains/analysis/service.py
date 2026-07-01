@@ -17,6 +17,7 @@ from money_api.domains.analysis.report_repository import (
     AnalysisReportRepository,
     InMemoryAnalysisReportRepository,
 )
+from money_api.domains.analysis.risk_policy import DefaultRiskPolicy
 from money_api.domains.market_data.resolver import StockResolver
 
 
@@ -28,12 +29,14 @@ class AnalysisService:
         quick_router: QuickAgentRouter,
         deep_engine: DeepResearchEngine,
         report_repository: AnalysisReportRepository | None = None,
+        risk_policy: DefaultRiskPolicy | None = None,
     ):
         self.resolver = resolver
         self.context_builder = context_builder
         self.quick_router = quick_router
         self.deep_engine = deep_engine
         self.report_repository = report_repository or InMemoryAnalysisReportRepository()
+        self.risk_policy = risk_policy or DefaultRiskPolicy()
 
     def create_single_stock_analysis(self, symbol: str, message: str) -> AnalysisReport:
         task_id = f"analysis-{uuid4().hex}"
@@ -54,6 +57,7 @@ class AnalysisService:
                 agent_views=[AgentView(agent="Quick Agent", conclusion="返回轻量分析摘要")],
                 data_context=context,
             )
+        report = self.risk_policy.apply(report)
         self.report_repository.save(report)
         return report
 
