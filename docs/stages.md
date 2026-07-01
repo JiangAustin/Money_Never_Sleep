@@ -35,6 +35,7 @@
 | 5. Web 工作台 | 已完成 | 提供用户可操作的单股分析入口和报告阅读体验 | 静态 Web 工作台、离线 mock 分析、最近报告、报告详情、数据诊断 | 用户可从 Web 发起 mock 分析并查看结构化报告 |
 | 5.5 HTTP API 层 | 已完成 | 为 Web 和桌面提供真实 JSON HTTP 边界 | HTTP dispatcher、标准库 server、Web API mode | 客户端可通过 HTTP 发起分析、读取报告和最近报告 |
 | 6. 桌面端与本地体验 | 已完成 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | Electron 桌面壳、macOS 构建入口、Web 工作台资源打包 | macOS `.app` 可构建并能承载 Web 工作台 |
+| 6.1 桌面托管本地 API | 已完成 | 让桌面端默认尝试拉起本地 API，并使用更接近可用产品的 runtime service | runtime service factory、Electron 托管 server、打包 API 源码资源 | 桌面无需手动设置 API URL 也可尝试进入真实 HTTP 模式 |
 | 7. 风控、回测与组合 | 已完成 | 从单股建议扩展到纪律、验证和组合层面 | 风控纪律契约、默认风控策略、报告风险控制计划 | 建议输出带仓位、止损、止盈和免责声明 |
 | 7.1 回测接口 | 已完成 | 用历史价格序列复盘报告和风控纪律 | 回测契约、确定性回测引擎、Python/HTTP API | 报告可输出收益、回撤、退出原因和持有天数 |
 | 7.2 真实 K 线回测数据源 | 已完成 | 用真实日线价格序列驱动回测接口 | Sina K 线 provider、provider 回测 API、opt-in 真实网络 smoke | 回测可由行情 provider 自动获取价格序列 |
@@ -43,14 +44,14 @@
 
 ## 当前阶段结论
 
-阶段 7.4 已完成。当前系统已具备带交易摩擦参数的回测入口：
+阶段 6.1 已完成。当前系统已具备更接近“开箱可用”的桌面启动链路：
 
-1. 阶段 7.1 已完成 `BacktestPricePoint`、`BacktestResult` 和 `SimpleBacktestEngine`。
-2. 阶段 7.2 新增 Sina 日线 K 线 provider，回测可通过 `source="sina"` 自动获取价格序列，并已补 opt-in 真实网络 smoke。
-3. 阶段 7.3 新增组合风险预算契约、预算器、Python API 和 HTTP API。
-4. 阶段 7.4 新增 `BacktestOptions`，支持 `cost_pct`、`slippage_pct` 和 `adjustment`。
-5. 回测结果现在同时输出净收益 `return_pct`、裸收益 `gross_return_pct`、成本影响 `cost_impact_pct` 和 options 回显。
-6. 真实复权价格转换、缓存、多 provider fallback、行业/相关性约束和 UI 组合页仍不属于当前切片。
+1. `run_http_server()` 默认装配 runtime service，而不是离线 mock-only service。
+2. runtime service 默认使用腾讯 quote + static fallback，并保留 `MONEY_DEEP_ENGINE=tradingagents` 的切换入口。
+3. 桌面端在未设置 `MNS_DESKTOP_API_URL` 时，会尝试拉起本地 Python API server，并等待 `/health` 后自动进入 `?api=` 模式。
+4. 打包后的桌面应用携带 `services/api` 源码资源，便于本机已有 Python 时直接托管本地 API。
+5. 若本地 server 启动失败，桌面仍会回退到离线工作台，不阻塞打开应用。
+6. Python runtime 仍不随桌面应用打包；真实 TradingAgents 依赖、签名和 DMG 仍不属于当前切片。
 
 离线验证命令：
 
@@ -58,7 +59,7 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`104 passed, 3 skipped`。
+离线结果：`106 passed, 3 skipped`。
 
 Sina K 线真实网络 smoke 结果：`1 passed`。
 
@@ -72,7 +73,7 @@ HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.
 
 ## 下一阶段建议
 
-建议下一步在两个方向中二选一：实现真实复权价格转换和缓存，或继续服务化方向的异步任务队列与状态轮询。
+建议下一步在两个方向中二选一：继续服务化方向的异步任务队列与状态轮询，或补真实 TradingAgents smoke 和启动诊断。
 
 ## 想法池
 

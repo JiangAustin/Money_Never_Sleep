@@ -29,7 +29,7 @@
 | MNS-BL-001 | 已完成 | P0 | Web 接真实 HTTP API | 阶段 5 选择零依赖静态工作台，避免同时引入 HTTP 服务和前端联调 | 用户可从浏览器真实发起分析、读取历史报告 | 已在阶段 5.5 完成 dependency-free HTTP dispatcher、server 入口、基础 CORS/OPTIONS 和 Web `?api=` 模式；验证：`68 passed, 2 skipped` | 阶段 5.5、`apps/web/`、`services/api/money_api/api/http.py` |
 | MNS-BL-002 | 已完成 | P0 | 桌面端技术选型与 macOS 构建入口 | `apps/desktop` 仍是预留目录，没有 Electron/Tauri/Wails 配置 | 满足本地桌面体验和用户偏好的每阶段 macOS 构建验证 | 已在阶段 6 完成 Electron 桌面壳和 macOS `.app` 构建入口；验证：`72 passed, 2 skipped`，`npm audit --audit-level=high` 无漏洞，产物 `apps/desktop/dist/mac-arm64/Money Never Sleep.app` | 阶段 6、`apps/desktop/` |
 | MNS-BL-015 | 待设计 | P1 | 桌面应用签名、公证、DMG 和图标 | 阶段 6 第一版只构建 `.app` 目录，避免引入证书、公证和安装包复杂度 | 提供更接近真实分发的 macOS 体验 | 准备图标和 Apple Developer 证书后，设计签名/公证/DMG 流程 | 阶段 6、`apps/desktop/` |
-| MNS-BL-016 | 待设计 | P1 | 桌面内嵌或托管 Python API server | 阶段 6 默认不管理 Python 子进程，避免进程生命周期复杂度 | 桌面应用可独立发起真实分析，不要求用户手动启动后端 | 设计本地 server 启动、健康检查、端口分配和退出清理 | 阶段 6、HTTP API |
+| MNS-BL-016 | 已完成 | P1 | 桌面内嵌或托管 Python API server | 阶段 6 默认不管理 Python 子进程，避免进程生命周期复杂度 | 桌面应用可独立发起真实分析，不要求用户手动启动后端 | 已在阶段 6.1 完成桌面托管 server、health 检查、退出清理和 API 源码打包；仍依赖本机 Python runtime | 阶段 6.1、HTTP API |
 | MNS-BL-013 | 待设计 | P1 | FastAPI/OpenAPI 升级 | 阶段 5.5 为避免新增依赖，先使用标准库 HTTP dispatcher | 获得 OpenAPI、自动文档、中间件和更成熟的服务化能力 | 在桌面壳或 Web 真联调稳定后，评估将 dispatcher 外层替换为 FastAPI | 阶段 5.5、`services/api/money_api/api/http.py` |
 | MNS-BL-014 | 待设计 | P1 | 异步任务队列与状态轮询 | 阶段 5.5 只做同步 HTTP 调用，避免一次性引入队列和 worker | 长耗时 TradingAgents 分析可被 Web/桌面稳定轮询和恢复 | 设计 task repository、worker、`GET /tasks/{id}` 和超时/取消语义 | 阶段 5.5/6、`AnalysisStatus` |
 | MNS-BL-003 | 待实现 | P1 | 真实 TradingAgents smoke | 阶段 3 只提供 opt-in smoke，默认测试不能依赖 LLM/API key | 验证真实多 Agent 投研链路可被 Money_Never_sleep 调起 | 准备本地密钥和可控样例，运行 `MNS_RUN_TRADINGAGENTS_SMOKE=1 ...test_tradingagents_smoke.py`，记录结果 | 阶段 3、`services/api/tests/test_tradingagents_smoke.py` |
@@ -83,7 +83,7 @@
 ### 阶段 6：桌面端与本地体验
 
 - 已选择 Electron 并补齐 macOS `.app` 构建入口。
-- 未签名、公证、打 DMG、设置图标或内嵌 Python API server。
+- 已支持桌面托管本地 Python API server，但仍未签名、公证、打 DMG、设置图标，也未随应用打包 Python runtime。
 
 ### 阶段 7：风控、回测与组合
 

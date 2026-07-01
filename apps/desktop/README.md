@@ -2,7 +2,7 @@
 
 Desktop client shell for Money_Never_sleep.
 
-当前第一版选择 Electron：直接承载 `apps/web/index.html`，并通过 `extraResources` 在打包后携带 Web 工作台静态资源。
+当前第一版选择 Electron：直接承载 `apps/web/index.html`，并通过 `extraResources` 在打包后携带 Web 工作台静态资源和 `services/api` 源码资源。
 
 ## 命令
 
@@ -20,6 +20,8 @@ cd apps/desktop
 npm start
 ```
 
+默认行为：若未设置 `MNS_DESKTOP_API_URL`，桌面端会尝试自动拉起本地 Python API server，并在健康检查成功后以 `?api=` 模式加载 Web 工作台。
+
 构建 macOS `.app`：
 
 ```bash
@@ -31,7 +33,7 @@ npm run build:mac
 
 ## HTTP API 模式
 
-默认桌面壳打开离线 Web 工作台。如需连接本地 HTTP API：
+如需连接外部或手动启动的本地 HTTP API：
 
 ```bash
 MNS_DESKTOP_API_URL=http://127.0.0.1:8000 npm start
@@ -39,9 +41,26 @@ MNS_DESKTOP_API_URL=http://127.0.0.1:8000 npm start
 
 打包后的应用同样读取 `MNS_DESKTOP_API_URL`，并把它传给 Web 工作台的 `?api=` 模式。
 
+如需指定桌面托管 server 使用的 Python：
+
+```bash
+MNS_DESKTOP_PYTHON_BIN=/path/to/python3 npm start
+```
+
+桌面托管 server 默认使用：
+
+- `MONEY_MARKET_DATA_MODE=tencent`
+- `MONEY_DEEP_ENGINE=mock`
+
+如需尝试真实 TradingAgents，可显式设置：
+
+```bash
+MONEY_DEEP_ENGINE=tradingagents npm start
+```
+
 ## 当前边界
 
-- 不内嵌 Python API server。
+- 桌面会托管本地 Python API server，但仍依赖本机已有 Python；当前不随应用打包 Python runtime。
 - 不做签名、公证、DMG、自动更新。
 - 未设置自定义应用图标。
 - Electron 依赖已通过 `npm audit --audit-level=high` 检查。

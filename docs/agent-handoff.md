@@ -255,6 +255,31 @@ HTTP 入口：`POST /reports/{task_id}/backtest` 的 body 可传 `{ "options": {
 
 未做事项：真实前复权/后复权价格转换、券商费率表、印花税细分、最小佣金、成交量约束。
 
+### 阶段 6.1：桌面托管本地 API 与 runtime service
+
+做了什么：让 `run_http_server()` 默认使用 runtime service，并让 Electron 在没有 `MNS_DESKTOP_API_URL` 时自动尝试拉起本地 Python API server。
+
+为什么这么做：之前桌面默认只打开离线工作台，而且即使手动起 HTTP server，默认 service 仍是离线 mock-only 装配，不足以形成“可直接使用”的本地链路。
+
+收益：桌面端在本机已有 Python 时可以默认进入真实 HTTP API 模式；runtime service 默认会走腾讯 quote + mock 深度分析，明显比纯离线 mock 更接近可用产品。
+
+关键文件：
+
+- `services/api/money_api/api/v1/router.py`
+- `services/api/money_api/api/http.py`
+- `apps/desktop/src/main.js`
+- `apps/desktop/package.json`
+- `services/api/tests/test_desktop_shell.py`
+
+环境变量：
+
+- `MNS_DESKTOP_API_URL`：显式指定外部 API URL 时，桌面不再托管本地 server。
+- `MNS_DESKTOP_PYTHON_BIN`：显式指定桌面托管 server 使用的 Python。
+- `MONEY_MARKET_DATA_MODE`：默认 `tencent`。
+- `MONEY_DEEP_ENGINE`：默认 `mock`，可切到 `tradingagents`。
+
+未做事项：随应用打包 Python runtime、server 启动失败的前端可视化诊断、签名、公证、DMG、自动更新。
+
 ## 当前验证命令
 
 后端和 Web 结构默认验证：
@@ -312,18 +337,18 @@ MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_
 ## 当前已知限制
 
 - Web 工作台默认仍是离线 mock；真实 HTTP API 需要通过 `?api=` 显式启用。
-- `apps/desktop` 已有 Electron 第一版壳和 macOS `.app` 构建入口，但尚未签名、公证、打 DMG、设置图标或内嵌 Python API server。
+- `apps/desktop` 已有 Electron 第一版壳、macOS `.app` 构建入口和托管本地 API server；但尚未签名、公证、打 DMG、设置图标，也未随应用打包 Python runtime。
 - 默认深度引擎仍是 mock；真实 TradingAgents 需要显式工厂和 opt-in smoke。
 - 数据层真实 provider 覆盖腾讯 quote 最小路径和 Sina 日线 K 线回测价格序列。
 - 报告 repository 使用 JSON 文件，适合第一版，不适合复杂查询和并发写入。
 - 没有任务队列，真实深度分析的长耗时执行还没有状态轮询。
-- 风控纪律层已完成第一版，但尚未接回测和组合风险预算。
+- 风控纪律、回测和组合预算已完成第一版，但尚未接真实交易执行或真实持仓同步。
 - 回测接口已接入 Sina 日线 K 线 provider，并支持成本、滑点和复权标记；尚未做真实复权价格转换、缓存和多 provider fallback。
 - 组合风险预算已完成第一版，但尚未接真实持仓、行业/主题/相关性约束和 Web/Desktop 组合视图。
 
 ## 推荐下一步
 
-建议继续阶段 7 后续切片：真实复权价格转换、回测缓存、多 provider fallback，或组合预算的行业/相关性约束；如果更偏服务化，可以先做异步任务队列和状态轮询。
+建议继续阶段 7 后续切片：真实复权价格转换、回测缓存、多 provider fallback，或组合预算的行业/相关性约束；如果更偏服务化和产品化，可以先做异步任务队列、状态轮询和桌面启动诊断。
 
 推荐第一版路径：
 
