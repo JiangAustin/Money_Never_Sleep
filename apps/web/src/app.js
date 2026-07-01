@@ -68,6 +68,14 @@ function createLocalAnalysis(symbol, message) {
     data_diagnostics: [
       { kind: "web_workbench", source: "local-mock", ok: true, error_type: null, error_message: null, fetched_at: createdAt, is_stale: false },
     ],
+    risk_controls: {
+      max_position_pct: 0.1,
+      stop_loss_pct: 0.08,
+      take_profit_pct: 0.15,
+      time_horizon: "5-20 个交易日",
+      rules: [{ name: "confidence", level: "medium", message: "Web 本地报告默认使用中等置信度风控纪律" }],
+      disclaimer: "本报告仅用于研究和复盘，不构成投资建议；任何交易决策需由用户自行承担风险。",
+    },
     data_context: {
       stock,
       quote: { price: null, source: "local-mock" },
