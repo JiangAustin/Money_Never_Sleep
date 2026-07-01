@@ -340,6 +340,28 @@ HTTP 入口：
 
 未做事项：真正的恢复执行、取消、重试、超时回收和并发限流。
 
+### 阶段 5.8：任务取消与重试
+
+做了什么：新增 `cancelled` 状态、`POST /tasks/{id}/cancel` 和 `POST /tasks/{id}/retry`，让失败或已取消任务可以基于原参数创建新任务。
+
+为什么这么做：阶段 5.7 虽然让任务可持久化和恢复，但用户仍然无法控制任务生命周期，也无法方便地重新发起失败任务。
+
+收益：真实深度分析链路终于有了最小控制面；服务端可以取消非终态任务，并对失败/取消任务创建重试任务。
+
+关键文件：
+
+- `services/api/money_api/domains/analysis/contracts.py`
+- `services/api/money_api/domains/analysis/task_queue.py`
+- `services/api/money_api/api/http.py`
+- `services/api/tests/test_task_queue.py`
+
+HTTP 入口：
+
+- `POST /tasks/{task_id}/cancel`
+- `POST /tasks/{task_id}/retry`
+
+未做事项：真正的线程/外部请求中断、超时回收、自动重试、前端 cancel/retry 按钮。
+
 ## 当前验证命令
 
 后端和 Web 结构默认验证：
@@ -401,14 +423,14 @@ MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_
 - 默认深度引擎仍是 mock；真实 TradingAgents 需要显式工厂和 opt-in smoke。
 - 数据层真实 provider 覆盖腾讯 quote 最小路径和 Sina 日线 K 线回测价格序列。
 - 报告 repository 使用 JSON 文件，适合第一版，不适合复杂查询和并发写入。
-- 已有第一版任务持久化、状态轮询和中断恢复标记，但还没有真正的恢复执行、取消、重试和超时回收语义。
+- 已有第一版任务持久化、状态轮询、中断恢复标记和 cancel/retry 控制，但还没有真正的恢复执行、强制中断和超时回收语义。
 - 风控纪律、回测和组合预算已完成第一版，但尚未接真实交易执行或真实持仓同步。
 - 回测接口已接入 Sina 日线 K 线 provider，并支持成本、滑点和复权标记；尚未做真实复权价格转换、缓存和多 provider fallback。
 - 组合风险预算已完成第一版，但尚未接真实持仓、行业/主题/相关性约束和 Web/Desktop 组合视图。
 
 ## 推荐下一步
 
-建议继续阶段 7 后续切片：真实复权价格转换、回测缓存、多 provider fallback，或组合预算的行业/相关性约束；如果更偏服务化和产品化，可以先补任务取消/重试/超时恢复语义、真实 TradingAgents smoke 和更详细的桌面日志控制。
+建议继续阶段 7 后续切片：真实复权价格转换、回测缓存、多 provider fallback，或组合预算的行业/相关性约束；如果更偏服务化和产品化，可以先补任务超时回收/自动重试语义、真实 TradingAgents smoke 和更详细的桌面日志控制。
 
 推荐第一版路径：
 

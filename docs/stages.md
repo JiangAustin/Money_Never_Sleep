@@ -36,6 +36,7 @@
 | 5.5 HTTP API 层 | 已完成 | 为 Web 和桌面提供真实 JSON HTTP 边界 | HTTP dispatcher、标准库 server、Web API mode | 客户端可通过 HTTP 发起分析、读取报告和最近报告 |
 | 5.6 HTTP 任务队列与状态轮询 | 已完成 | 让 Web/桌面在真实 API 模式下可异步发起分析并轮询状态 | in-memory task queue、`POST /tasks/analysis`、`GET /tasks/{id}`、Web 轮询 | 真实 API 模式下分析请求不再依赖长同步阻塞 |
 | 5.7 任务持久化与恢复 | 已完成 | 让任务在服务重启后仍可查询，并标记中断任务 | JSON task repository、`GET /tasks`、恢复中断任务为 failed | 重启后仍可查看近期任务，并知道哪些任务被中断 |
+| 5.8 任务取消与重试 | 已完成 | 让任务具备最小控制面，而不必等待服务端完全重构 | `POST /tasks/{id}/cancel`、`POST /tasks/{id}/retry`、cancelled 状态 | 服务端可取消非终态任务，并基于失败/取消任务重试 |
 | 6. 桌面端与本地体验 | 已完成 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | Electron 桌面壳、macOS 构建入口、Web 工作台资源打包 | macOS `.app` 可构建并能承载 Web 工作台 |
 | 6.1 桌面托管本地 API | 已完成 | 让桌面端默认尝试拉起本地 API，并使用更接近可用产品的 runtime service | runtime service factory、Electron 托管 server、打包 API 源码资源 | 桌面无需手动设置 API URL 也可尝试进入真实 HTTP 模式 |
 | 6.2 桌面启动诊断 | 已完成 | 让用户看到桌面当前运行模式和回退原因 | startup 上下文注入、mode pill、诊断面板启动区块 | 桌面能显示托管 API / 外部 API / 离线模式和最近错误 |
@@ -47,14 +48,14 @@
 
 ## 当前阶段结论
 
-阶段 5.7 已完成。当前系统已具备带任务持久化的异步 HTTP 分析闭环：
+阶段 5.8 已完成。当前系统已具备带最小控制面的异步 HTTP 分析闭环：
 
 1. `POST /tasks/analysis` 可创建分析任务，`GET /tasks/{id}` 和 `GET /tasks?limit=` 可查询任务。
-2. 任务默认持久化到 JSON 文件目录 `data/cache/tasks`。
-3. HTTP 服务启动时会恢复历史任务，并把上次中断的运行中任务标记为 `failed`。
+2. 任务默认持久化到 JSON 文件目录 `data/cache/tasks`，服务重启时会把上次中断的运行中任务标记为 `failed`。
+3. `POST /tasks/{id}/cancel` 可取消非终态任务；`POST /tasks/{id}/retry` 可基于失败或已取消任务创建重试任务。
 4. Web/桌面在连接 HTTP API 时，前端优先走任务模式，而不是直接等待同步 `POST /analysis` 长阻塞。
 5. 任务完成后，前端会自动拉最终报告；失败时会回退到离线 mock 并附带任务错误诊断。
-6. 现有同步 `POST /analysis` 仍然保留；真正的取消、重试、超时恢复和并发限流仍不属于当前切片。
+6. 取消不是底层线程/外部引擎的强制中断；真正的超时回收、自动重试和并发限流仍不属于当前切片。
 
 离线验证命令：
 
@@ -62,7 +63,7 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`115 passed, 3 skipped`。
+离线结果：`119 passed, 3 skipped`。
 
 Sina K 线真实网络 smoke 结果：`1 passed`。
 
@@ -76,7 +77,7 @@ HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.
 
 ## 下一阶段建议
 
-建议下一步在两个方向中二选一：补真实 TradingAgents smoke 与任务取消/重试/超时恢复语义，或继续回测与数据层的真实化增强。
+建议下一步在两个方向中二选一：补真实 TradingAgents smoke 与任务超时回收/自动重试语义，或继续回测与数据层的真实化增强。
 
 ## 想法池
 

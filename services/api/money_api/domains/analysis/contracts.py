@@ -15,6 +15,7 @@ class AnalysisStatus(str, Enum):
     RISK_REVIEW = "risk_review"
     REPORT_READY = "report_ready"
     FAILED = "failed"
+    CANCELLED = "cancelled"
 
 
 class DecisionAction(str, Enum):

@@ -46,6 +46,7 @@
 | MNS-BL-023 | 已完成 | P1 | 桌面启动诊断 | 阶段 6.1 虽已托管本地 API，但失败回退对用户不可见 | 让用户知道当前是托管 API、外部 API 还是离线模式，并看到最近错误 | 已在阶段 6.2 完成 startup 上下文注入、mode pill 和诊断面板启动区块；验证：`107 passed, 3 skipped` | 阶段 6.2、`apps/desktop/src/main.js`、`apps/web/src/app.js` |
 | MNS-BL-024 | 已完成 | P1 | HTTP 分析任务队列 | 阶段 5.5 只有同步 `POST /analysis`，真实深度分析会变成长请求 | 让 Web/桌面可以稳定轮询长任务并在完成后拉报告 | 已在阶段 5.6 完成任务创建、状态轮询和 Web 接入；验证：`110 passed, 3 skipped` | 阶段 5.6、`services/api/money_api/api/http.py`、`apps/web/src/app.js` |
 | MNS-BL-025 | 已完成 | P1 | 任务历史查询与重启恢复 | 阶段 5.6 任务全在内存中，服务重启后任务上下文会丢失 | 让近期任务可查询，并让中断任务有明确失败状态 | 已在阶段 5.7 完成 JSON task repository、`GET /tasks` 和中断任务恢复标记；验证：`115 passed, 3 skipped` | 阶段 5.7、`services/api/money_api/domains/analysis/task_queue.py` |
+| MNS-BL-026 | 已完成 | P1 | 任务取消与重试控制 | 阶段 5.7 任务可查询但不可控，用户无法取消长任务或基于失败任务重跑 | 为真实深度分析链路提供最小控制面 | 已在阶段 5.8 完成 cancel/retry 端点和 cancelled 状态；验证：`119 passed, 3 skipped` | 阶段 5.8、`services/api/money_api/domains/analysis/task_queue.py` |
 | MNS-BL-021 | 已完成 | P2 | 交易成本、滑点和复权参数 | 阶段 7.1 为保持 deterministic 最小闭环，不做成本和复权 | 提高回测结果可信度，避免过度乐观 | 已在阶段 7.4 完成 `BacktestOptions`、净收益/裸收益/成本影响和 Python/HTTP API 参数；真实复权价格转换仍是后续项 | 阶段 7.4 |
 | MNS-BL-019 | 已完成 | P1 | 组合风险预算 | 当前系统仍是单股分析，没有组合层持仓和风险预算 | 支持多标的仓位约束、集中度控制和组合视图 | 已在阶段 7.3 完成组合预算契约、预算器、Python API 和 HTTP API；验证：`100 passed, 3 skipped` | 阶段 7.3 |
 | MNS-BL-010 | 待设计 | P2 | Web 图表和行情可视化 | 阶段 5 静态工作台不做 K 线或图表 | 改善报告阅读和行情理解效率 | 先接真实 API，再选择轻量图表方案 | 阶段 5 后续 |
@@ -80,7 +81,7 @@
 ### 阶段 5：Web 工作台
 
 - Web 是零依赖静态版本，默认使用离线 mock 数据。
-- 阶段 5.7 已支持 `?api=` HTTP 任务模式和任务持久化，但未提供取消、重试、更丰富的任务历史 UI 和恢复执行。
+- 阶段 5.8 已支持 `?api=` HTTP 任务模式、任务持久化和服务端 cancel/retry，但未提供对应前端按钮、更丰富的任务历史 UI 和恢复执行。
 - 未引入前端框架、路由、状态管理、图表或自动化浏览器截图验证。
 
 ### 阶段 6：桌面端与本地体验

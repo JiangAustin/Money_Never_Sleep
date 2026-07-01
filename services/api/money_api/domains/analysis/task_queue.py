@@ -24,6 +24,7 @@ class AnalysisTaskRecord:
     updated_at: str
     report_id: str | None = None
     error: str | None = None
+    retry_of: str | None = None
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -35,6 +36,7 @@ class AnalysisTaskRecord:
             "updated_at": self.updated_at,
             "report_id": self.report_id,
             "error": self.error,
+            "retry_of": self.retry_of,
         }
 
     @classmethod
@@ -48,6 +50,7 @@ class AnalysisTaskRecord:
             updated_at=str(payload.get("updated_at", "")),
             report_id=str(payload.get("report_id")) if payload.get("report_id") is not None else None,
             error=str(payload.get("error")) if payload.get("error") is not None else None,
+            retry_of=str(payload.get("retry_of")) if payload.get("retry_of") is not None else None,
         )
 
 
@@ -173,6 +176,26 @@ class InMemoryAnalysisTaskQueue:
             self._records[record.task_id] = record
 
     def create_analysis_task(self, symbol: str, message: str) -> AnalysisTaskRecord:
+        return self._create_task_record(symbol=symbol, message=message)
+
+    def cancel_task(self, task_id: str) -> AnalysisTaskRecord | None:
+        task = self.get_task(task_id)
+        if task is None:
+            return None
+        if task.status in {AnalysisStatus.REPORT_READY.value, AnalysisStatus.FAILED.value, AnalysisStatus.CANCELLED.value}:
+            return task
+        self._update(task_id, status=AnalysisStatus.CANCELLED.value, error="cancelled by user")
+        return self.get_task(task_id)
+
+    def retry_task(self, task_id: str) -> AnalysisTaskRecord | None:
+        task = self.get_task(task_id)
+        if task is None:
+            return None
+        if task.status not in {AnalysisStatus.FAILED.value, AnalysisStatus.CANCELLED.value}:
+            return None
+        return self._create_task_record(symbol=task.symbol, message=task.message, retry_of=task.task_id)
+
+    def _create_task_record(self, symbol: str, message: str, retry_of: str | None = None) -> AnalysisTaskRecord:
         now = datetime.now(timezone.utc).isoformat()
         task_id = f"task-{uuid4().hex}"
         record = AnalysisTaskRecord(
@@ -182,6 +205,7 @@ class InMemoryAnalysisTaskQueue:
             status=AnalysisStatus.QUEUED.value,
             created_at=now,
             updated_at=now,
+            retry_of=retry_of,
         )
         with self._lock:
             self._records[task_id] = record
@@ -211,15 +235,23 @@ class InMemoryAnalysisTaskQueue:
         record = self.get_task(task_id)
         if record is None:
             return
+        if record.status == AnalysisStatus.CANCELLED.value:
+            return
         next_status = (
             AnalysisStatus.DEEP_ANALYSIS.value
             if self.service.quick_router.needs_deep_analysis(record.message)
             else AnalysisStatus.QUICK_SCREENING.value
         )
         self._update(task_id, status=next_status)
+        if (current := self.get_task(task_id)) is not None and current.status == AnalysisStatus.CANCELLED.value:
+            return
         try:
             report = self.service.create_single_stock_analysis(record.symbol, record.message)
         except Exception as exc:
+            if (current := self.get_task(task_id)) is not None and current.status == AnalysisStatus.CANCELLED.value:
+                return
             self._update(task_id, status=AnalysisStatus.FAILED.value, error=str(exc))
+            return
+        if (current := self.get_task(task_id)) is not None and current.status == AnalysisStatus.CANCELLED.value:
             return
         self._update(task_id, status=AnalysisStatus.REPORT_READY.value, report_id=report.task_id)

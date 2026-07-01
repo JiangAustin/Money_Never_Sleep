@@ -2,9 +2,9 @@ import json
 
 from money_api.api.http import HttpApiApp
 from money_api.api.v1.router import build_default_analysis_service
-from money_api.domains.analysis.contracts import BacktestPricePoint
+from money_api.domains.analysis.contracts import AnalysisStatus, BacktestPricePoint
 from money_api.domains.analysis.report_repository import InMemoryAnalysisReportRepository
-from money_api.domains.analysis.task_queue import InMemoryAnalysisTaskQueue, InMemoryAnalysisTaskRepository
+from money_api.domains.analysis.task_queue import AnalysisTaskRecord, InMemoryAnalysisTaskQueue, InMemoryAnalysisTaskRepository
 from money_api.domains.market_data.provider_results import ProviderResult
 from money_api.main import run_http_server
 
@@ -116,6 +116,49 @@ def test_http_returns_404_for_missing_task() -> None:
     response = build_app().handle("GET", "/tasks/missing", b"")
 
     assert response.status == 404
+
+
+def test_http_can_cancel_task() -> None:
+    service = build_default_analysis_service(report_repository=InMemoryAnalysisReportRepository())
+    repository = InMemoryAnalysisTaskRepository()
+    app = HttpApiApp(
+        service=service,
+        price_providers={"sina": FakePriceProvider()},
+        task_queue=InMemoryAnalysisTaskQueue(service=service, repository=repository, executor=lambda operation: None),
+    )
+    task = decode(app.handle("POST", "/tasks/analysis", json.dumps({"symbol": "贵州茅台", "message": "请全面分析"}).encode("utf-8")))
+
+    response = app.handle("POST", f"/tasks/{task['task_id']}/cancel", b"")
+
+    assert response.status == 200
+    assert decode(response)["status"] == "cancelled"
+
+
+def test_http_can_retry_failed_task() -> None:
+    service = build_default_analysis_service(report_repository=InMemoryAnalysisReportRepository())
+    repository = InMemoryAnalysisTaskRepository()
+    failed = AnalysisTaskRecord(
+        task_id="task-failed",
+        symbol="600519",
+        message="请全面分析",
+        status=AnalysisStatus.FAILED.value,
+        created_at="2026-07-01T00:00:00+00:00",
+        updated_at="2026-07-01T00:00:00+00:00",
+        error="boom",
+    )
+    repository.save(failed)
+    app = HttpApiApp(
+        service=service,
+        price_providers={"sina": FakePriceProvider()},
+        task_queue=InMemoryAnalysisTaskQueue(service=service, repository=repository, executor=lambda operation: operation()),
+    )
+
+    response = app.handle("POST", "/tasks/task-failed/retry", b"")
+
+    assert response.status == 202
+    payload = decode(response)
+    assert payload["task_id"] != "task-failed"
+    assert payload["symbol"] == "600519"
 
 
 def test_http_backtest_report() -> None:

@@ -44,6 +44,18 @@ class HttpApiApp:
         if method == "GET" and path == "/tasks":
             limit = self._parse_limit(query.get("limit", ["20"])[0])
             return self._json(200, [record.to_dict() for record in self.task_queue.repository.list_recent(limit=limit)])
+        if method == "POST" and path.startswith("/tasks/") and path.endswith("/cancel"):
+            task_id = path.removeprefix("/tasks/").removesuffix("/cancel")
+            task = self.task_queue.cancel_task(task_id)
+            if task is None:
+                return self._json(404, {"error": "task not found"})
+            return self._json(200, task.to_dict())
+        if method == "POST" and path.startswith("/tasks/") and path.endswith("/retry"):
+            task_id = path.removeprefix("/tasks/").removesuffix("/retry")
+            task = self.task_queue.retry_task(task_id)
+            if task is None:
+                return self._json(404, {"error": "task not found or cannot retry"})
+            return self._json(202, task.to_dict())
         if method == "GET" and path == "/reports":
             limit = self._parse_limit(query.get("limit", ["20"])[0])
             return self._json(200, [record.to_dict() for record in self.service.list_reports(limit=limit)])

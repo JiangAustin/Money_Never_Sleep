@@ -32,7 +32,7 @@
 | 项目本地 skills | `.github/superpowers/` | `.github/copilot-instructions.md` |
 | API / 后端入口 | `services/api/money_api/main.py` | `services/api/money_api/api/v1/router.py` |
 | HTTP API 边界 | `services/api/money_api/api/http.py` | `services/api/tests/test_http_api.py` |
-| HTTP 任务队列与持久化 | `services/api/money_api/domains/analysis/task_queue.py` | `services/api/tests/test_http_api.py`、`services/api/tests/test_task_queue.py` |
+| HTTP 任务队列、持久化与控制 | `services/api/money_api/domains/analysis/task_queue.py` | `services/api/tests/test_http_api.py`、`services/api/tests/test_task_queue.py` |
 | runtime service 装配 | `services/api/money_api/api/v1/router.py` | `services/api/tests/test_analysis_api.py` |
 | 分析领域契约 | `services/api/money_api/domains/analysis/contracts.py` | `services/api/tests/test_analysis_contracts.py` |
 | 风控纪律层 | `services/api/money_api/domains/analysis/risk_policy.py` | `services/api/tests/test_risk_policy.py` |
