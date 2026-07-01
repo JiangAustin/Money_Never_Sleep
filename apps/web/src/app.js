@@ -306,10 +306,13 @@ function renderTaskHistory() {
 
   state.tasks.forEach((task) => {
     const item = createElement("article", "report-item");
+    const retryMeta = task.next_retry_at
+      ? `下次重试 ${task.next_retry_at}${task.next_retry_policy ? ` / 策略 ${task.next_retry_policy}` : ""}${Number.isInteger(task.next_retry_delay_s) ? ` / 延迟 ${task.next_retry_delay_s}s` : ""}`
+      : task.error || task.message || "任务已创建";
     item.append(
       createElement("span", "report-title", `${task.symbol} / ${task.status}`),
       createElement("span", "report-meta", task.task_id),
-      createElement("span", "report-summary", task.error || task.message || "任务已创建")
+      createElement("span", "report-summary", retryMeta)
     );
     elements.taskHistoryList.append(item);
   });

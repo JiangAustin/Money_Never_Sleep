@@ -29,6 +29,8 @@ class AnalysisTaskRecord:
     retry_count: int = 0
     max_retries: int = 0
     next_retry_at: str | None = None
+    next_retry_delay_s: int | None = None
+    next_retry_policy: str | None = None
     report_id: str | None = None
     error: str | None = None
     retry_of: str | None = None
@@ -46,6 +48,8 @@ class AnalysisTaskRecord:
             "retry_count": self.retry_count,
             "max_retries": self.max_retries,
             "next_retry_at": self.next_retry_at,
+            "next_retry_delay_s": self.next_retry_delay_s,
+            "next_retry_policy": self.next_retry_policy,
             "report_id": self.report_id,
             "error": self.error,
             "retry_of": self.retry_of,
@@ -65,6 +69,8 @@ class AnalysisTaskRecord:
             retry_count=int(payload.get("retry_count", 0)),
             max_retries=int(payload.get("max_retries", 0)),
             next_retry_at=str(payload.get("next_retry_at")) if payload.get("next_retry_at") is not None else None,
+            next_retry_delay_s=int(payload.get("next_retry_delay_s")) if payload.get("next_retry_delay_s") is not None else None,
+            next_retry_policy=str(payload.get("next_retry_policy")) if payload.get("next_retry_policy") is not None else None,
             report_id=str(payload.get("report_id")) if payload.get("report_id") is not None else None,
             error=str(payload.get("error")) if payload.get("error") is not None else None,
             retry_of=str(payload.get("retry_of")) if payload.get("retry_of") is not None else None,
@@ -270,6 +276,7 @@ class InMemoryAnalysisTaskQueue:
 
     def get_task(self, task_id: str) -> AnalysisTaskRecord | None:
         self._expire_task_if_needed(task_id)
+        self._maybe_retry(task_id)
         with self._lock:
             return self._records.get(task_id)
 
@@ -335,7 +342,8 @@ class InMemoryAnalysisTaskQueue:
         self.repository.save(updated)
 
     def _maybe_retry(self, task_id: str) -> None:
-        task = self.get_task(task_id)
+        with self._lock:
+            task = self._records.get(task_id)
         if task is None:
             return
         if task.status != AnalysisStatus.FAILED.value:
@@ -345,8 +353,13 @@ class InMemoryAnalysisTaskQueue:
         if self._has_retry_child(task.task_id):
             return
         if task.next_retry_at is None:
-            delay_s = self._compute_retry_delay_s(task.retry_count, task.error)
-            self._update(task_id, next_retry_at=(datetime.fromisoformat(self._now()) + timedelta(seconds=delay_s)).isoformat())
+            delay_s, policy = self._compute_retry_delay_s(task.retry_count, task.error)
+            self._update(
+                task_id,
+                next_retry_at=(datetime.fromisoformat(self._now()) + timedelta(seconds=delay_s)).isoformat(),
+                next_retry_delay_s=delay_s,
+                next_retry_policy=policy,
+            )
             return
         if datetime.fromisoformat(self._now()) < datetime.fromisoformat(task.next_retry_at):
             return
@@ -363,16 +376,18 @@ class InMemoryAnalysisTaskQueue:
         with self._lock:
             return any(record.retry_of == task_id for record in self._records.values())
 
-    def _compute_retry_delay_s(self, retry_count: int, error: str | None = None) -> int:
+    def _compute_retry_delay_s(self, retry_count: int, error: str | None = None) -> tuple[int, str]:
         delay = self.retry_backoff_base_s * (self.retry_backoff_factor ** retry_count)
         normalized_error = (error or "").lower()
+        policy = "generic"
         if "timeout" in normalized_error or "timed out" in normalized_error:
             delay *= self.retry_timeout_multiplier
+            policy = "timeout"
         delay = min(self.retry_backoff_max_s, delay)
         if self.retry_jitter_ratio > 0:
             jitter = int(delay * self.retry_jitter_ratio * self._retry_random())
             delay = min(self.retry_backoff_max_s, delay + jitter)
-        return max(1, delay)
+        return max(1, delay), policy
 
     def _run_task(self, task_id: str) -> None:
         record = self.get_task(task_id)

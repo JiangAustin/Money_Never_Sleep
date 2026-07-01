@@ -99,6 +99,8 @@ def test_app_js_exposes_http_service_boundary() -> None:
     assert 'fetch(`${apiBaseUrl}/tasks?limit=' in app_js
     assert 'fetch(`${apiBaseUrl}/tasks/' in app_js
     assert "createLocalAnalysis" in app_js
+    assert "next_retry_at" in app_js
+    assert "next_retry_policy" in app_js
 
 
 def test_app_js_exposes_startup_diagnostics_boundary() -> None:

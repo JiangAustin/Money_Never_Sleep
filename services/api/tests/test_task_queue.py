@@ -260,6 +260,8 @@ def test_task_queue_retry_delay_supports_timeout_multiplier_and_jitter() -> None
 
     assert task is not None
     assert task.next_retry_at == "2026-07-01T00:00:17+00:00"
+    assert task.next_retry_delay_s == 12
+    assert task.next_retry_policy == "timeout"
 
 
 def test_task_queue_start_watchdog_sweeps_timeouts() -> None:

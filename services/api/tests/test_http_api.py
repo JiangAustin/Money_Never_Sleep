@@ -149,6 +149,34 @@ def test_http_get_task_marks_timeout() -> None:
     assert payload["error"] == "task timed out after 1s"
 
 
+def test_http_task_exposes_retry_observability_fields() -> None:
+    service = build_default_analysis_service(report_repository=InMemoryAnalysisReportRepository())
+    repository = InMemoryAnalysisTaskRepository()
+    queue = InMemoryAnalysisTaskQueue(service=service, repository=repository, executor=lambda operation: None)
+    failed = AnalysisTaskRecord(
+        task_id="task-failed-timeout",
+        symbol="600519",
+        message="请全面分析",
+        status=AnalysisStatus.FAILED.value,
+        created_at="2026-07-01T00:00:00+00:00",
+        updated_at="2026-07-01T00:00:00+00:00",
+        retry_count=0,
+        max_retries=1,
+        error="task timed out after 1s",
+    )
+    repository.save(failed)
+    queue._records[failed.task_id] = failed
+    queue._now = lambda: "2026-07-01T00:00:05+00:00"  # type: ignore[attr-defined]
+    app = HttpApiApp(service=service, price_providers={"sina": FakePriceProvider()}, task_queue=queue)
+
+    response = app.handle("GET", "/tasks/task-failed-timeout", b"")
+
+    assert response.status == 200
+    payload = decode(response)
+    assert payload["next_retry_delay_s"] == 2
+    assert payload["next_retry_policy"] == "timeout"
+
+
 def test_http_task_returns_400_for_invalid_payload() -> None:
     response = build_app().handle("POST", "/tasks/analysis", b"{}")
 

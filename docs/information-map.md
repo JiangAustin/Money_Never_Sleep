@@ -32,7 +32,7 @@
 | 项目本地 skills | `.github/superpowers/` | `.github/copilot-instructions.md` |
 | API / 后端入口 | `services/api/money_api/main.py` | `services/api/money_api/api/v1/router.py` |
 | HTTP API 边界 | `services/api/money_api/api/http.py` | `services/api/tests/test_http_api.py` |
-| HTTP 任务队列、持久化、控制、超时、watchdog 与可配置退避重试调度 | `services/api/money_api/domains/analysis/task_queue.py` | `services/api/tests/test_http_api.py`、`services/api/tests/test_task_queue.py` |
+| HTTP 任务队列、持久化、控制、超时、watchdog、可配置退避重试调度与重试观测字段 | `services/api/money_api/domains/analysis/task_queue.py` | `services/api/tests/test_http_api.py`、`services/api/tests/test_task_queue.py` |
 | runtime service 装配 | `services/api/money_api/api/v1/router.py` | `services/api/tests/test_analysis_api.py` |
 | 分析领域契约 | `services/api/money_api/domains/analysis/contracts.py` | `services/api/tests/test_analysis_contracts.py` |
 | 风控纪律层 | `services/api/money_api/domains/analysis/risk_policy.py` | `services/api/tests/test_risk_policy.py` |
@@ -42,7 +42,7 @@
 | Sina K 线 provider | `services/api/money_api/domains/market_data/sina_kline.py` | `services/api/tests/test_sina_kline.py`、`services/api/tests/test_sina_kline_smoke.py` |
 | TradingAgents adapter | `services/api/money_api/domains/analysis/tradingagents_engine.py` | `services/api/money_api/integrations/tradingagents_runner.py`、`services/api/tests/test_tradingagents_smoke.py` |
 | 报告历史仓储 | `services/api/money_api/domains/analysis/report_repository.py` | `services/api/tests/test_report_repository.py` |
-| Web 工作台、启动模式、任务控制与任务历史 | `apps/web/index.html` | `apps/web/src/`、`services/api/tests/test_web_workbench.py` |
+| Web 工作台、启动模式、任务控制、任务历史与重试观测展示 | `apps/web/index.html` | `apps/web/src/`、`services/api/tests/test_web_workbench.py` |
 | 桌面端现状、托管 API 与启动诊断 | `apps/desktop/README.md` | `apps/desktop/package.json`、`apps/desktop/src/`、`services/api/tests/test_desktop_shell.py` |
 
 ## 做完之后写哪里
