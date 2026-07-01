@@ -11,6 +11,7 @@ class Settings:
     api_port: int = int(os.getenv("MONEY_API_PORT", "8000"))
     analysis_reports_dir: str = os.getenv("MONEY_REPORTS_DIR", "data/cache/reports")
     analysis_tasks_dir: str = os.getenv("MONEY_TASKS_DIR", "data/cache/tasks")
+    analysis_task_timeout_s: int = int(os.getenv("MONEY_TASK_TIMEOUT_S", "300"))
     tradingagents_astock_path: str = os.getenv("TRADINGAGENTS_ASTOCK_PATH", "../TradingAgents-astock")
     tradingagents_results_dir: str = os.getenv("TRADINGAGENTS_RESULTS_DIR", "data/cache/tradingagents/results")
     tradingagents_cache_dir: str = os.getenv("TRADINGAGENTS_CACHE_DIR", "data/cache/tradingagents/cache")

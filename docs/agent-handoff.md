@@ -362,6 +362,25 @@ HTTP 入口：
 
 未做事项：真正的线程/外部请求中断、超时回收、自动重试、前端 cancel/retry 按钮。
 
+### 阶段 5.9：任务超时回收
+
+做了什么：新增 `started_at`、`timeout_s` 和读取路径上的超时检查；超时中的任务会自动转为 `failed` 并写明超时秒数。
+
+为什么这么做：阶段 5.8 让任务可以取消和重试，但如果调用方既不取消也不重试，长时间卡住的任务仍会导致前端无限轮询。
+
+收益：即使没有人工干预，超时任务也会自动收敛成明确失败状态，前端可据此结束轮询并展示错误。
+
+关键文件：
+
+- `services/api/money_api/core/config.py`
+- `services/api/money_api/domains/analysis/task_queue.py`
+- `services/api/money_api/api/http.py`
+- `services/api/tests/test_task_queue.py`
+
+配置项：`MONEY_TASK_TIMEOUT_S`，默认 `300`。
+
+未做事项：真正的后台 watchdog、自动重试、前端超时配置 UI。
+
 ## 当前验证命令
 
 后端和 Web 结构默认验证：
@@ -423,14 +442,14 @@ MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_
 - 默认深度引擎仍是 mock；真实 TradingAgents 需要显式工厂和 opt-in smoke。
 - 数据层真实 provider 覆盖腾讯 quote 最小路径和 Sina 日线 K 线回测价格序列。
 - 报告 repository 使用 JSON 文件，适合第一版，不适合复杂查询和并发写入。
-- 已有第一版任务持久化、状态轮询、中断恢复标记和 cancel/retry 控制，但还没有真正的恢复执行、强制中断和超时回收语义。
+- 已有第一版任务持久化、状态轮询、中断恢复标记、cancel/retry 控制和超时回收，但还没有真正的恢复执行、强制中断和自动重试语义。
 - 风控纪律、回测和组合预算已完成第一版，但尚未接真实交易执行或真实持仓同步。
 - 回测接口已接入 Sina 日线 K 线 provider，并支持成本、滑点和复权标记；尚未做真实复权价格转换、缓存和多 provider fallback。
 - 组合风险预算已完成第一版，但尚未接真实持仓、行业/主题/相关性约束和 Web/Desktop 组合视图。
 
 ## 推荐下一步
 
-建议继续阶段 7 后续切片：真实复权价格转换、回测缓存、多 provider fallback，或组合预算的行业/相关性约束；如果更偏服务化和产品化，可以先补任务超时回收/自动重试语义、真实 TradingAgents smoke 和更详细的桌面日志控制。
+建议继续阶段 7 后续切片：真实复权价格转换、回测缓存、多 provider fallback，或组合预算的行业/相关性约束；如果更偏服务化和产品化，可以先补自动重试/后台 watchdog、真实 TradingAgents smoke 和更详细的桌面日志控制。
 
 推荐第一版路径：
 

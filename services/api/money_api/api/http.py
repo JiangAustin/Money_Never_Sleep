@@ -43,7 +43,7 @@ class HttpApiApp:
             return self._create_analysis_task(body)
         if method == "GET" and path == "/tasks":
             limit = self._parse_limit(query.get("limit", ["20"])[0])
-            return self._json(200, [record.to_dict() for record in self.task_queue.repository.list_recent(limit=limit)])
+            return self._json(200, [record.to_dict() for record in self.task_queue.list_tasks(limit=limit)])
         if method == "POST" and path.startswith("/tasks/") and path.endswith("/cancel"):
             task_id = path.removeprefix("/tasks/").removesuffix("/cancel")
             task = self.task_queue.cancel_task(task_id)
@@ -100,10 +100,17 @@ class HttpApiApp:
 
         symbol = payload.get("symbol")
         message = payload.get("message")
+        timeout_s = payload.get("timeout_s")
         if not isinstance(symbol, str) or not symbol.strip() or not isinstance(message, str) or not message.strip():
             return self._json(400, {"error": "symbol and message are required"})
 
-        task = self.task_queue.create_analysis_task(symbol, message)
+        if timeout_s is not None:
+            try:
+                timeout_s = max(1, int(timeout_s))
+            except (TypeError, ValueError):
+                return self._json(400, {"error": "timeout_s must be an integer"})
+
+        task = self.task_queue.create_analysis_task(symbol, message, timeout_s=timeout_s)
         return self._json(202, task.to_dict())
 
     def _backtest_report(self, task_id: str, body: bytes) -> HttpResponse:

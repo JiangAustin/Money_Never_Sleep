@@ -92,6 +92,50 @@ def test_http_list_tasks() -> None:
     assert payload[0]["symbol"] == "贵州茅台"
 
 
+def test_http_create_analysis_task_accepts_timeout() -> None:
+    app = build_app()
+
+    response = app.handle(
+        "POST",
+        "/tasks/analysis",
+        json.dumps({"symbol": "贵州茅台", "message": "请全面分析", "timeout_s": 12}).encode("utf-8"),
+    )
+
+    assert response.status == 202
+    assert decode(response)["timeout_s"] == 12
+
+
+def test_http_get_task_marks_timeout() -> None:
+    service = build_default_analysis_service(report_repository=InMemoryAnalysisReportRepository())
+    repository = InMemoryAnalysisTaskRepository()
+    queue = InMemoryAnalysisTaskQueue(service=service, repository=repository, executor=lambda operation: None)
+    timed_out = AnalysisTaskRecord(
+        task_id="task-timeout",
+        symbol="600519",
+        message="请全面分析",
+        status=AnalysisStatus.DEEP_ANALYSIS.value,
+        created_at="2026-07-01T00:00:00+00:00",
+        updated_at="2026-07-01T00:00:00+00:00",
+        started_at="2026-07-01T00:00:00+00:00",
+        timeout_s=1,
+    )
+    repository.save(timed_out)
+    queue._records[timed_out.task_id] = timed_out
+    queue._now = lambda: "2026-07-01T00:00:05+00:00"  # type: ignore[attr-defined]
+    app = HttpApiApp(
+        service=service,
+        price_providers={"sina": FakePriceProvider()},
+        task_queue=queue,
+    )
+
+    response = app.handle("GET", "/tasks/task-timeout", b"")
+
+    assert response.status == 200
+    payload = decode(response)
+    assert payload["status"] == AnalysisStatus.FAILED.value
+    assert payload["error"] == "task timed out after 1s"
+
+
 def test_http_task_returns_400_for_invalid_payload() -> None:
     response = build_app().handle("POST", "/tasks/analysis", b"{}")
 

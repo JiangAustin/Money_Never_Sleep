@@ -22,6 +22,8 @@ class AnalysisTaskRecord:
     status: str
     created_at: str
     updated_at: str
+    started_at: str | None = None
+    timeout_s: int = 300
     report_id: str | None = None
     error: str | None = None
     retry_of: str | None = None
@@ -34,6 +36,8 @@ class AnalysisTaskRecord:
             "status": self.status,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
+            "started_at": self.started_at,
+            "timeout_s": self.timeout_s,
             "report_id": self.report_id,
             "error": self.error,
             "retry_of": self.retry_of,
@@ -48,6 +52,8 @@ class AnalysisTaskRecord:
             status=str(payload.get("status", "")),
             created_at=str(payload.get("created_at", "")),
             updated_at=str(payload.get("updated_at", "")),
+            started_at=str(payload.get("started_at")) if payload.get("started_at") is not None else None,
+            timeout_s=int(payload.get("timeout_s", 300)),
             report_id=str(payload.get("report_id")) if payload.get("report_id") is not None else None,
             error=str(payload.get("error")) if payload.get("error") is not None else None,
             retry_of=str(payload.get("retry_of")) if payload.get("retry_of") is not None else None,
@@ -164,10 +170,12 @@ class InMemoryAnalysisTaskQueue:
         service: AnalysisService,
         repository: AnalysisTaskRepository | None = None,
         executor: Callable[[Callable[[], None]], None] | None = None,
+        default_timeout_s: int = 300,
     ):
         self.service = service
         self.repository = repository or InMemoryAnalysisTaskRepository()
         self.executor = executor or self._default_executor
+        self.default_timeout_s = default_timeout_s
         self._records: dict[str, AnalysisTaskRecord] = {}
         self._lock = Lock()
         for record in self.repository.list_recent(limit=10_000):
@@ -175,8 +183,8 @@ class InMemoryAnalysisTaskQueue:
         for record in self.repository.recover_incomplete("service restarted before task finished"):
             self._records[record.task_id] = record
 
-    def create_analysis_task(self, symbol: str, message: str) -> AnalysisTaskRecord:
-        return self._create_task_record(symbol=symbol, message=message)
+    def create_analysis_task(self, symbol: str, message: str, timeout_s: int | None = None) -> AnalysisTaskRecord:
+        return self._create_task_record(symbol=symbol, message=message, timeout_s=timeout_s)
 
     def cancel_task(self, task_id: str) -> AnalysisTaskRecord | None:
         task = self.get_task(task_id)
@@ -193,9 +201,9 @@ class InMemoryAnalysisTaskQueue:
             return None
         if task.status not in {AnalysisStatus.FAILED.value, AnalysisStatus.CANCELLED.value}:
             return None
-        return self._create_task_record(symbol=task.symbol, message=task.message, retry_of=task.task_id)
+        return self._create_task_record(symbol=task.symbol, message=task.message, retry_of=task.task_id, timeout_s=task.timeout_s)
 
-    def _create_task_record(self, symbol: str, message: str, retry_of: str | None = None) -> AnalysisTaskRecord:
+    def _create_task_record(self, symbol: str, message: str, retry_of: str | None = None, timeout_s: int | None = None) -> AnalysisTaskRecord:
         now = datetime.now(timezone.utc).isoformat()
         task_id = f"task-{uuid4().hex}"
         record = AnalysisTaskRecord(
@@ -205,6 +213,8 @@ class InMemoryAnalysisTaskQueue:
             status=AnalysisStatus.QUEUED.value,
             created_at=now,
             updated_at=now,
+            started_at=now,
+            timeout_s=int(timeout_s or self.default_timeout_s),
             retry_of=retry_of,
         )
         with self._lock:
@@ -214,18 +224,50 @@ class InMemoryAnalysisTaskQueue:
         return record
 
     def get_task(self, task_id: str) -> AnalysisTaskRecord | None:
+        self._expire_task_if_needed(task_id)
         with self._lock:
             return self._records.get(task_id)
 
+    def list_tasks(self, limit: int = 20) -> list[AnalysisTaskRecord]:
+        for task_id in list(self._records.keys()):
+            self._expire_task_if_needed(task_id)
+        with self._lock:
+            records = sorted(self._records.values(), key=lambda item: item.updated_at, reverse=True)
+        return records[:limit]
+
     def _default_executor(self, operation: Callable[[], None]) -> None:
         Thread(target=operation, daemon=True).start()
+
+    def _now(self) -> str:
+        return datetime.now(timezone.utc).isoformat()
+
+    def _expire_task_if_needed(self, task_id: str) -> None:
+        with self._lock:
+            record = self._records.get(task_id)
+        if record is None:
+            return
+        if record.status not in {
+            AnalysisStatus.QUEUED.value,
+            AnalysisStatus.COLLECTING_DATA.value,
+            AnalysisStatus.QUICK_SCREENING.value,
+            AnalysisStatus.DEEP_ANALYSIS.value,
+            AnalysisStatus.RISK_REVIEW.value,
+        }:
+            return
+        if not record.started_at:
+            return
+        started_at = datetime.fromisoformat(record.started_at)
+        current = datetime.fromisoformat(self._now())
+        if (current - started_at).total_seconds() < record.timeout_s:
+            return
+        self._update(task_id, status=AnalysisStatus.FAILED.value, error=f"task timed out after {record.timeout_s}s")
 
     def _update(self, task_id: str, **changes: object) -> None:
         with self._lock:
             record = self._records[task_id]
             updated = replace(
                 record,
-                updated_at=datetime.now(timezone.utc).isoformat(),
+                updated_at=self._now(),
                 **changes,
             )
             self._records[task_id] = updated
@@ -242,7 +284,7 @@ class InMemoryAnalysisTaskQueue:
             if self.service.quick_router.needs_deep_analysis(record.message)
             else AnalysisStatus.QUICK_SCREENING.value
         )
-        self._update(task_id, status=next_status)
+        self._update(task_id, status=next_status, started_at=record.started_at or self._now())
         if (current := self.get_task(task_id)) is not None and current.status == AnalysisStatus.CANCELLED.value:
             return
         try:

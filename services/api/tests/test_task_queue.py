@@ -130,3 +130,28 @@ def test_task_queue_can_retry_failed_task() -> None:
     assert retried.task_id != failed.task_id
     assert retried.status in {AnalysisStatus.QUEUED.value, AnalysisStatus.QUICK_SCREENING.value, AnalysisStatus.DEEP_ANALYSIS.value, AnalysisStatus.REPORT_READY.value}
     assert retried.message == failed.message
+
+
+def test_task_queue_marks_timed_out_task_failed() -> None:
+    service = build_default_analysis_service(report_repository=InMemoryAnalysisReportRepository())
+    repository = InMemoryAnalysisTaskRepository()
+    queue = InMemoryAnalysisTaskQueue(service=service, repository=repository, executor=lambda operation: None)
+    expired = AnalysisTaskRecord(
+        task_id="task-timeout",
+        symbol="600519",
+        message="请全面分析",
+        status=AnalysisStatus.DEEP_ANALYSIS.value,
+        created_at="2026-07-01T00:00:00+00:00",
+        updated_at="2026-07-01T00:00:00+00:00",
+        started_at="2026-07-01T00:00:00+00:00",
+        timeout_s=1,
+    )
+    repository.save(expired)
+    queue._records[expired.task_id] = expired
+    queue._now = lambda: "2026-07-01T00:00:05+00:00"  # type: ignore[attr-defined]
+
+    task = queue.get_task("task-timeout")
+
+    assert task is not None
+    assert task.status == AnalysisStatus.FAILED.value
+    assert task.error == "task timed out after 1s"
