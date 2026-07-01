@@ -415,6 +415,14 @@ HTTP 入口：
 
 未做事项：完整任务历史面板、批量控制、重试策略可视化、任务列表级操作。
 
+### 阶段 3 验证补充：真实 TradingAgents smoke
+
+做了什么：执行 `MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api ...test_tradingagents_smoke.py`。
+
+结果：`1 passed`。
+
+意义：确认当前 Money_Never_sleep 到 TradingAgents-astock 的真实 runner 链路在本机环境下可被调起，不再只是 mock 或设计级接入。
+
 ## 当前验证命令
 
 后端和 Web 结构默认验证：

@@ -32,7 +32,7 @@
 | MNS-BL-016 | 已完成 | P1 | 桌面内嵌或托管 Python API server | 阶段 6 默认不管理 Python 子进程，避免进程生命周期复杂度 | 桌面应用可独立发起真实分析，不要求用户手动启动后端 | 已在阶段 6.1 完成桌面托管 server、health 检查、退出清理和 API 源码打包；仍依赖本机 Python runtime | 阶段 6.1、HTTP API |
 | MNS-BL-013 | 待设计 | P1 | FastAPI/OpenAPI 升级 | 阶段 5.5 为避免新增依赖，先使用标准库 HTTP dispatcher | 获得 OpenAPI、自动文档、中间件和更成熟的服务化能力 | 在桌面壳或 Web 真联调稳定后，评估将 dispatcher 外层替换为 FastAPI | 阶段 5.5、`services/api/money_api/api/http.py` |
 | MNS-BL-014 | 已完成 | P1 | 异步任务队列与状态轮询 | 阶段 5.5 只做同步 HTTP 调用，避免一次性引入队列和 worker | 长耗时 TradingAgents 分析可被 Web/桌面稳定轮询和恢复 | 已在阶段 5.6 完成 in-memory task queue、`POST /tasks/analysis`、`GET /tasks/{id}` 和 Web 轮询；任务持久化/取消/恢复仍是后续项 | 阶段 5.6、`AnalysisStatus` |
-| MNS-BL-003 | 待实现 | P1 | 真实 TradingAgents smoke | 阶段 3 只提供 opt-in smoke，默认测试不能依赖 LLM/API key | 验证真实多 Agent 投研链路可被 Money_Never_sleep 调起 | 准备本地密钥和可控样例，运行 `MNS_RUN_TRADINGAGENTS_SMOKE=1 ...test_tradingagents_smoke.py`，记录结果 | 阶段 3、`services/api/tests/test_tradingagents_smoke.py` |
+| MNS-BL-003 | 已完成 | P1 | 真实 TradingAgents smoke | 阶段 3 只提供 opt-in smoke，默认测试不能依赖 LLM/API key | 验证真实多 Agent 投研链路可被 Money_Never_sleep 调起 | 已运行 `MNS_RUN_TRADINGAGENTS_SMOKE=1 ...test_tradingagents_smoke.py`，结果 `1 passed` | 阶段 3、`services/api/tests/test_tradingagents_smoke.py` |
 | MNS-BL-004 | 待设计 | P1 | JSON 报告仓储升级为 SQLite 或可迁移仓储 | 阶段 4 为降低复杂度先使用 JSON 文件 | 提升查询、筛选、分页和并发写入能力 | 在 Web API 接入后评估 SQLite schema 和迁移策略 | 阶段 4、`report_repository.py` |
 | MNS-BL-005 | 待设计 | P1 | 真实 K 线、技术指标和估值扩展 | 阶段 2 只接入腾讯 quote 最小真实路径 | 提高深度分析上下文质量，减少 mock/fixture 依赖 | 设计 provider bundle 的 K 线与 fundamentals 扩展，保持 diagnostics/gaps 语义 | 阶段 2、`domains/market_data/` |
 | MNS-BL-006 | 待设计 | P1 | 新闻、公告、资金流、龙虎榜和解禁 provider | 阶段 2 明确不接宽数据面 | 支撑 A 股政策、游资、解禁等 TradingAgents 角色 | 优先选择 1-2 个高价值数据源，复用 provider result 契约 | 阶段 2/3、TradingAgents-astock 参考 |
