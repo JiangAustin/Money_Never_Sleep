@@ -36,18 +36,18 @@
 | 5.5 HTTP API 层 | 已完成 | 为 Web 和桌面提供真实 JSON HTTP 边界 | HTTP dispatcher、标准库 server、Web API mode | 客户端可通过 HTTP 发起分析、读取报告和最近报告 |
 | 6. 桌面端与本地体验 | 已完成 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | Electron 桌面壳、macOS 构建入口、Web 工作台资源打包 | macOS `.app` 可构建并能承载 Web 工作台 |
 | 7. 风控、回测与组合 | 已完成 | 从单股建议扩展到纪律、验证和组合层面 | 风控纪律契约、默认风控策略、报告风险控制计划 | 建议输出带仓位、止损、止盈和免责声明 |
-| 7.1 回测接口 | 进行中 | 用历史价格序列复盘报告和风控纪律 | 回测契约、确定性回测引擎、Python/HTTP API | 报告可输出收益、回撤、退出原因和持有天数 |
+| 7.1 回测接口 | 已完成 | 用历史价格序列复盘报告和风控纪律 | 回测契约、确定性回测引擎、Python/HTTP API | 报告可输出收益、回撤、退出原因和持有天数 |
 
 ## 当前阶段结论
 
-阶段 7 第一版已完成。当前系统已具备确定性风控纪律层：
+阶段 7.1 已完成。当前系统已具备最小确定性回测接口：
 
-1. 新增 `RiskControlRule` 和 `RiskControlPlan` 契约。
-2. `AnalysisReport` 输出 `risk_controls` 字段。
-3. 新增 `DefaultRiskPolicy`，基于状态、动作、置信度和 data gaps 生成风控计划。
-4. `AnalysisService` 在保存报告前自动应用风控策略。
-5. Web mock 报告包含并展示风控纪律。
-6. 回测、组合风险预算和自动交易仍不属于第一版。
+1. 新增 `BacktestPricePoint` 和 `BacktestResult` 契约。
+2. 新增 `SimpleBacktestEngine`，基于传入价格序列执行止损、止盈、时间退出判断。
+3. `AnalysisService`、Python API 和 HTTP API 均可执行报告回测。
+4. HTTP 路由新增 `POST /reports/{task_id}/backtest`。
+5. Web mock 报告包含 backtest 示例字段。
+6. 真实行情、交易成本、滑点、复权和组合回测仍不属于第一版。
 
 离线验证命令：
 
@@ -55,7 +55,7 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`79 passed, 2 skipped`。
+离线结果：`87 passed, 2 skipped`。
 
 macOS 构建结果：`apps/desktop/dist/mac-arm64/Money Never Sleep.app`。
 
@@ -67,7 +67,7 @@ HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.
 
 ## 下一阶段建议
 
-阶段 7.1“回测接口”已完成设计规格和实现计划，正在进入实现。第一版只使用调用者传入的价格序列，不接真实行情 provider。
+建议下一步在两个方向中二选一：接入真实 K 线 provider 让回测不再依赖手工价格序列，或补真实链路验证（腾讯 quote / TradingAgents smoke）。
 
 ## 想法池
 

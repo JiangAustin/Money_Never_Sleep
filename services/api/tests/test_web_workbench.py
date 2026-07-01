@@ -42,6 +42,7 @@ def test_mock_data_matches_report_contract() -> None:
         "data_diagnostics",
         "data_context",
         "risk_controls",
+        "backtest",
     ):
         assert field in mock_data
 

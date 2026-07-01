@@ -27,6 +27,17 @@ window.MNS_MOCK_REPORTS = [
       ],
       disclaimer: "本报告仅用于研究和复盘，不构成投资建议；任何交易决策需由用户自行承担风险。"
     },
+    backtest: {
+      task_id: "analysis-demo-600519",
+      entry_date: "2026-07-01",
+      exit_date: "2026-07-05",
+      entry_price: 100,
+      exit_price: 116,
+      return_pct: 0.16,
+      max_drawdown_pct: -0.02,
+      holding_days: 4,
+      exit_reason: "take_profit"
+    },
     data_context: {
       stock: { code: "600519", name: "贵州茅台", market: "cn" },
       quote: { price: 1688, source: "tencent" },
@@ -64,6 +75,17 @@ window.MNS_MOCK_REPORTS = [
         { name: "data_gaps", level: "medium", message: "存在新闻数据缺口，仓位上限降至 5%" }
       ],
       disclaimer: "本报告仅用于研究和复盘，不构成投资建议；任何交易决策需由用户自行承担风险。"
+    },
+    backtest: {
+      task_id: "analysis-demo-000001",
+      entry_date: "2026-07-01",
+      exit_date: "2026-07-05",
+      entry_price: 100,
+      exit_price: 96,
+      return_pct: -0.04,
+      max_drawdown_pct: -0.06,
+      holding_days: 4,
+      exit_reason: "time_exit"
     },
     data_context: {
       stock: { code: "000001", name: "平安银行", market: "cn" },

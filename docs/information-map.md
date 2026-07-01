@@ -33,6 +33,7 @@
 | HTTP API 边界 | `services/api/money_api/api/http.py` | `services/api/tests/test_http_api.py` |
 | 分析领域契约 | `services/api/money_api/domains/analysis/contracts.py` | `services/api/tests/test_analysis_contracts.py` |
 | 风控纪律层 | `services/api/money_api/domains/analysis/risk_policy.py` | `services/api/tests/test_risk_policy.py` |
+| 回测接口 | `services/api/money_api/domains/analysis/backtest.py` | `services/api/tests/test_backtest.py`、`services/api/tests/test_http_api.py` |
 | 数据 provider 契约 | `services/api/money_api/domains/market_data/provider_results.py` | `services/api/tests/test_provider_results.py` |
 | TradingAgents adapter | `services/api/money_api/domains/analysis/tradingagents_engine.py` | `services/api/money_api/integrations/tradingagents_runner.py` |
 | 报告历史仓储 | `services/api/money_api/domains/analysis/report_repository.py` | `services/api/tests/test_report_repository.py` |
