@@ -27,6 +27,7 @@ def test_web_workbench_has_core_regions() -> None:
     assert 'id="task-status"' in html
     assert 'id="task-cancel-button"' in html
     assert 'id="task-retry-button"' in html
+    assert 'id="task-history-list"' in html
 
 
 def test_mock_data_matches_report_contract() -> None:
@@ -92,7 +93,10 @@ def test_app_js_exposes_http_service_boundary() -> None:
     assert "async function pollAnalysisTask" in app_js
     assert "async function cancelHttpAnalysisTask" in app_js
     assert "async function retryHttpAnalysisTask" in app_js
+    assert "async function fetchTaskHistory" in app_js
+    assert "function renderTaskHistory" in app_js
     assert 'fetch(`${apiBaseUrl}/tasks/analysis`' in app_js
+    assert 'fetch(`${apiBaseUrl}/tasks?limit=' in app_js
     assert 'fetch(`${apiBaseUrl}/tasks/' in app_js
     assert "createLocalAnalysis" in app_js
 

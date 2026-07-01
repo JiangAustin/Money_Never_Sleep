@@ -8,6 +8,7 @@ const state = {
   currentTaskId: null,
   currentTaskState: null,
   latestFailedTaskId: null,
+  tasks: [],
 };
 
 const elements = {
@@ -18,6 +19,7 @@ const elements = {
   taskStatus: document.getElementById("task-status"),
   taskCancelButton: document.getElementById("task-cancel-button"),
   taskRetryButton: document.getElementById("task-retry-button"),
+  taskHistoryList: document.getElementById("task-history-list"),
   reportList: document.getElementById("report-list"),
   reportCount: document.getElementById("report-count"),
   detail: document.getElementById("report-detail"),
@@ -189,6 +191,15 @@ async function fetchTask(apiBaseUrl, taskId) {
   return payload;
 }
 
+async function fetchTaskHistory(apiBaseUrl, limit = 10) {
+  const response = await fetch(`${apiBaseUrl}/tasks?limit=${limit}`);
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || `HTTP ${response.status}`);
+  }
+  return payload;
+}
+
 async function cancelHttpAnalysisTask(apiBaseUrl, taskId) {
   const response = await fetch(`${apiBaseUrl}/tasks/${taskId}/cancel`, { method: "POST" });
   const payload = await response.json();
@@ -279,6 +290,28 @@ function renderReportList() {
       render();
     });
     elements.reportList.append(button);
+  });
+}
+
+function renderTaskHistory() {
+  elements.taskHistoryList.replaceChildren();
+  if (!state.apiBaseUrl) {
+    elements.taskHistoryList.append(createElement("p", "empty-state", "离线模式下不显示真实任务历史"));
+    return;
+  }
+  if (!state.tasks.length) {
+    elements.taskHistoryList.append(createElement("p", "empty-state", "暂无任务历史"));
+    return;
+  }
+
+  state.tasks.forEach((task) => {
+    const item = createElement("article", "report-item");
+    item.append(
+      createElement("span", "report-title", `${task.symbol} / ${task.status}`),
+      createElement("span", "report-meta", task.task_id),
+      createElement("span", "report-summary", task.error || task.message || "任务已创建")
+    );
+    elements.taskHistoryList.append(item);
   });
 }
 
@@ -411,8 +444,23 @@ function render() {
   renderModePill();
   renderTaskStatus();
   renderReportList();
+  renderTaskHistory();
   renderReportDetail();
   renderDiagnostics();
+}
+
+async function refreshTaskHistory() {
+  if (!state.apiBaseUrl) {
+    state.tasks = [];
+    renderTaskHistory();
+    return;
+  }
+  try {
+    state.tasks = await fetchTaskHistory(state.apiBaseUrl, 10);
+  } catch {
+    state.tasks = [];
+  }
+  renderTaskHistory();
 }
 
 async function handleSubmit(event) {
@@ -426,6 +474,7 @@ async function handleSubmit(event) {
       state.latestFailedTaskId = null;
       state.taskStatus = `任务已创建：${task.task_id}`;
       renderTaskStatus();
+      await refreshTaskHistory();
       report = await pollAnalysisTask(state.apiBaseUrl, task.task_id);
     } catch (error) {
       state.taskStatus = `任务失败：${error.message || "unknown error"}`;
@@ -452,6 +501,7 @@ async function handleCancelTask() {
     state.latestFailedTaskId = task.task_id;
     state.taskStatus = "任务已取消";
     renderTaskStatus();
+    await refreshTaskHistory();
   } catch (error) {
     state.taskStatus = `取消失败：${error.message || "unknown error"}`;
     renderTaskStatus();
@@ -469,6 +519,7 @@ async function handleRetryTask() {
     state.latestFailedTaskId = null;
     state.taskStatus = `任务已重试：${task.task_id}`;
     renderTaskStatus();
+    await refreshTaskHistory();
     const report = await pollAnalysisTask(state.apiBaseUrl, task.task_id);
     state.reports.unshift(report);
     state.selectedTaskId = report.task_id;
@@ -483,3 +534,4 @@ elements.form.addEventListener("submit", handleSubmit);
 elements.taskCancelButton.addEventListener("click", handleCancelTask);
 elements.taskRetryButton.addEventListener("click", handleRetryTask);
 render();
+refreshTaskHistory();
