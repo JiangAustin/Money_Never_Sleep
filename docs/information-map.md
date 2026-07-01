@@ -34,6 +34,7 @@
 | HTTP API 边界 | `services/api/money_api/api/http.py` | `services/api/tests/test_http_api.py` |
 | HTTP 任务队列、持久化、控制、超时、watchdog、可配置退避重试调度与重试观测字段 | `services/api/money_api/domains/analysis/task_queue.py` | `services/api/tests/test_http_api.py`、`services/api/tests/test_task_queue.py` |
 | runtime service 装配与 auto 深度引擎默认语义 | `services/api/money_api/api/v1/router.py` | `services/api/tests/test_analysis_api.py` |
+| 默认 runtime 连续推进主线（5.16-5.19） | `docs/agent-handoff.md` | `docs/stages.md`、`docs/improvement-backlog.md` |
 | 分析领域契约 | `services/api/money_api/domains/analysis/contracts.py` | `services/api/tests/test_analysis_contracts.py` |
 | 风控纪律层 | `services/api/money_api/domains/analysis/risk_policy.py` | `services/api/tests/test_risk_policy.py` |
 | 回测接口与成本参数 | `services/api/money_api/domains/analysis/backtest.py`、`services/api/money_api/domains/analysis/contracts.py` | `services/api/tests/test_backtest.py`、`services/api/tests/test_http_api.py` |
