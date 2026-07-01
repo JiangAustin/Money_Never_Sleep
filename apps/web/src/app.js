@@ -5,6 +5,9 @@ const state = {
   apiBaseUrl: getApiBaseUrl(),
   startup: getStartupContext(),
   taskStatus: "当前未提交任务",
+  currentTaskId: null,
+  currentTaskState: null,
+  latestFailedTaskId: null,
 };
 
 const elements = {
@@ -13,6 +16,8 @@ const elements = {
   symbol: document.getElementById("symbol-input"),
   message: document.getElementById("message-input"),
   taskStatus: document.getElementById("task-status"),
+  taskCancelButton: document.getElementById("task-cancel-button"),
+  taskRetryButton: document.getElementById("task-retry-button"),
   reportList: document.getElementById("report-list"),
   reportCount: document.getElementById("report-count"),
   detail: document.getElementById("report-detail"),
@@ -88,6 +93,8 @@ function renderModePill() {
 
 function renderTaskStatus() {
   elements.taskStatus.textContent = state.taskStatus;
+  elements.taskCancelButton.disabled = !state.apiBaseUrl || !state.currentTaskId || ["report_ready", "failed", "cancelled"].includes(state.currentTaskState || "");
+  elements.taskRetryButton.disabled = !state.apiBaseUrl || !state.latestFailedTaskId;
 }
 
 function createLocalAnalysis(symbol, message) {
@@ -182,6 +189,24 @@ async function fetchTask(apiBaseUrl, taskId) {
   return payload;
 }
 
+async function cancelHttpAnalysisTask(apiBaseUrl, taskId) {
+  const response = await fetch(`${apiBaseUrl}/tasks/${taskId}/cancel`, { method: "POST" });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || `HTTP ${response.status}`);
+  }
+  return payload;
+}
+
+async function retryHttpAnalysisTask(apiBaseUrl, taskId) {
+  const response = await fetch(`${apiBaseUrl}/tasks/${taskId}/retry`, { method: "POST" });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || `HTTP ${response.status}`);
+  }
+  return payload;
+}
+
 async function fetchReport(apiBaseUrl, reportId) {
   const response = await fetch(`${apiBaseUrl}/reports/${reportId}`);
   const payload = await response.json();
@@ -198,15 +223,28 @@ function delay(ms) {
 async function pollAnalysisTask(apiBaseUrl, taskId) {
   for (let attempt = 0; attempt < 40; attempt += 1) {
     const task = await fetchTask(apiBaseUrl, taskId);
+    state.currentTaskId = task.task_id;
+    state.currentTaskState = task.status;
     state.taskStatus = `任务状态：${task.status}`;
     renderTaskStatus();
     if (task.status === "report_ready" && task.report_id) {
+      state.currentTaskId = null;
+      state.currentTaskState = task.status;
       state.taskStatus = "任务已完成";
       renderTaskStatus();
       return fetchReport(apiBaseUrl, task.report_id);
     }
     if (task.status === "failed") {
+      state.currentTaskId = null;
+      state.currentTaskState = task.status;
+      state.latestFailedTaskId = task.task_id;
       throw new Error(task.error || "analysis task failed");
+    }
+    if (task.status === "cancelled") {
+      state.currentTaskId = null;
+      state.currentTaskState = task.status;
+      state.latestFailedTaskId = task.task_id;
+      throw new Error(task.error || "analysis task cancelled");
     }
     await delay(250);
   }
@@ -383,6 +421,9 @@ async function handleSubmit(event) {
   if (state.apiBaseUrl) {
     try {
       const task = await createHttpAnalysisTask(state.apiBaseUrl, elements.symbol.value, elements.message.value);
+      state.currentTaskId = task.task_id;
+      state.currentTaskState = task.status;
+      state.latestFailedTaskId = null;
       state.taskStatus = `任务已创建：${task.task_id}`;
       renderTaskStatus();
       report = await pollAnalysisTask(state.apiBaseUrl, task.task_id);
@@ -400,5 +441,45 @@ async function handleSubmit(event) {
   render();
 }
 
+async function handleCancelTask() {
+  if (!state.apiBaseUrl || !state.currentTaskId) {
+    return;
+  }
+  try {
+    const task = await cancelHttpAnalysisTask(state.apiBaseUrl, state.currentTaskId);
+    state.currentTaskId = null;
+    state.currentTaskState = task.status;
+    state.latestFailedTaskId = task.task_id;
+    state.taskStatus = "任务已取消";
+    renderTaskStatus();
+  } catch (error) {
+    state.taskStatus = `取消失败：${error.message || "unknown error"}`;
+    renderTaskStatus();
+  }
+}
+
+async function handleRetryTask() {
+  if (!state.apiBaseUrl || !state.latestFailedTaskId) {
+    return;
+  }
+  try {
+    const task = await retryHttpAnalysisTask(state.apiBaseUrl, state.latestFailedTaskId);
+    state.currentTaskId = task.task_id;
+    state.currentTaskState = task.status;
+    state.latestFailedTaskId = null;
+    state.taskStatus = `任务已重试：${task.task_id}`;
+    renderTaskStatus();
+    const report = await pollAnalysisTask(state.apiBaseUrl, task.task_id);
+    state.reports.unshift(report);
+    state.selectedTaskId = report.task_id;
+    render();
+  } catch (error) {
+    state.taskStatus = `重试失败：${error.message || "unknown error"}`;
+    renderTaskStatus();
+  }
+}
+
 elements.form.addEventListener("submit", handleSubmit);
+elements.taskCancelButton.addEventListener("click", handleCancelTask);
+elements.taskRetryButton.addEventListener("click", handleRetryTask);
 render();

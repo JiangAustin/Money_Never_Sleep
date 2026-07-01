@@ -398,6 +398,23 @@ HTTP 入口：
 
 未做事项：复杂退避策略、重试黑名单、前端 retry 配置、分布式 worker。
 
+### 阶段 5.11：Web 任务控制 UI
+
+做了什么：在 Web 工作台增加 `取消任务` 和 `重试任务` 按钮，并维护当前任务 ID、当前任务状态和最近失败任务 ID。
+
+为什么这么做：阶段 5.8-5.10 已经有完整的服务端任务控制链路，但如果用户不能在页面上触发这些能力，实际可用性仍然不够。
+
+收益：真实 API 模式下，用户可以直接在工作台取消当前任务或重试失败任务，前后端控制面终于闭环。
+
+关键文件：
+
+- `apps/web/index.html`
+- `apps/web/src/app.js`
+- `apps/web/src/styles.css`
+- `services/api/tests/test_web_workbench.py`
+
+未做事项：完整任务历史面板、批量控制、重试策略可视化、任务列表级操作。
+
 ## 当前验证命令
 
 后端和 Web 结构默认验证：
@@ -459,14 +476,14 @@ MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_
 - 默认深度引擎仍是 mock；真实 TradingAgents 需要显式工厂和 opt-in smoke。
 - 数据层真实 provider 覆盖腾讯 quote 最小路径和 Sina 日线 K 线回测价格序列。
 - 报告 repository 使用 JSON 文件，适合第一版，不适合复杂查询和并发写入。
-- 已有第一版任务持久化、状态轮询、中断恢复标记、cancel/retry 控制、超时回收和自动重试，但还没有真正的恢复执行、强制中断和复杂退避语义。
+- 已有第一版任务持久化、状态轮询、中断恢复标记、cancel/retry 控制、超时回收、自动重试和最小前端入口，但还没有真正的恢复执行、强制中断和复杂退避语义。
 - 风控纪律、回测和组合预算已完成第一版，但尚未接真实交易执行或真实持仓同步。
 - 回测接口已接入 Sina 日线 K 线 provider，并支持成本、滑点和复权标记；尚未做真实复权价格转换、缓存和多 provider fallback。
 - 组合风险预算已完成第一版，但尚未接真实持仓、行业/主题/相关性约束和 Web/Desktop 组合视图。
 
 ## 推荐下一步
 
-建议继续阶段 7 后续切片：真实复权价格转换、回测缓存、多 provider fallback，或组合预算的行业/相关性约束；如果更偏服务化和产品化，可以先补真实 TradingAgents smoke、更细粒度的重试/退避策略和更详细的桌面日志控制。
+建议继续阶段 7 后续切片：真实复权价格转换、回测缓存、多 provider fallback，或组合预算的行业/相关性约束；如果更偏服务化和产品化，可以先补真实 TradingAgents smoke、更细粒度的重试/退避策略和任务历史 UI。
 
 推荐第一版路径：
 
