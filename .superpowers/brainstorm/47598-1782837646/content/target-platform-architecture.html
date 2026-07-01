@@ -1,0 +1,50 @@
+<h2>推荐设计：平台骨架 + AI 投研引擎</h2>
+<p class="subtitle">不是简单重写，也不是直接 fork。Money_Never_sleep 保持自己的平台边界，TradingAgents-astock 作为深度 AI 分析内核接入。</p>
+
+<div class="mockup">
+  <div class="mockup-header">目标分层架构</div>
+  <div class="mockup-body">
+    <div style="display:grid;grid-template-columns:1fr;gap:12px">
+      <div class="placeholder" style="background:#eef6ff;border-color:#9cc7ee">
+        <strong>体验层</strong><br>
+        Web 工作台 / 桌面客户端 / Agent 对话 / 报告阅读 / 自选股与组合看板
+      </div>
+      <div class="placeholder" style="background:#f4f7ef;border-color:#bed39d">
+        <strong>平台 API 层</strong><br>
+        FastAPI 服务、任务队列、历史报告、配置、用户组合、分析会话、权限与审计
+      </div>
+      <div class="placeholder" style="background:#fff7ea;border-color:#e1bc72">
+        <strong>AI 投研层</strong><br>
+        快速问股 Agent / 深度多 Agent 投研图 / 风控辩论 / 决策评分 / 策略技能
+      </div>
+      <div class="placeholder" style="background:#f7eef4;border-color:#d7a6c6">
+        <strong>数据与知识层</strong><br>
+        A 股行情、财务、新闻、公告、资金流、龙虎榜、解禁、缓存、标准化、记忆
+      </div>
+      <div class="placeholder" style="background:#f3f1ee;border-color:#c8b9a7">
+        <strong>验证与风控层</strong><br>
+        回测、信号归因、置信度、止损纪律、成本预算、可追溯日志、投资免责声明
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">从三个项目吸收什么</div>
+    <div class="mockup-body">
+      <p><strong>TradingAgents-astock</strong>：7 分析师、Bull/Bear 辩论、风险辩论、Portfolio Manager。</p>
+      <p><strong>daily_stock_analysis</strong>：API/Web/桌面边界、任务、报告、通知、数据 fallback、测试和 CI。</p>
+      <p><strong>go-stock</strong>：Wails 桌面经验、行情图表、工具分组、ReAct / PlanExecute 模式、MCP 工具想法。</p>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">第一阶段不做什么</div>
+    <div class="mockup-body">
+      <p>不承诺自动赚钱，不做黑箱荐股。</p>
+      <p>不直接复制三个项目的大量代码。</p>
+      <p>不一开始同时做 Web、桌面、回测、选股、通知全家桶。</p>
+      <p>先做一个可解释、可追溯、可复盘的单股深度分析闭环。</p>
+    </div>
+  </div>
+</div>

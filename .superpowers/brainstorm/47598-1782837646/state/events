@@ -1,0 +1,1 @@
+{"type":"click","text":"C\n    \n      Money_Never_sleep 自建平台骨架\n      不 fork 任一项目。以自己的领域模型、API 合约和插件边界为中心，先接入 TradingAgents 作为深度分析插件，借鉴 DSA 的产品层和 go-stock 的桌面/工具体验。\n      \n        优点长期最可控避免三项目技术栈硬耦合方便未来接回测、策略、组合和插件\n        缺点首版速度比 fork 慢需要先定义清楚核心契约","choice":"c","id":null,"timestamp":1782838749848}

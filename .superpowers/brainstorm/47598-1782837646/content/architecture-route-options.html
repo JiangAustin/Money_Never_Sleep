@@ -1,0 +1,59 @@
+<h2>Money_Never_sleep 架构路线选择</h2>
+<p class="subtitle">第一阶段目标：长期平台优先。下面三条路线都可以做，差别在于基座、速度、长期可控性和 AI 投研深度。</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>以 daily_stock_analysis 为基座</h3>
+      <p>最快获得 API、Web、桌面、报告、通知、自选股、历史记录等完整产品面。再逐步把 TradingAgents 的深度投研图和 go-stock 的桌面体验接进来。</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>最快可用</li><li>工程边界成熟</li><li>测试和 CI 最完整</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>容易继承复杂历史包袱</li><li>AI 投研深度不如 TradingAgents 纯粹</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>以 TradingAgents-astock 为 AI 核心</h3>
+      <p>把 7 分析师、多轮辩论、风控辩论、组合决策做成核心引擎，外层自己建设 API、数据缓存、任务、Web 和桌面。</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>投研逻辑最强</li><li>A 股角色设计准确</li><li>适合作为 AI 引擎</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>产品层较薄</li><li>服务化、权限、任务与客户端要补</li><li>全量分析成本高</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Money_Never_sleep 自建平台骨架</h3>
+      <p>不 fork 任一项目。以自己的领域模型、API 合约和插件边界为中心，先接入 TradingAgents 作为深度分析插件，借鉴 DSA 的产品层和 go-stock 的桌面/工具体验。</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>长期最可控</li><li>避免三项目技术栈硬耦合</li><li>方便未来接回测、策略、组合和插件</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>首版速度比 fork 慢</li><li>需要先定义清楚核心契约</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>我的推荐</h3>
+  <p><strong>推荐 C：</strong>Money_Never_sleep 自建平台骨架，TradingAgents-astock 做 AI 投研引擎，daily_stock_analysis 提供服务化和产品工程参考，go-stock 提供桌面体验和工具/图表参考。</p>
+</div>
+
+<div class="mockup">
+  <div class="mockup-header">推荐目标结构</div>
+  <div class="mockup-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center">
+      <div class="placeholder">客户端层<br>Web / Desktop / Mobile Later</div>
+      <div class="placeholder">平台 API<br>任务 / 报告 / 组合 / 设置</div>
+      <div class="placeholder">AI 投研引擎<br>Trading Graph / Skills / Risk</div>
+      <div class="placeholder">数据层<br>A 股数据源 / 缓存 / 标准化</div>
+      <div class="placeholder">知识层<br>记忆 / 研报 / 新闻 / 策略库</div>
+      <div class="placeholder">验证层<br>回测 / 归因 / 置信度 / 审计</div>
+    </div>
+  </div>
+</div>
