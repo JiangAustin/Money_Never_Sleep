@@ -39,17 +39,18 @@
 | 7.1 回测接口 | 已完成 | 用历史价格序列复盘报告和风控纪律 | 回测契约、确定性回测引擎、Python/HTTP API | 报告可输出收益、回撤、退出原因和持有天数 |
 | 7.2 真实 K 线回测数据源 | 已完成 | 用真实日线价格序列驱动回测接口 | Sina K 线 provider、provider 回测 API、opt-in 真实网络 smoke | 回测可由行情 provider 自动获取价格序列 |
 | 7.3 组合风险预算 | 已完成 | 将多份单股报告合成为组合层仓位预算 | 组合预算契约、预算器、Python/HTTP API | 输出总仓位、现金保留、单票预算和组合规则 |
+| 7.4 回测成本与滑点 | 已完成 | 让回测收益表达交易摩擦和复权语义 | BacktestOptions、净收益/裸收益/成本影响、Python/HTTP API | 默认行为兼容，传参时输出成本调整后的净收益 |
 
 ## 当前阶段结论
 
-阶段 7.3 已完成。当前系统已具备基于报告历史的组合风险预算入口：
+阶段 7.4 已完成。当前系统已具备带交易摩擦参数的回测入口：
 
 1. 阶段 7.1 已完成 `BacktestPricePoint`、`BacktestResult` 和 `SimpleBacktestEngine`。
 2. 阶段 7.2 新增 Sina 日线 K 线 provider，回测可通过 `source="sina"` 自动获取价格序列，并已补 opt-in 真实网络 smoke。
-3. 阶段 7.3 新增 `PortfolioPositionBudget` 和 `PortfolioRiskBudget` 契约。
-4. 新增 `PortfolioRiskBudgeter`，基于报告风控计划计算单票预算、组合总仓位和现金保留。
-5. Python API 和 HTTP API 均可生成组合风险预算，HTTP 路径为 `POST /portfolio/risk-budget`。
-6. 交易成本、滑点、复权、缓存、多 provider fallback、行业/相关性约束和 UI 组合页仍不属于当前切片。
+3. 阶段 7.3 新增组合风险预算契约、预算器、Python API 和 HTTP API。
+4. 阶段 7.4 新增 `BacktestOptions`，支持 `cost_pct`、`slippage_pct` 和 `adjustment`。
+5. 回测结果现在同时输出净收益 `return_pct`、裸收益 `gross_return_pct`、成本影响 `cost_impact_pct` 和 options 回显。
+6. 真实复权价格转换、缓存、多 provider fallback、行业/相关性约束和 UI 组合页仍不属于当前切片。
 
 离线验证命令：
 
@@ -57,7 +58,7 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`100 passed, 3 skipped`。
+离线结果：`104 passed, 3 skipped`。
 
 Sina K 线真实网络 smoke 结果：`1 passed`。
 
@@ -71,7 +72,7 @@ HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.
 
 ## 下一阶段建议
 
-建议下一步在两个方向中二选一：为回测补交易成本、滑点和复权参数，或继续服务化方向的异步任务队列与状态轮询。
+建议下一步在两个方向中二选一：实现真实复权价格转换和缓存，或继续服务化方向的异步任务队列与状态轮询。
 
 ## 想法池
 

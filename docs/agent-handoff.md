@@ -235,6 +235,26 @@ HTTP 入口：`POST /portfolio/risk-budget`，body 可传 `{ "task_ids": [...] }
 
 未做事项：真实持仓同步、行业/主题/相关性约束、组合 UI、自动调仓。
 
+### 阶段 7.4：回测成本、滑点和复权参数
+
+做了什么：新增 `BacktestOptions`，回测支持 `cost_pct`、`slippage_pct` 和 `adjustment`，结果输出净收益、裸收益、成本影响和 options 回显。
+
+为什么这么做：阶段 7.1/7.2 的回测只看裸价格涨跌，容易高估真实可交易收益。
+
+收益：调用方可以显式模拟交易摩擦，Web/Desktop 后续也能展示“裸收益 vs 净收益”的差异。
+
+关键文件：
+
+- `services/api/money_api/domains/analysis/contracts.py`
+- `services/api/money_api/domains/analysis/backtest.py`
+- `services/api/money_api/domains/analysis/service.py`
+- `services/api/money_api/api/http.py`
+- `services/api/tests/test_backtest.py`
+
+HTTP 入口：`POST /reports/{task_id}/backtest` 的 body 可传 `{ "options": { "cost_pct": 0.001, "slippage_pct": 0.002, "adjustment": "qfq" } }`。
+
+未做事项：真实前复权/后复权价格转换、券商费率表、印花税细分、最小佣金、成交量约束。
+
 ## 当前验证命令
 
 后端和 Web 结构默认验证：
@@ -298,12 +318,12 @@ MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_
 - 报告 repository 使用 JSON 文件，适合第一版，不适合复杂查询和并发写入。
 - 没有任务队列，真实深度分析的长耗时执行还没有状态轮询。
 - 风控纪律层已完成第一版，但尚未接回测和组合风险预算。
-- 回测接口已接入 Sina 日线 K 线 provider，但尚未接交易成本、滑点、复权、缓存和多 provider fallback。
+- 回测接口已接入 Sina 日线 K 线 provider，并支持成本、滑点和复权标记；尚未做真实复权价格转换、缓存和多 provider fallback。
 - 组合风险预算已完成第一版，但尚未接真实持仓、行业/主题/相关性约束和 Web/Desktop 组合视图。
 
 ## 推荐下一步
 
-建议继续阶段 7 后续切片：回测成本/滑点/复权，或组合预算的行业/相关性约束；如果更偏服务化，可以先做异步任务队列和状态轮询。
+建议继续阶段 7 后续切片：真实复权价格转换、回测缓存、多 provider fallback，或组合预算的行业/相关性约束；如果更偏服务化，可以先做异步任务队列和状态轮询。
 
 推荐第一版路径：
 
