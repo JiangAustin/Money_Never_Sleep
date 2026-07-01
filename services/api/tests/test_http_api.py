@@ -4,6 +4,7 @@ from money_api.api.http import HttpApiApp
 from money_api.api.v1.router import build_default_analysis_service
 from money_api.domains.analysis.contracts import BacktestPricePoint
 from money_api.domains.analysis.report_repository import InMemoryAnalysisReportRepository
+from money_api.domains.analysis.task_queue import InMemoryAnalysisTaskQueue, InMemoryAnalysisTaskRepository
 from money_api.domains.market_data.provider_results import ProviderResult
 from money_api.main import run_http_server
 
@@ -20,7 +21,15 @@ class FakePriceProvider:
 
 def build_app() -> HttpApiApp:
     service = build_default_analysis_service(report_repository=InMemoryAnalysisReportRepository())
-    return HttpApiApp(service=service, price_providers={"sina": FakePriceProvider()})
+    return HttpApiApp(
+        service=service,
+        price_providers={"sina": FakePriceProvider()},
+        task_queue=InMemoryAnalysisTaskQueue(
+            service=service,
+            repository=InMemoryAnalysisTaskRepository(),
+            executor=lambda operation: operation(),
+        ),
+    )
 
 
 def decode(response):
@@ -69,6 +78,18 @@ def test_http_create_analysis_task_and_poll_status() -> None:
 
     assert polled["task_id"] == task["task_id"]
     assert polled["status"] in {"queued", "quick_screening", "deep_analysis", "report_ready"}
+
+
+def test_http_list_tasks() -> None:
+    app = build_app()
+    app.handle("POST", "/tasks/analysis", json.dumps({"symbol": "贵州茅台", "message": "请全面分析"}).encode("utf-8"))
+
+    response = app.handle("GET", "/tasks?limit=5", b"")
+
+    assert response.status == 200
+    payload = decode(response)
+    assert payload
+    assert payload[0]["symbol"] == "贵州茅台"
 
 
 def test_http_task_returns_400_for_invalid_payload() -> None:

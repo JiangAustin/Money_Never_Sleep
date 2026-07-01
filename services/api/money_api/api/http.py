@@ -6,9 +6,10 @@ import json
 from urllib.parse import parse_qs, urlparse
 
 from money_api.api.v1.router import build_runtime_analysis_service
+from money_api.core.config import settings
 from money_api.domains.analysis.contracts import BacktestOptions
 from money_api.domains.analysis.service import AnalysisService
-from money_api.domains.analysis.task_queue import InMemoryAnalysisTaskQueue
+from money_api.domains.analysis.task_queue import InMemoryAnalysisTaskQueue, JsonFileAnalysisTaskRepository
 from money_api.domains.market_data.sina_kline import SinaKLineProvider
 from money_api.main import health
 
@@ -24,7 +25,7 @@ class HttpApiApp:
     def __init__(self, service: AnalysisService, price_providers: dict[str, object] | None = None, task_queue: InMemoryAnalysisTaskQueue | None = None):
         self.service = service
         self.price_providers = price_providers or {"sina": SinaKLineProvider()}
-        self.task_queue = task_queue or InMemoryAnalysisTaskQueue(service=service)
+        self.task_queue = task_queue or InMemoryAnalysisTaskQueue(service=service, repository=JsonFileAnalysisTaskRepository(settings.analysis_tasks_dir))
 
     def handle(self, method: str, target: str, body: bytes) -> HttpResponse:
         parsed = urlparse(target)
@@ -40,6 +41,9 @@ class HttpApiApp:
             return self._create_analysis(body)
         if method == "POST" and path == "/tasks/analysis":
             return self._create_analysis_task(body)
+        if method == "GET" and path == "/tasks":
+            limit = self._parse_limit(query.get("limit", ["20"])[0])
+            return self._json(200, [record.to_dict() for record in self.task_queue.repository.list_recent(limit=limit)])
         if method == "GET" and path == "/reports":
             limit = self._parse_limit(query.get("limit", ["20"])[0])
             return self._json(200, [record.to_dict() for record in self.service.list_reports(limit=limit)])
