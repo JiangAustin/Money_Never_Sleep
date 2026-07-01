@@ -5,7 +5,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from urllib.parse import parse_qs, urlparse
 
-from money_api.api.v1.router import build_default_analysis_service
+from money_api.api.v1.router import build_runtime_analysis_service
 from money_api.domains.analysis.contracts import BacktestOptions
 from money_api.domains.analysis.service import AnalysisService
 from money_api.domains.market_data.sina_kline import SinaKLineProvider
@@ -126,7 +126,7 @@ class HttpApiApp:
 
 
 def run_http_server(host: str = "127.0.0.1", port: int = 8000, app: HttpApiApp | None = None) -> None:
-    api_app = app or HttpApiApp(service=build_default_analysis_service())
+    api_app = app or HttpApiApp(service=build_runtime_analysis_service())
 
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:

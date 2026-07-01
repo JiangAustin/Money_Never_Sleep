@@ -22,6 +22,7 @@ def test_desktop_package_includes_web_resources() -> None:
     extra_resources = package["build"]["extraResources"]
 
     assert {"from": "../web", "to": "web", "filter": ["**/*"]} in extra_resources
+    assert {"from": "../../services/api", "to": "services-api", "filter": ["**/*"]} in extra_resources
 
 
 def test_desktop_main_loads_web_workbench() -> None:
@@ -31,6 +32,11 @@ def test_desktop_main_loads_web_workbench() -> None:
     assert "index.html" in main_js
     assert "MNS_DESKTOP_API_URL" in main_js
     assert "process.resourcesPath" in main_js
+    assert "MNS_DESKTOP_PYTHON_BIN" in main_js
+    assert "spawn(" in main_js
+    assert "/health" in main_js
+    assert "PYTHONPATH" in main_js
+    assert "before-quit" in main_js
 
 
 def test_desktop_preload_exposes_versions() -> None:

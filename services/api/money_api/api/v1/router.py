@@ -1,6 +1,7 @@
 """Version 1 route functions for the Money_Never_sleep API."""
 
 from collections.abc import Callable
+import os
 
 from money_api.core.config import settings
 from money_api.domains.analysis.agent_engine import MockDeepResearchEngine, QuickAgentRouter
@@ -95,6 +96,44 @@ def build_tradingagents_analysis_service(
         quick_router=QuickAgentRouter(),
         deep_engine=TradingAgentsDeepResearchEngine(runner or FakeTradingAgentsRunner()),
         report_repository=report_repository,
+    )
+
+
+def build_runtime_analysis_service(
+    transport: Callable[[str], str] | None = None,
+    report_repository: AnalysisReportRepository | None = None,
+    tradingagents_runner: TradingAgentsRunner | None = None,
+) -> AnalysisService:
+    market_data_mode = os.getenv("MONEY_MARKET_DATA_MODE", "tencent").lower()
+    deep_engine_mode = os.getenv("MONEY_DEEP_ENGINE", "mock").lower()
+
+    static_provider = StaticMarketDataProvider(
+        quote={"price": 1688.0},
+        technicals={"ma5": 1660.0, "ma10": 1625.0, "ma20": 1588.0},
+        fundamentals={"pe_ttm": 28.5, "pb": 9.1},
+        news=[{"title": "示例新闻：业绩保持稳定"}],
+    )
+    provider = static_provider
+    if market_data_mode == "tencent":
+        provider = QuoteOverrideProvider(
+            quote_provider=TencentQuoteProvider(transport=transport),
+            fallback=StaticMarketDataProvider(
+                technicals={"ma5": 1660.0, "ma10": 1625.0, "ma20": 1588.0},
+                fundamentals={"pe_ttm": 28.5, "pb": 9.1},
+                news=[{"title": "示例新闻：业绩保持稳定"}],
+            ),
+        )
+
+    deep_engine = MockDeepResearchEngine()
+    if deep_engine_mode == "tradingagents":
+        deep_engine = TradingAgentsDeepResearchEngine(tradingagents_runner or TradingAgentsGraphRunner())
+
+    return AnalysisService(
+        resolver=StockResolver(name_map={"贵州茅台": "600519", "平安银行": "000001"}),
+        context_builder=DataContextBuilder(provider),
+        quick_router=QuickAgentRouter(),
+        deep_engine=deep_engine,
+        report_repository=report_repository or JsonFileAnalysisReportRepository(settings.analysis_reports_dir),
     )
 
 

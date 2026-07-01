@@ -1,5 +1,6 @@
 from money_api.api.v1.router import (
     build_default_analysis_service,
+    build_runtime_analysis_service,
     build_tencent_quote_analysis_service,
     build_tradingagents_analysis_service,
 )
@@ -126,3 +127,35 @@ def test_build_portfolio_risk_budget_returns_serialized_budget() -> None:
     assert budget["total_position_pct"] > 0
     assert budget["cash_reserve_pct"] < 1
     assert [position["stock"]["code"] for position in budget["positions"]] == ["600519", "000001"]
+
+
+def test_runtime_analysis_service_uses_tencent_quote_by_default(monkeypatch) -> None:
+    monkeypatch.delenv("MONEY_MARKET_DATA_MODE", raising=False)
+    monkeypatch.delenv("MONEY_DEEP_ENGINE", raising=False)
+
+    def transport(url: str) -> str:
+        values = [""] * 53
+        values[1] = "贵州茅台"
+        values[3] = "1688.00"
+        return 'v_sh600519="' + "~".join(values) + '";'
+
+    service = build_runtime_analysis_service(transport=transport)
+    payload = service.create_single_stock_analysis("贵州茅台", "请全面分析并给出投资建议").to_dict()
+
+    assert payload["data_diagnostics"][0]["source"] == "tencent"
+    assert payload["agent_views"][0]["agent"] == "Mock Research Engine"
+
+
+def test_runtime_analysis_service_accepts_tradingagents_runner(monkeypatch) -> None:
+    monkeypatch.setenv("MONEY_DEEP_ENGINE", "tradingagents")
+
+    def transport(url: str) -> str:
+        values = [""] * 53
+        values[1] = "贵州茅台"
+        values[3] = "1688.00"
+        return 'v_sh600519="' + "~".join(values) + '";'
+
+    service = build_runtime_analysis_service(transport=transport, tradingagents_runner=FakeTradingAgentsRunner())
+    payload = service.create_single_stock_analysis("贵州茅台", "请全面分析并给出投资建议").to_dict()
+
+    assert payload["data_diagnostics"][-1]["source"] == "fake-tradingagents"

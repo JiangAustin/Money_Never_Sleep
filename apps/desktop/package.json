@@ -30,6 +30,13 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "../../services/api",
+        "to": "services-api",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "mac": {
