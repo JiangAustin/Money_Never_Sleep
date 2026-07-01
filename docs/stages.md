@@ -38,17 +38,18 @@
 | 7. 风控、回测与组合 | 已完成 | 从单股建议扩展到纪律、验证和组合层面 | 风控纪律契约、默认风控策略、报告风险控制计划 | 建议输出带仓位、止损、止盈和免责声明 |
 | 7.1 回测接口 | 已完成 | 用历史价格序列复盘报告和风控纪律 | 回测契约、确定性回测引擎、Python/HTTP API | 报告可输出收益、回撤、退出原因和持有天数 |
 | 7.2 真实 K 线回测数据源 | 已完成 | 用真实日线价格序列驱动回测接口 | Sina K 线 provider、provider 回测 API、opt-in 真实网络 smoke | 回测可由行情 provider 自动获取价格序列 |
+| 7.3 组合风险预算 | 已完成 | 将多份单股报告合成为组合层仓位预算 | 组合预算契约、预算器、Python/HTTP API | 输出总仓位、现金保留、单票预算和组合规则 |
 
 ## 当前阶段结论
 
-阶段 7.2 已完成。当前系统已具备基于真实日线 K 线 provider 的回测入口：
+阶段 7.3 已完成。当前系统已具备基于报告历史的组合风险预算入口：
 
 1. 阶段 7.1 已完成 `BacktestPricePoint`、`BacktestResult` 和 `SimpleBacktestEngine`。
-2. `AnalysisService`、Python API 和 HTTP API 均可执行报告回测。
-3. 阶段 7.2 新增 Sina 日线 K 线 provider，回测可通过 `source="sina"` 自动获取价格序列。
-4. 新增默认跳过的 Sina 真实网络 smoke，用 `MNS_RUN_NETWORK_SMOKE=1` 显式启用。
-5. Web mock 报告包含 backtest 示例字段。
-6. 交易成本、滑点、复权、缓存、多 provider fallback 和组合回测仍不属于当前切片。
+2. 阶段 7.2 新增 Sina 日线 K 线 provider，回测可通过 `source="sina"` 自动获取价格序列，并已补 opt-in 真实网络 smoke。
+3. 阶段 7.3 新增 `PortfolioPositionBudget` 和 `PortfolioRiskBudget` 契约。
+4. 新增 `PortfolioRiskBudgeter`，基于报告风控计划计算单票预算、组合总仓位和现金保留。
+5. Python API 和 HTTP API 均可生成组合风险预算，HTTP 路径为 `POST /portfolio/risk-budget`。
+6. 交易成本、滑点、复权、缓存、多 provider fallback、行业/相关性约束和 UI 组合页仍不属于当前切片。
 
 离线验证命令：
 
@@ -56,7 +57,7 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`93 passed, 3 skipped`。
+离线结果：`100 passed, 3 skipped`。
 
 Sina K 线真实网络 smoke 结果：`1 passed`。
 
@@ -70,7 +71,7 @@ HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.
 
 ## 下一阶段建议
 
-建议下一步在两个方向中二选一：继续组合风险预算切片，或先为回测补交易成本、滑点和复权参数。
+建议下一步在两个方向中二选一：为回测补交易成本、滑点和复权参数，或继续服务化方向的异步任务队列与状态轮询。
 
 ## 想法池
 

@@ -44,7 +44,7 @@
 | MNS-BL-020 | 已完成 | P1 | 真实行情回测数据源 | 阶段 7.1 只接受调用者传入价格序列，不接真实 K 线 provider | 回测可以直接基于真实历史行情运行，减少手工输入 | 已在阶段 7.2 完成 Sina 日线 K 线 provider 和 provider 回测 API；验证：`93 passed, 3 skipped`，macOS `.app` 构建通过 | 阶段 7.2、`domains/market_data/` |
 | MNS-BL-022 | 已完成 | P1 | Sina K 线真实网络 smoke | 阶段 7.2 先做离线 parser/provider 测试，避免默认测试依赖外网 | 验证 Sina 当前真实接口能返回可用于回测的价格序列 | 已新增 opt-in smoke：默认 skip；`MNS_RUN_NETWORK_SMOKE=1 ...test_sina_kline_smoke.py` 验证 `1 passed` | 阶段 7.2、`services/api/tests/test_sina_kline_smoke.py` |
 | MNS-BL-021 | 待设计 | P2 | 交易成本、滑点和复权 | 阶段 7.1 为保持 deterministic 最小闭环，不做成本和复权 | 提高回测结果可信度，避免过度乐观 | 扩展 BacktestRequest，加入 cost/slippage/adjustment 参数 | 阶段 7.1 后续 |
-| MNS-BL-019 | 待设计 | P1 | 组合风险预算 | 当前系统仍是单股分析，没有组合层持仓和风险预算 | 支持多标的仓位约束、集中度控制和组合视图 | 报告历史和风控计划稳定后设计 portfolio schema | 阶段 7 后续 |
+| MNS-BL-019 | 已完成 | P1 | 组合风险预算 | 当前系统仍是单股分析，没有组合层持仓和风险预算 | 支持多标的仓位约束、集中度控制和组合视图 | 已在阶段 7.3 完成组合预算契约、预算器、Python API 和 HTTP API；验证：`100 passed, 3 skipped` | 阶段 7.3 |
 | MNS-BL-010 | 待设计 | P2 | Web 图表和行情可视化 | 阶段 5 静态工作台不做 K 线或图表 | 改善报告阅读和行情理解效率 | 先接真实 API，再选择轻量图表方案 | 阶段 5 后续 |
 | MNS-BL-011 | 待设计 | P2 | CI / 本地脚本统一入口 | 当前验证命令分散在阶段文档和对话中 | 降低换 agent 或换机器后的验证成本 | 增加 `scripts/test_api.sh`、后续 Web/Desktop 构建脚本 | `scripts/` |
 | MNS-BL-012 | 待设计 | P2 | 英文文档入口 | README 规定中文默认、英文可选，但还没有英文文档 | 方便英文环境或国际协作理解项目 | 在核心功能稳定后增加 `docs/README_EN.md` | README 文档规则 |

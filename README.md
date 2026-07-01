@@ -46,7 +46,7 @@ Money_Never_sleep/
 4. 通过 Agent 引擎适配器生成结构化 dry-run 报告。
 5. 暴露 Python 级 API 函数，供测试和早期集成使用。
 
-当前阶段已经完成真实 A 股数据层、TradingAgents 深度引擎边界、报告历史能力、Web 工作台第一版、JSON HTTP API 层、Electron 桌面壳、风控纪律层、回测接口，并新增 Sina 日线 K 线 provider：回测可自动获取真实价格序列。
+当前阶段已经完成真实 A 股数据层、TradingAgents 深度引擎边界、报告历史能力、Web 工作台第一版、JSON HTTP API 层、Electron 桌面壳、风控纪律层、回测接口、Sina 日线 K 线 provider 和组合风险预算：回测可自动获取真实价格序列，组合预算可基于多份报告生成总仓位、现金保留和单票预算。
 
 阶段拆分和后续计划见 [docs/stages.md](docs/stages.md)。该文件是活文档，会随阶段完成、新想法和优先级变化持续更新。
 
