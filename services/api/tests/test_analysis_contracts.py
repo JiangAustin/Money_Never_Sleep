@@ -6,6 +6,8 @@ from money_api.domains.analysis.contracts import (
     AgentView,
     AnalysisReport,
     AnalysisStatus,
+    BacktestPricePoint,
+    BacktestResult,
     ConfidenceLevel,
     DataContext,
     DecisionAction,
@@ -147,3 +149,20 @@ def test_risk_control_plan_round_trip() -> None:
     )
 
     assert RiskControlPlan.from_dict(plan.to_dict()) == plan
+
+
+def test_backtest_result_round_trip() -> None:
+    result = BacktestResult(
+        task_id="task-1",
+        entry_date="2026-07-01",
+        exit_date="2026-07-05",
+        entry_price=100.0,
+        exit_price=112.0,
+        return_pct=0.12,
+        max_drawdown_pct=-0.03,
+        holding_days=4,
+        exit_reason="take_profit",
+        price_path=[BacktestPricePoint(date="2026-07-01", close=100.0)],
+    )
+
+    assert BacktestResult.from_dict(result.to_dict()) == result

@@ -107,6 +107,62 @@ class RiskControlPlan:
 
 
 @dataclass(frozen=True)
+class BacktestPricePoint:
+    date: str
+    close: float
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"date": self.date, "close": self.close}
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "BacktestPricePoint":
+        return cls(date=str(payload.get("date", "")), close=float(payload.get("close", 0)))
+
+
+@dataclass(frozen=True)
+class BacktestResult:
+    task_id: str
+    entry_date: str
+    exit_date: str
+    entry_price: float
+    exit_price: float
+    return_pct: float
+    max_drawdown_pct: float
+    holding_days: int
+    exit_reason: str
+    price_path: list[BacktestPricePoint]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "task_id": self.task_id,
+            "entry_date": self.entry_date,
+            "exit_date": self.exit_date,
+            "entry_price": self.entry_price,
+            "exit_price": self.exit_price,
+            "return_pct": self.return_pct,
+            "max_drawdown_pct": self.max_drawdown_pct,
+            "holding_days": self.holding_days,
+            "exit_reason": self.exit_reason,
+            "price_path": [point.to_dict() for point in self.price_path],
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "BacktestResult":
+        return cls(
+            task_id=str(payload.get("task_id", "")),
+            entry_date=str(payload.get("entry_date", "")),
+            exit_date=str(payload.get("exit_date", "")),
+            entry_price=float(payload.get("entry_price", 0)),
+            exit_price=float(payload.get("exit_price", 0)),
+            return_pct=float(payload.get("return_pct", 0)),
+            max_drawdown_pct=float(payload.get("max_drawdown_pct", 0)),
+            holding_days=int(payload.get("holding_days", 0)),
+            exit_reason=str(payload.get("exit_reason", "")),
+            price_path=[BacktestPricePoint.from_dict(item) for item in payload.get("price_path", [])],
+        )
+
+
+@dataclass(frozen=True)
 class AgentView:
     """Captures one analysis agent's conclusion for the final report."""
 
