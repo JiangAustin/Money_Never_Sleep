@@ -4,6 +4,7 @@ const state = {
   selectedTaskId: reports[0]?.task_id || null,
   apiBaseUrl: getApiBaseUrl(),
   startup: getStartupContext(),
+  taskStatus: "当前未提交任务",
 };
 
 const elements = {
@@ -11,6 +12,7 @@ const elements = {
   modePill: document.getElementById("mode-pill"),
   symbol: document.getElementById("symbol-input"),
   message: document.getElementById("message-input"),
+  taskStatus: document.getElementById("task-status"),
   reportList: document.getElementById("report-list"),
   reportCount: document.getElementById("report-count"),
   detail: document.getElementById("report-detail"),
@@ -84,6 +86,10 @@ function renderModePill() {
   elements.modePill.textContent = getModeLabel();
 }
 
+function renderTaskStatus() {
+  elements.taskStatus.textContent = state.taskStatus;
+}
+
 function createLocalAnalysis(symbol, message) {
   const stock = normalizeSymbol(symbol);
   const createdAt = new Date().toISOString();
@@ -152,6 +158,59 @@ async function createHttpAnalysis(apiBaseUrl, symbol, message) {
     throw new Error(payload.error || `HTTP ${response.status}`);
   }
   return payload;
+}
+
+async function createHttpAnalysisTask(apiBaseUrl, symbol, message) {
+  const response = await fetch(`${apiBaseUrl}/tasks/analysis`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ symbol, message }),
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || `HTTP ${response.status}`);
+  }
+  return payload;
+}
+
+async function fetchTask(apiBaseUrl, taskId) {
+  const response = await fetch(`${apiBaseUrl}/tasks/${taskId}`);
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || `HTTP ${response.status}`);
+  }
+  return payload;
+}
+
+async function fetchReport(apiBaseUrl, reportId) {
+  const response = await fetch(`${apiBaseUrl}/reports/${reportId}`);
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || `HTTP ${response.status}`);
+  }
+  return payload;
+}
+
+function delay(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function pollAnalysisTask(apiBaseUrl, taskId) {
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    const task = await fetchTask(apiBaseUrl, taskId);
+    state.taskStatus = `任务状态：${task.status}`;
+    renderTaskStatus();
+    if (task.status === "report_ready" && task.report_id) {
+      state.taskStatus = "任务已完成";
+      renderTaskStatus();
+      return fetchReport(apiBaseUrl, task.report_id);
+    }
+    if (task.status === "failed") {
+      throw new Error(task.error || "analysis task failed");
+    }
+    await delay(250);
+  }
+  throw new Error("analysis task timeout");
 }
 
 function getSelectedReport() {
@@ -312,6 +371,7 @@ function renderDiagnostics() {
 
 function render() {
   renderModePill();
+  renderTaskStatus();
   renderReportList();
   renderReportDetail();
   renderDiagnostics();
@@ -322,11 +382,17 @@ async function handleSubmit(event) {
   let report;
   if (state.apiBaseUrl) {
     try {
-      report = await createHttpAnalysis(state.apiBaseUrl, elements.symbol.value, elements.message.value);
+      const task = await createHttpAnalysisTask(state.apiBaseUrl, elements.symbol.value, elements.message.value);
+      state.taskStatus = `任务已创建：${task.task_id}`;
+      renderTaskStatus();
+      report = await pollAnalysisTask(state.apiBaseUrl, task.task_id);
     } catch (error) {
+      state.taskStatus = `任务失败：${error.message || "unknown error"}`;
+      renderTaskStatus();
       report = createFallbackAnalysis(elements.symbol.value, elements.message.value, error);
     }
   } else {
+    state.taskStatus = "当前为离线本地模式";
     report = createLocalAnalysis(elements.symbol.value, elements.message.value);
   }
   state.reports.unshift(report);

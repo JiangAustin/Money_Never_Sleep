@@ -298,6 +298,29 @@ HTTP 入口：`POST /reports/{task_id}/backtest` 的 body 可传 `{ "options": {
 
 未做事项：独立日志窗口、重试按钮、更细粒度的 Python 探测和日志持久化。
 
+### 阶段 5.6：HTTP 任务队列与状态轮询
+
+做了什么：新增 in-memory analysis task queue、`POST /tasks/analysis`、`GET /tasks/{id}`，并让 Web 工作台在连接 HTTP API 时优先走任务创建与轮询。
+
+为什么这么做：同步 `POST /analysis` 对 mock 和轻量查询足够，但真实深度分析会变成长请求，前端需要稳定的排队和轮询入口。
+
+收益：Web 和桌面在真实 API 模式下不再依赖长同步阻塞；任务完成后会自动拉最终报告，失败时仍可回退到离线 mock。
+
+关键文件：
+
+- `services/api/money_api/domains/analysis/task_queue.py`
+- `services/api/money_api/api/http.py`
+- `apps/web/index.html`
+- `apps/web/src/app.js`
+- `services/api/tests/test_http_api.py`
+
+HTTP 入口：
+
+- `POST /tasks/analysis`
+- `GET /tasks/{task_id}`
+
+未做事项：任务持久化、取消、重试、超时恢复、并发限流和任务历史查询。
+
 ## 当前验证命令
 
 后端和 Web 结构默认验证：
@@ -359,14 +382,14 @@ MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_
 - 默认深度引擎仍是 mock；真实 TradingAgents 需要显式工厂和 opt-in smoke。
 - 数据层真实 provider 覆盖腾讯 quote 最小路径和 Sina 日线 K 线回测价格序列。
 - 报告 repository 使用 JSON 文件，适合第一版，不适合复杂查询和并发写入。
-- 没有任务队列，真实深度分析的长耗时执行还没有状态轮询。
+- 已有第一版内存任务队列和状态轮询，但还没有任务持久化、取消、重试和恢复语义。
 - 风控纪律、回测和组合预算已完成第一版，但尚未接真实交易执行或真实持仓同步。
 - 回测接口已接入 Sina 日线 K 线 provider，并支持成本、滑点和复权标记；尚未做真实复权价格转换、缓存和多 provider fallback。
 - 组合风险预算已完成第一版，但尚未接真实持仓、行业/主题/相关性约束和 Web/Desktop 组合视图。
 
 ## 推荐下一步
 
-建议继续阶段 7 后续切片：真实复权价格转换、回测缓存、多 provider fallback，或组合预算的行业/相关性约束；如果更偏服务化和产品化，可以先做异步任务队列、状态轮询和更详细的桌面启动日志/重试控制。
+建议继续阶段 7 后续切片：真实复权价格转换、回测缓存、多 provider fallback，或组合预算的行业/相关性约束；如果更偏服务化和产品化，可以先补任务持久化/取消/恢复语义、真实 TradingAgents smoke 和更详细的桌面日志控制。
 
 推荐第一版路径：
 

@@ -56,6 +56,28 @@ def test_http_list_reports() -> None:
     assert decode(response)[0]["stock"]["code"] == "600519"
 
 
+def test_http_create_analysis_task_and_poll_status() -> None:
+    app = build_app()
+
+    response = app.handle("POST", "/tasks/analysis", json.dumps({"symbol": "贵州茅台", "message": "请全面分析"}).encode("utf-8"))
+
+    assert response.status == 202
+    task = decode(response)
+    assert task["status"] in {"queued", "quick_screening", "deep_analysis", "report_ready"}
+
+    polled = decode(app.handle("GET", f"/tasks/{task['task_id']}", b""))
+
+    assert polled["task_id"] == task["task_id"]
+    assert polled["status"] in {"queued", "quick_screening", "deep_analysis", "report_ready"}
+
+
+def test_http_task_returns_400_for_invalid_payload() -> None:
+    response = build_app().handle("POST", "/tasks/analysis", b"{}")
+
+    assert response.status == 400
+    assert decode(response)["error"] == "symbol and message are required"
+
+
 def test_http_returns_400_for_invalid_analysis_payload() -> None:
     response = build_app().handle("POST", "/analysis", b"{}")
 
@@ -65,6 +87,12 @@ def test_http_returns_400_for_invalid_analysis_payload() -> None:
 
 def test_http_returns_404_for_missing_report() -> None:
     response = build_app().handle("GET", "/reports/missing", b"")
+
+    assert response.status == 404
+
+
+def test_http_returns_404_for_missing_task() -> None:
+    response = build_app().handle("GET", "/tasks/missing", b"")
 
     assert response.status == 404
 

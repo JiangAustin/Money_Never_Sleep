@@ -24,6 +24,7 @@ def test_web_workbench_has_core_regions() -> None:
     assert 'id="report-detail"' in html
     assert 'id="diagnostics-panel"' in html
     assert 'id="mode-pill"' in html
+    assert 'id="task-status"' in html
 
 
 def test_mock_data_matches_report_contract() -> None:
@@ -85,7 +86,9 @@ def test_app_js_exposes_http_service_boundary() -> None:
 
     assert "function getApiBaseUrl" in app_js
     assert "async function createHttpAnalysis" in app_js
-    assert "fetch(`${apiBaseUrl}/analysis`" in app_js
+    assert "async function createHttpAnalysisTask" in app_js
+    assert "async function pollAnalysisTask" in app_js
+    assert 'fetch(`${apiBaseUrl}/tasks/analysis`' in app_js
     assert "createLocalAnalysis" in app_js
 
 

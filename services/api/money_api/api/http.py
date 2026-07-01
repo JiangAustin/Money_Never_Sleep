@@ -8,6 +8,7 @@ from urllib.parse import parse_qs, urlparse
 from money_api.api.v1.router import build_runtime_analysis_service
 from money_api.domains.analysis.contracts import BacktestOptions
 from money_api.domains.analysis.service import AnalysisService
+from money_api.domains.analysis.task_queue import InMemoryAnalysisTaskQueue
 from money_api.domains.market_data.sina_kline import SinaKLineProvider
 from money_api.main import health
 
@@ -20,9 +21,10 @@ class HttpResponse:
 
 
 class HttpApiApp:
-    def __init__(self, service: AnalysisService, price_providers: dict[str, object] | None = None):
+    def __init__(self, service: AnalysisService, price_providers: dict[str, object] | None = None, task_queue: InMemoryAnalysisTaskQueue | None = None):
         self.service = service
         self.price_providers = price_providers or {"sina": SinaKLineProvider()}
+        self.task_queue = task_queue or InMemoryAnalysisTaskQueue(service=service)
 
     def handle(self, method: str, target: str, body: bytes) -> HttpResponse:
         parsed = urlparse(target)
@@ -36,9 +38,17 @@ class HttpApiApp:
             return self._json(200, health())
         if method == "POST" and path == "/analysis":
             return self._create_analysis(body)
+        if method == "POST" and path == "/tasks/analysis":
+            return self._create_analysis_task(body)
         if method == "GET" and path == "/reports":
             limit = self._parse_limit(query.get("limit", ["20"])[0])
             return self._json(200, [record.to_dict() for record in self.service.list_reports(limit=limit)])
+        if method == "GET" and path.startswith("/tasks/"):
+            task_id = path.removeprefix("/tasks/")
+            task = self.task_queue.get_task(task_id)
+            if task is None:
+                return self._json(404, {"error": "task not found"})
+            return self._json(200, task.to_dict())
         if method == "GET" and path.startswith("/reports/"):
             task_id = path.removeprefix("/reports/")
             report = self.service.get_report(task_id)
@@ -65,6 +75,20 @@ class HttpApiApp:
 
         report = self.service.create_single_stock_analysis(symbol, message)
         return self._json(200, report.to_dict())
+
+    def _create_analysis_task(self, body: bytes) -> HttpResponse:
+        try:
+            payload = json.loads(body.decode("utf-8") or "{}")
+        except json.JSONDecodeError:
+            return self._json(400, {"error": "invalid json"})
+
+        symbol = payload.get("symbol")
+        message = payload.get("message")
+        if not isinstance(symbol, str) or not symbol.strip() or not isinstance(message, str) or not message.strip():
+            return self._json(400, {"error": "symbol and message are required"})
+
+        task = self.task_queue.create_analysis_task(symbol, message)
+        return self._json(202, task.to_dict())
 
     def _backtest_report(self, task_id: str, body: bytes) -> HttpResponse:
         try:

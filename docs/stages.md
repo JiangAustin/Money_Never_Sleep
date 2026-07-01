@@ -34,6 +34,7 @@
 | 4. 报告、历史与复盘 | 已完成 | 保存报告和分析上下文，支持历史查询、复盘和追问 | 报告 round-trip 契约、repository、JSON 持久化、历史查询 API | 报告可重复读取，关键证据和 data gaps 可追溯 |
 | 5. Web 工作台 | 已完成 | 提供用户可操作的单股分析入口和报告阅读体验 | 静态 Web 工作台、离线 mock 分析、最近报告、报告详情、数据诊断 | 用户可从 Web 发起 mock 分析并查看结构化报告 |
 | 5.5 HTTP API 层 | 已完成 | 为 Web 和桌面提供真实 JSON HTTP 边界 | HTTP dispatcher、标准库 server、Web API mode | 客户端可通过 HTTP 发起分析、读取报告和最近报告 |
+| 5.6 HTTP 任务队列与状态轮询 | 已完成 | 让 Web/桌面在真实 API 模式下可异步发起分析并轮询状态 | in-memory task queue、`POST /tasks/analysis`、`GET /tasks/{id}`、Web 轮询 | 真实 API 模式下分析请求不再依赖长同步阻塞 |
 | 6. 桌面端与本地体验 | 已完成 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | Electron 桌面壳、macOS 构建入口、Web 工作台资源打包 | macOS `.app` 可构建并能承载 Web 工作台 |
 | 6.1 桌面托管本地 API | 已完成 | 让桌面端默认尝试拉起本地 API，并使用更接近可用产品的 runtime service | runtime service factory、Electron 托管 server、打包 API 源码资源 | 桌面无需手动设置 API URL 也可尝试进入真实 HTTP 模式 |
 | 6.2 桌面启动诊断 | 已完成 | 让用户看到桌面当前运行模式和回退原因 | startup 上下文注入、mode pill、诊断面板启动区块 | 桌面能显示托管 API / 外部 API / 离线模式和最近错误 |
@@ -45,14 +46,14 @@
 
 ## 当前阶段结论
 
-阶段 6.2 已完成。当前系统已具备可见的桌面启动模式诊断：
+阶段 5.6 已完成。当前系统已具备最小异步 HTTP 分析闭环：
 
-1. 阶段 6.1 已让桌面默认尝试拉起本地 API，并让 HTTP server 默认装配 runtime service。
-2. 阶段 6.2 新增 desktop startup 上下文，Electron 会把当前模式、API URL 和最近错误传给 renderer。
-3. Web 工作台头部的 mode pill 现在会显示托管 API、外部 API、桌面离线或浏览器离线模式。
-4. 诊断面板新增启动模式区块，可显示最近一次托管启动失败原因。
-5. 若本地 server 启动失败，用户不再只看到静默回退，而能在界面里看到原因。
-6. Python runtime 仍不随桌面应用打包；独立日志窗口、重试按钮、签名和 DMG 仍不属于当前切片。
+1. `POST /tasks/analysis` 可创建分析任务，`GET /tasks/{id}` 可轮询状态。
+2. HTTP 任务在内存队列中以后台线程执行，最小状态闭环为 `queued -> quick_screening|deep_analysis -> report_ready|failed`。
+3. Web/桌面在连接 HTTP API 时，前端优先走任务模式，而不是直接等待同步 `POST /analysis` 长阻塞。
+4. 任务完成后，前端会自动拉最终报告；失败时会回退到离线 mock 并附带任务错误诊断。
+5. 现有同步 `POST /analysis` 仍然保留，用于兼容已有调用方。
+6. 任务持久化、取消、重试、超时恢复和并发限流仍不属于当前切片。
 
 离线验证命令：
 
@@ -60,7 +61,7 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`107 passed, 3 skipped`。
+离线结果：`110 passed, 3 skipped`。
 
 Sina K 线真实网络 smoke 结果：`1 passed`。
 
@@ -74,7 +75,7 @@ HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.
 
 ## 下一阶段建议
 
-建议下一步在两个方向中二选一：继续服务化方向的异步任务队列与状态轮询，或补真实 TradingAgents smoke 与更详细的启动日志/重试控制。
+建议下一步在两个方向中二选一：补真实 TradingAgents smoke 与任务超时/取消/恢复语义，或继续回测与数据层的真实化增强。
 
 ## 想法池
 

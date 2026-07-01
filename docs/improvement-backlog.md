@@ -31,12 +31,12 @@
 | MNS-BL-015 | 待设计 | P1 | 桌面应用签名、公证、DMG 和图标 | 阶段 6 第一版只构建 `.app` 目录，避免引入证书、公证和安装包复杂度 | 提供更接近真实分发的 macOS 体验 | 准备图标和 Apple Developer 证书后，设计签名/公证/DMG 流程 | 阶段 6、`apps/desktop/` |
 | MNS-BL-016 | 已完成 | P1 | 桌面内嵌或托管 Python API server | 阶段 6 默认不管理 Python 子进程，避免进程生命周期复杂度 | 桌面应用可独立发起真实分析，不要求用户手动启动后端 | 已在阶段 6.1 完成桌面托管 server、health 检查、退出清理和 API 源码打包；仍依赖本机 Python runtime | 阶段 6.1、HTTP API |
 | MNS-BL-013 | 待设计 | P1 | FastAPI/OpenAPI 升级 | 阶段 5.5 为避免新增依赖，先使用标准库 HTTP dispatcher | 获得 OpenAPI、自动文档、中间件和更成熟的服务化能力 | 在桌面壳或 Web 真联调稳定后，评估将 dispatcher 外层替换为 FastAPI | 阶段 5.5、`services/api/money_api/api/http.py` |
-| MNS-BL-014 | 待设计 | P1 | 异步任务队列与状态轮询 | 阶段 5.5 只做同步 HTTP 调用，避免一次性引入队列和 worker | 长耗时 TradingAgents 分析可被 Web/桌面稳定轮询和恢复 | 设计 task repository、worker、`GET /tasks/{id}` 和超时/取消语义 | 阶段 5.5/6、`AnalysisStatus` |
+| MNS-BL-014 | 已完成 | P1 | 异步任务队列与状态轮询 | 阶段 5.5 只做同步 HTTP 调用，避免一次性引入队列和 worker | 长耗时 TradingAgents 分析可被 Web/桌面稳定轮询和恢复 | 已在阶段 5.6 完成 in-memory task queue、`POST /tasks/analysis`、`GET /tasks/{id}` 和 Web 轮询；任务持久化/取消/恢复仍是后续项 | 阶段 5.6、`AnalysisStatus` |
 | MNS-BL-003 | 待实现 | P1 | 真实 TradingAgents smoke | 阶段 3 只提供 opt-in smoke，默认测试不能依赖 LLM/API key | 验证真实多 Agent 投研链路可被 Money_Never_sleep 调起 | 准备本地密钥和可控样例，运行 `MNS_RUN_TRADINGAGENTS_SMOKE=1 ...test_tradingagents_smoke.py`，记录结果 | 阶段 3、`services/api/tests/test_tradingagents_smoke.py` |
 | MNS-BL-004 | 待设计 | P1 | JSON 报告仓储升级为 SQLite 或可迁移仓储 | 阶段 4 为降低复杂度先使用 JSON 文件 | 提升查询、筛选、分页和并发写入能力 | 在 Web API 接入后评估 SQLite schema 和迁移策略 | 阶段 4、`report_repository.py` |
 | MNS-BL-005 | 待设计 | P1 | 真实 K 线、技术指标和估值扩展 | 阶段 2 只接入腾讯 quote 最小真实路径 | 提高深度分析上下文质量，减少 mock/fixture 依赖 | 设计 provider bundle 的 K 线与 fundamentals 扩展，保持 diagnostics/gaps 语义 | 阶段 2、`domains/market_data/` |
 | MNS-BL-006 | 待设计 | P1 | 新闻、公告、资金流、龙虎榜和解禁 provider | 阶段 2 明确不接宽数据面 | 支撑 A 股政策、游资、解禁等 TradingAgents 角色 | 优先选择 1-2 个高价值数据源，复用 provider result 契约 | 阶段 2/3、TradingAgents-astock 参考 |
-| MNS-BL-007 | 待设计 | P1 | 分析任务状态与异步执行 | 目前 Python API 是同步函数，Web 第一版是本地 mock | 长耗时 TradingAgents 分析需要排队、状态轮询和错误恢复 | 先设计 task schema：queued/running/failed/report_ready，再接 Web 轮询 | 阶段 5 后续、`AnalysisStatus` |
+| MNS-BL-007 | 待设计 | P1 | 分析任务持久化与恢复 | 当前阶段 5.6 已有内存队列和状态轮询，但任务生命周期不持久 | 支持服务重启后恢复、历史任务查询、取消与重试 | 在现有 task schema 基础上引入持久化 repository 和恢复语义 | 阶段 5.6 后续、`AnalysisStatus` |
 | MNS-BL-008 | 待设计 | P2 | 报告追问与分析会话 | 阶段 4 只保存最终报告，没有 conversation/session | 支持围绕历史报告继续提问、补证据、复盘 | 在报告持久化稳定后设计 `AnalysisSession` 和追问记录 | 阶段 4/5 |
 | MNS-BL-009 | 待设计 | P2 | 投资免责声明与风险提示治理 | 当前有风险字段，但没有统一产品级免责声明 | 降低误解为自动荐股的风险，统一 Web/API/报告表达 | 增加 report disclaimer 字段或 UI 固定风险说明 | README、Web、报告契约 |
 | MNS-BL-017 | 已完成 | P0 | 风控纪律层 | 此前报告只有 action/confidence/risks，没有统一仓位、止损、止盈和免责声明 | 让每份报告都有可复盘的纪律约束，避免只输出买卖结论 | 已在阶段 7 完成 `RiskControlPlan`、默认风险策略、Service/API 集成和 Web mock 兼容；验证：`79 passed, 2 skipped`，macOS `.app` 构建通过 | 阶段 7、`AnalysisReport` |
@@ -44,6 +44,7 @@
 | MNS-BL-020 | 已完成 | P1 | 真实行情回测数据源 | 阶段 7.1 只接受调用者传入价格序列，不接真实 K 线 provider | 回测可以直接基于真实历史行情运行，减少手工输入 | 已在阶段 7.2 完成 Sina 日线 K 线 provider 和 provider 回测 API；验证：`93 passed, 3 skipped`，macOS `.app` 构建通过 | 阶段 7.2、`domains/market_data/` |
 | MNS-BL-022 | 已完成 | P1 | Sina K 线真实网络 smoke | 阶段 7.2 先做离线 parser/provider 测试，避免默认测试依赖外网 | 验证 Sina 当前真实接口能返回可用于回测的价格序列 | 已新增 opt-in smoke：默认 skip；`MNS_RUN_NETWORK_SMOKE=1 ...test_sina_kline_smoke.py` 验证 `1 passed` | 阶段 7.2、`services/api/tests/test_sina_kline_smoke.py` |
 | MNS-BL-023 | 已完成 | P1 | 桌面启动诊断 | 阶段 6.1 虽已托管本地 API，但失败回退对用户不可见 | 让用户知道当前是托管 API、外部 API 还是离线模式，并看到最近错误 | 已在阶段 6.2 完成 startup 上下文注入、mode pill 和诊断面板启动区块；验证：`107 passed, 3 skipped` | 阶段 6.2、`apps/desktop/src/main.js`、`apps/web/src/app.js` |
+| MNS-BL-024 | 已完成 | P1 | HTTP 分析任务队列 | 阶段 5.5 只有同步 `POST /analysis`，真实深度分析会变成长请求 | 让 Web/桌面可以稳定轮询长任务并在完成后拉报告 | 已在阶段 5.6 完成任务创建、状态轮询和 Web 接入；验证：`110 passed, 3 skipped` | 阶段 5.6、`services/api/money_api/api/http.py`、`apps/web/src/app.js` |
 | MNS-BL-021 | 已完成 | P2 | 交易成本、滑点和复权参数 | 阶段 7.1 为保持 deterministic 最小闭环，不做成本和复权 | 提高回测结果可信度，避免过度乐观 | 已在阶段 7.4 完成 `BacktestOptions`、净收益/裸收益/成本影响和 Python/HTTP API 参数；真实复权价格转换仍是后续项 | 阶段 7.4 |
 | MNS-BL-019 | 已完成 | P1 | 组合风险预算 | 当前系统仍是单股分析，没有组合层持仓和风险预算 | 支持多标的仓位约束、集中度控制和组合视图 | 已在阶段 7.3 完成组合预算契约、预算器、Python API 和 HTTP API；验证：`100 passed, 3 skipped` | 阶段 7.3 |
 | MNS-BL-010 | 待设计 | P2 | Web 图表和行情可视化 | 阶段 5 静态工作台不做 K 线或图表 | 改善报告阅读和行情理解效率 | 先接真实 API，再选择轻量图表方案 | 阶段 5 后续 |
@@ -78,7 +79,7 @@
 ### 阶段 5：Web 工作台
 
 - Web 是零依赖静态版本，默认使用离线 mock 数据。
-- 阶段 5.5 已支持 `?api=` HTTP 模式，但尚未提供完整任务状态轮询。
+- 阶段 5.6 已支持 `?api=` HTTP 任务模式，但任务仍是内存态，未提供取消、重试、恢复和更丰富的状态可视化。
 - 未引入前端框架、路由、状态管理、图表或自动化浏览器截图验证。
 
 ### 阶段 6：桌面端与本地体验
