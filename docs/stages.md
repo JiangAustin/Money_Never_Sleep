@@ -46,6 +46,7 @@
 | 5.15 任务重试策略可观测性 | 已完成 | 让任务历史能看见重试延迟和策略命中信息 | `next_retry_delay_s`、`next_retry_policy`、Web 历史展示 | 调用方可看到本次计划重试为何延迟、延迟多久 |
 | 5.16 真实个股新闻数据接入 | 已完成 | 让 runtime 分析上下文的新闻字段来自真实资讯流 | `EastmoneyNewsProvider`、runtime news 装配、provider 测试 | tencent runtime 模式下 news 来源变为 `eastmoney` |
 | 5.17 runtime 默认深度引擎 auto 模式 | 已完成 | 让默认链路优先尝试真实 TradingAgents，失败时自动回退 mock | `AutoFallbackDeepResearchEngine`、runtime default `auto`、桌面默认值同步 | 默认 runtime 具备“真实优先、失败回退”的深度分析语义 |
+| 5.18 runtime 市场快讯接入 | 已完成 | 让默认 news 上下文同时覆盖个股新闻与市场快讯 | `ClsMarketFlashProvider`、`CompositeNewsProvider`、runtime news 合并 | 默认 runtime 的 `news` 同时包含东方财富个股新闻和 CLS 快讯 |
 | 6. 桌面端与本地体验 | 已完成 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | Electron 桌面壳、macOS 构建入口、Web 工作台资源打包 | macOS `.app` 可构建并能承载 Web 工作台 |
 | 6.1 桌面托管本地 API | 已完成 | 让桌面端默认尝试拉起本地 API，并使用更接近可用产品的 runtime service | runtime service factory、Electron 托管 server、打包 API 源码资源 | 桌面无需手动设置 API URL 也可尝试进入真实 HTTP 模式 |
 | 6.2 桌面启动诊断 | 已完成 | 让用户看到桌面当前运行模式和回退原因 | startup 上下文注入、mode pill、诊断面板启动区块 | 桌面能显示托管 API / 外部 API / 离线模式和最近错误 |
@@ -57,7 +58,7 @@
 
 ## 当前阶段结论
 
-阶段 5.17 已完成。当前系统已具备前后端贯通的异步 HTTP 任务控制与任务可见性闭环，并开始让默认深度分析链路优先尝试真实 TradingAgents：
+阶段 5.18 已完成。当前系统已具备前后端贯通的异步 HTTP 任务控制与任务可见性闭环，并继续补齐真实输入面：
 
 1. `POST /tasks/analysis` 可创建分析任务，`GET /tasks/{id}` 和 `GET /tasks?limit=` 可查询任务。
 2. 任务默认持久化到 JSON 文件目录 `data/cache/tasks`，服务重启时会把上次中断的运行中任务标记为 `failed`。
@@ -65,9 +66,10 @@
 4. 新增 `timeout_s`、`started_at`、`retry_count`、`max_retries`、`next_retry_at`、`next_retry_delay_s` 和 `next_retry_policy`，任务可在后台 watchdog 扫描时自动超时失败，并保留下一次重试的决策信息。
 5. `retry_backoff_factor`、`retry_jitter_ratio` 和 `retry_timeout_multiplier` 支持按错误类型（timeout）应用倍率并附加抖动。
 6. runtime service 在 `MONEY_MARKET_DATA_MODE=tencent` 下，`quote` 来自腾讯，`news` 来自东方财富个股新闻，`technicals/fundamentals` 仍使用 fallback。
-7. runtime deep engine 默认值现在是 `auto`：优先尝试真实 TradingAgents，若导入或运行失败则自动回退到 mock，并在 diagnostics 中保留失败来源。
-8. Web 工作台现在提供 `取消任务` 和 `重试任务` 按钮，并在最近任务列表中展示下一次重试时间、策略标签和延迟秒数。
-9. 取消不是底层线程/外部引擎的强制中断；新闻只接入了最小个股资讯流，仍未实现公告、资金流、分布式 worker、筛选分页或完整任务详情页。
+7. runtime service 现在会把东方财富个股新闻和 CLS 市场快讯合并到同一个 `news` 上下文中，保持现有 schema 不变。
+8. runtime deep engine 默认值现在是 `auto`：优先尝试真实 TradingAgents，若导入或运行失败则自动回退到 mock，并在 diagnostics 中保留失败来源。
+9. Web 工作台现在提供 `取消任务` 和 `重试任务` 按钮，并在最近任务列表中展示下一次重试时间、策略标签和延迟秒数。
+10. 取消不是底层线程/外部引擎的强制中断；仍未实现交易所公告、资金流、分布式 worker、筛选分页或完整任务详情页。
 
 离线验证命令：
 
@@ -75,7 +77,7 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`133 passed, 3 skipped`。
+离线结果：`137 passed, 3 skipped`。
 
 Sina K 线真实网络 smoke 结果：`1 passed`。
 
@@ -91,7 +93,7 @@ HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.
 
 ## 下一阶段建议
 
-建议下一步按既定顺序继续：补第二条真实输入面（公告或市场快讯），然后把 `auto` 模式从“安全尝试”进一步推进到“真实链路可观测和可配置”。
+建议下一步按既定顺序继续：补交易所公告或更结构化事件流，然后把 `auto` 模式的命中/回退状态显式展示到 Web/桌面。
 
 ## 想法池
 

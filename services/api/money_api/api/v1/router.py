@@ -15,8 +15,9 @@ from money_api.domains.analysis.tradingagents_engine import (
     TradingAgentsDeepResearchEngine,
     TradingAgentsRunner,
 )
+from money_api.domains.market_data.cls_market_flash import ClsMarketFlashProvider
 from money_api.domains.market_data.provider_results import ProviderResult
-from money_api.domains.market_data.eastmoney_news import EastmoneyNewsProvider
+from money_api.domains.market_data.eastmoney_news import CompositeNewsProvider, EastmoneyNewsProvider
 from money_api.domains.market_data.resolver import StockResolver
 from money_api.domains.market_data.sina_kline import SinaKLineProvider
 from money_api.domains.market_data.tencent_quote import TencentQuoteProvider
@@ -29,7 +30,7 @@ class QuoteOverrideProvider:
         self,
         quote_provider: TencentQuoteProvider,
         fallback: StaticMarketDataProvider,
-        news_provider: EastmoneyNewsProvider | None = None,
+        news_provider=None,
     ):
         self.quote_provider = quote_provider
         self.fallback = fallback
@@ -70,6 +71,7 @@ def build_default_analysis_service(report_repository: AnalysisReportRepository |
 def build_tencent_quote_analysis_service(
     transport: Callable[[str], str] | None = None,
     news_transport: Callable[[str], str] | None = None,
+    flash_transport: Callable[[str], dict[str, object]] | None = None,
     report_repository: AnalysisReportRepository | None = None,
 ) -> AnalysisService:
     fallback_provider = StaticMarketDataProvider(
@@ -80,7 +82,12 @@ def build_tencent_quote_analysis_service(
     provider = QuoteOverrideProvider(
         quote_provider=TencentQuoteProvider(transport=transport),
         fallback=fallback_provider,
-        news_provider=EastmoneyNewsProvider(transport=news_transport),
+        news_provider=CompositeNewsProvider(
+            [
+                EastmoneyNewsProvider(transport=news_transport),
+                ClsMarketFlashProvider(transport=flash_transport),
+            ]
+        ),
     )
     return AnalysisService(
         resolver=StockResolver(name_map={"贵州茅台": "600519", "平安银行": "000001"}),
@@ -114,6 +121,7 @@ def build_tradingagents_analysis_service(
 def build_runtime_analysis_service(
     transport: Callable[[str], str] | None = None,
     news_transport: Callable[[str], str] | None = None,
+    flash_transport: Callable[[str], dict[str, object]] | None = None,
     report_repository: AnalysisReportRepository | None = None,
     tradingagents_runner: TradingAgentsRunner | None = None,
 ) -> AnalysisService:
@@ -135,7 +143,12 @@ def build_runtime_analysis_service(
                 fundamentals={"pe_ttm": 28.5, "pb": 9.1},
                 news=[{"title": "示例新闻：业绩保持稳定"}],
             ),
-            news_provider=EastmoneyNewsProvider(transport=news_transport),
+            news_provider=CompositeNewsProvider(
+                [
+                    EastmoneyNewsProvider(transport=news_transport),
+                    ClsMarketFlashProvider(transport=flash_transport),
+                ]
+            ),
         )
 
     deep_engine = MockDeepResearchEngine()

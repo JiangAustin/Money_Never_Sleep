@@ -5,11 +5,15 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Callable
+from typing import Callable, Protocol
 from urllib import parse, request
 
 from money_api.domains.analysis.contracts import StockIdentity
 from money_api.domains.market_data.provider_results import ProviderResult
+
+
+class NewsProvider(Protocol):
+    def get_news(self, stock: StockIdentity) -> ProviderResult: ...
 
 
 def parse_eastmoney_news_jsonp(raw_payload: str) -> list[dict[str, str]]:
@@ -99,3 +103,43 @@ class EastmoneyNewsProvider:
                 error_message=str(exc),
                 fetched_at=fetched_at,
             )
+
+
+@dataclass
+class CompositeNewsProvider:
+    providers: list[NewsProvider]
+
+    def get_news(self, stock: StockIdentity) -> ProviderResult:
+        collected: list[dict[str, str]] = []
+        sources: list[str] = []
+        fetched_at = datetime.now(timezone.utc).isoformat()
+        error_messages: list[str] = []
+        ok = False
+
+        for provider in self.providers:
+            result = provider.get_news(stock)
+            sources.append(result.source)
+            if result.ok and isinstance(result.data, list):
+                ok = True
+                collected.extend(result.data)
+            elif result.error_message:
+                error_messages.append(f"{result.source}: {result.error_message}")
+
+        deduped: list[dict[str, str]] = []
+        seen_titles: set[str] = set()
+        for item in collected:
+            title = item.get("title", "")
+            if title in seen_titles:
+                continue
+            seen_titles.add(title)
+            deduped.append(item)
+
+        return ProviderResult(
+            kind="news",
+            source="+".join(sources),
+            ok=ok,
+            data=deduped,
+            error_type=None if ok else "RuntimeError",
+            error_message=None if ok else "; ".join(error_messages) or "all news providers failed",
+            fetched_at=fetched_at,
+        )
