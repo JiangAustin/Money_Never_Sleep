@@ -148,20 +148,29 @@ def test_runtime_analysis_service_uses_tencent_quote_by_default(monkeypatch) -> 
     def flash_transport(url: str):
         return {"data": {"roll_data": [{"title": "央行公开市场操作", "brief": "今日开展逆回购操作", "ctime": "1782879000"}]}}
 
+    def bulletin_transport(url: str) -> str:
+        return """
+        <html><body><div class='datelist'><ul>
+          <li>2026-05-09 <a href='https://vip.stock.finance.sina.com.cn/bulletin/1'>协鑫能科：关于对控股子公司提供担保的进展公告</a></li>
+        </ul></div></body></html>
+        """
+
     service = build_runtime_analysis_service(
         transport=transport,
         news_transport=news_transport,
         flash_transport=flash_transport,
+        bulletin_transport=bulletin_transport,
         tradingagents_runner=FakeTradingAgentsRunner(),
     )
     payload = service.create_single_stock_analysis("贵州茅台", "请全面分析并给出投资建议").to_dict()
 
     assert payload["data_diagnostics"][0]["source"] == "tencent"
-    assert payload["data_diagnostics"][3]["source"] == "eastmoney+cls"
+    assert payload["data_diagnostics"][3]["source"] == "eastmoney+cls+sina-bulletin"
     assert payload["data_diagnostics"][-1]["source"] == "fake-tradingagents"
     assert payload["summary"] == "贵州茅台 fake TradingAgents 分析完成。"
     assert payload["data_context"]["news"][0]["title"] == "茅台业绩稳健"
     assert payload["data_context"]["news"][1]["source"] == "CLS Wire"
+    assert payload["data_context"]["news"][2]["source"] == "新浪公告"
     assert payload["agent_views"][0]["agent"] == "TradingAgents market"
 
 

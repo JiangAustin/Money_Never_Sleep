@@ -20,6 +20,7 @@ from money_api.domains.market_data.provider_results import ProviderResult
 from money_api.domains.market_data.eastmoney_news import CompositeNewsProvider, EastmoneyNewsProvider
 from money_api.domains.market_data.resolver import StockResolver
 from money_api.domains.market_data.sina_kline import SinaKLineProvider
+from money_api.domains.market_data.sina_bulletin import SinaBulletinProvider
 from money_api.domains.market_data.tencent_quote import TencentQuoteProvider
 
 
@@ -72,6 +73,7 @@ def build_tencent_quote_analysis_service(
     transport: Callable[[str], str] | None = None,
     news_transport: Callable[[str], str] | None = None,
     flash_transport: Callable[[str], dict[str, object]] | None = None,
+    bulletin_transport: Callable[[str], str] | None = None,
     report_repository: AnalysisReportRepository | None = None,
 ) -> AnalysisService:
     fallback_provider = StaticMarketDataProvider(
@@ -86,6 +88,7 @@ def build_tencent_quote_analysis_service(
             [
                 EastmoneyNewsProvider(transport=news_transport),
                 ClsMarketFlashProvider(transport=flash_transport),
+                SinaBulletinProvider(transport=bulletin_transport),
             ]
         ),
     )
@@ -122,6 +125,7 @@ def build_runtime_analysis_service(
     transport: Callable[[str], str] | None = None,
     news_transport: Callable[[str], str] | None = None,
     flash_transport: Callable[[str], dict[str, object]] | None = None,
+    bulletin_transport: Callable[[str], str] | None = None,
     report_repository: AnalysisReportRepository | None = None,
     tradingagents_runner: TradingAgentsRunner | None = None,
 ) -> AnalysisService:
@@ -147,6 +151,7 @@ def build_runtime_analysis_service(
                 [
                     EastmoneyNewsProvider(transport=news_transport),
                     ClsMarketFlashProvider(transport=flash_transport),
+                    SinaBulletinProvider(transport=bulletin_transport),
                 ]
             ),
         )

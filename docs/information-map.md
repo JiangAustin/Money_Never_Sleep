@@ -41,6 +41,7 @@
 | 数据 provider 契约 | `services/api/money_api/domains/market_data/provider_results.py` | `services/api/tests/test_provider_results.py` |
 | 东方财富个股新闻 provider | `services/api/money_api/domains/market_data/eastmoney_news.py` | `services/api/tests/test_eastmoney_news.py` |
 | CLS 市场快讯 provider | `services/api/money_api/domains/market_data/cls_market_flash.py` | `services/api/tests/test_cls_market_flash.py` |
+| 新浪公告标题 provider | `services/api/money_api/domains/market_data/sina_bulletin.py` | `services/api/tests/test_sina_bulletin.py` |
 | Sina K 线 provider | `services/api/money_api/domains/market_data/sina_kline.py` | `services/api/tests/test_sina_kline.py`、`services/api/tests/test_sina_kline_smoke.py` |
 | TradingAgents adapter 与 auto fallback 引擎 | `services/api/money_api/domains/analysis/tradingagents_engine.py` | `services/api/money_api/integrations/tradingagents_runner.py`、`services/api/tests/test_tradingagents_smoke.py` |
 | 报告历史仓储 | `services/api/money_api/domains/analysis/report_repository.py` | `services/api/tests/test_report_repository.py` |
