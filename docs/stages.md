@@ -35,18 +35,18 @@
 | 5. Web 工作台 | 已完成 | 提供用户可操作的单股分析入口和报告阅读体验 | 静态 Web 工作台、离线 mock 分析、最近报告、报告详情、数据诊断 | 用户可从 Web 发起 mock 分析并查看结构化报告 |
 | 5.5 HTTP API 层 | 已完成 | 为 Web 和桌面提供真实 JSON HTTP 边界 | HTTP dispatcher、标准库 server、Web API mode | 客户端可通过 HTTP 发起分析、读取报告和最近报告 |
 | 6. 桌面端与本地体验 | 已完成 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | Electron 桌面壳、macOS 构建入口、Web 工作台资源打包 | macOS `.app` 可构建并能承载 Web 工作台 |
-| 7. 风控、回测与组合 | 进行中 | 从单股建议扩展到纪律、验证和组合层面 | 风控规则、回测接口、组合视图、绩效归因 | 建议可被复盘验证，不只输出买卖结论 |
+| 7. 风控、回测与组合 | 已完成 | 从单股建议扩展到纪律、验证和组合层面 | 风控纪律契约、默认风控策略、报告风险控制计划 | 建议输出带仓位、止损、止盈和免责声明 |
 
 ## 当前阶段结论
 
-阶段 6 已完成。当前系统已具备第一版桌面端本地体验：
+阶段 7 第一版已完成。当前系统已具备确定性风控纪律层：
 
-1. 第一版桌面壳选型为 Electron。
-2. `apps/desktop` 新增 `npm start` 和 `npm run build:mac`。
-3. Electron main 进程在开发和打包模式都能加载 Web 工作台。
-4. 打包时通过 `extraResources` 携带 `apps/web` 静态资源。
-5. 支持 `MNS_DESKTOP_API_URL`，可把桌面壳切到 Web `?api=` 模式。
-6. macOS `.app` 可构建，产物位于 `apps/desktop/dist/mac-arm64/Money Never Sleep.app`。
+1. 新增 `RiskControlRule` 和 `RiskControlPlan` 契约。
+2. `AnalysisReport` 输出 `risk_controls` 字段。
+3. 新增 `DefaultRiskPolicy`，基于状态、动作、置信度和 data gaps 生成风控计划。
+4. `AnalysisService` 在保存报告前自动应用风控策略。
+5. Web mock 报告包含并展示风控纪律。
+6. 回测、组合风险预算和自动交易仍不属于第一版。
 
 离线验证命令：
 
@@ -54,7 +54,7 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`72 passed, 2 skipped`。
+离线结果：`79 passed, 2 skipped`。
 
 macOS 构建结果：`apps/desktop/dist/mac-arm64/Money Never Sleep.app`。
 
@@ -66,7 +66,7 @@ HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.
 
 ## 下一阶段建议
 
-阶段 7“风控、回测与组合”已完成风控纪律切片设计规格和实现计划，正在进入实现。第一版先为每份报告追加确定性的风险控制计划，完整回测和组合优化继续留在 backlog。
+建议下一步在两个方向中二选一：继续阶段 7 后续的回测接口，或先补真实链路验证（腾讯 quote / TradingAgents smoke）和桌面分发能力。
 
 ## 想法池
 
