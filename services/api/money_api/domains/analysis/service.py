@@ -3,11 +3,14 @@
 from uuid import uuid4
 
 from money_api.domains.analysis.agent_engine import DeepResearchEngine, QuickAgentRouter
+from money_api.domains.analysis.backtest import SimpleBacktestEngine
 from money_api.domains.analysis.context_builder import DataContextBuilder
 from money_api.domains.analysis.contracts import (
     AgentView,
     AnalysisReport,
     AnalysisStatus,
+    BacktestPricePoint,
+    BacktestResult,
     ConfidenceLevel,
     DecisionAction,
     RiskFinding,
@@ -30,6 +33,7 @@ class AnalysisService:
         deep_engine: DeepResearchEngine,
         report_repository: AnalysisReportRepository | None = None,
         risk_policy: DefaultRiskPolicy | None = None,
+        backtest_engine: SimpleBacktestEngine | None = None,
     ):
         self.resolver = resolver
         self.context_builder = context_builder
@@ -37,6 +41,7 @@ class AnalysisService:
         self.deep_engine = deep_engine
         self.report_repository = report_repository or InMemoryAnalysisReportRepository()
         self.risk_policy = risk_policy or DefaultRiskPolicy()
+        self.backtest_engine = backtest_engine or SimpleBacktestEngine()
 
     def create_single_stock_analysis(self, symbol: str, message: str) -> AnalysisReport:
         task_id = f"analysis-{uuid4().hex}"
@@ -66,3 +71,9 @@ class AnalysisService:
 
     def list_reports(self, limit: int = 20) -> list[AnalysisReportRecord]:
         return self.report_repository.list_recent(limit=limit)
+
+    def backtest_report(self, task_id: str, prices: list[BacktestPricePoint]) -> BacktestResult | None:
+        report = self.get_report(task_id)
+        if report is None:
+            return None
+        return self.backtest_engine.run(report, prices)

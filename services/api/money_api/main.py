@@ -24,6 +24,12 @@ def list_analysis_reports(limit: int = 20) -> list[dict[str, object]]:
     return list_analysis_reports_v1(limit=limit)
 
 
+def backtest_analysis_report(task_id: str, prices: list[dict[str, object]]) -> dict[str, object] | None:
+    from money_api.api.v1.router import backtest_analysis_report as backtest_analysis_report_v1
+
+    return backtest_analysis_report_v1(task_id=task_id, prices=prices)
+
+
 def run_http_server(host: str = "127.0.0.1", port: int = 8000) -> None:
     from money_api.api.http import run_http_server as run_http_server_v1
 

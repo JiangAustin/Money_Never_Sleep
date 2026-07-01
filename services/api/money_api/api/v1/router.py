@@ -5,7 +5,7 @@ from collections.abc import Callable
 from money_api.core.config import settings
 from money_api.domains.analysis.agent_engine import MockDeepResearchEngine, QuickAgentRouter
 from money_api.domains.analysis.context_builder import DataContextBuilder, StaticMarketDataProvider
-from money_api.domains.analysis.contracts import StockIdentity
+from money_api.domains.analysis.contracts import BacktestPricePoint, StockIdentity
 from money_api.domains.analysis.report_repository import AnalysisReportRepository, JsonFileAnalysisReportRepository
 from money_api.domains.analysis.service import AnalysisService
 from money_api.domains.analysis.tradingagents_engine import (
@@ -111,6 +111,12 @@ def get_analysis_report(task_id: str) -> dict[str, object] | None:
 
 def list_analysis_reports(limit: int = 20) -> list[dict[str, object]]:
     return [record.to_dict() for record in _analysis_service.list_reports(limit=limit)]
+
+
+def backtest_analysis_report(task_id: str, prices: list[dict[str, object]]) -> dict[str, object] | None:
+    price_points = [BacktestPricePoint.from_dict(price) for price in prices]
+    result = _analysis_service.backtest_report(task_id, price_points)
+    return result.to_dict() if result is not None else None
 
 
 def routes() -> dict[str, object]:

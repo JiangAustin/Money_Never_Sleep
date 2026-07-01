@@ -57,6 +57,20 @@ def test_http_returns_404_for_missing_report() -> None:
     assert response.status == 404
 
 
+def test_http_backtest_report() -> None:
+    app = build_app()
+    response = app.handle("POST", "/analysis", json.dumps({"symbol": "贵州茅台", "message": "请全面分析"}).encode("utf-8"))
+    payload = decode(response)
+    backtest_response = app.handle(
+        "POST",
+        f"/reports/{payload['task_id']}/backtest",
+        json.dumps({"prices": [{"date": "2026-07-01", "close": 100.0}, {"date": "2026-07-03", "close": 116.0}]}).encode("utf-8"),
+    )
+
+    assert backtest_response.status == 200
+    assert decode(backtest_response)["exit_reason"] == "take_profit"
+
+
 def test_http_responses_include_cors_headers() -> None:
     response = build_app().handle("GET", "/health", b"")
 

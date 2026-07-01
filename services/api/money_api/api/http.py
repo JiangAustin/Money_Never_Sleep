@@ -42,6 +42,9 @@ class HttpApiApp:
             if report is None:
                 return self._json(404, {"error": "report not found"})
             return self._json(200, report.to_dict())
+        if method == "POST" and path.startswith("/reports/") and path.endswith("/backtest"):
+            task_id = path.removeprefix("/reports/").removesuffix("/backtest")
+            return self._backtest_report(task_id, body)
         return self._json(404, {"error": "not found"})
 
     def _create_analysis(self, body: bytes) -> HttpResponse:
@@ -57,6 +60,24 @@ class HttpApiApp:
 
         report = self.service.create_single_stock_analysis(symbol, message)
         return self._json(200, report.to_dict())
+
+    def _backtest_report(self, task_id: str, body: bytes) -> HttpResponse:
+        try:
+            payload = json.loads(body.decode("utf-8") or "{}")
+        except json.JSONDecodeError:
+            return self._json(400, {"error": "invalid json"})
+        prices = payload.get("prices")
+        if not isinstance(prices, list):
+            return self._json(400, {"error": "prices are required"})
+        try:
+            from money_api.domains.analysis.contracts import BacktestPricePoint
+
+            result = self.service.backtest_report(task_id, [BacktestPricePoint.from_dict(price) for price in prices])
+        except ValueError as exc:
+            return self._json(400, {"error": str(exc)})
+        if result is None:
+            return self._json(404, {"error": "report not found"})
+        return self._json(200, result.to_dict())
 
     def _parse_limit(self, value: str) -> int:
         try:
