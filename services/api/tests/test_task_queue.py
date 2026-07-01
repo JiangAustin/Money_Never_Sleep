@@ -155,3 +155,60 @@ def test_task_queue_marks_timed_out_task_failed() -> None:
     assert task is not None
     assert task.status == AnalysisStatus.FAILED.value
     assert task.error == "task timed out after 1s"
+
+
+def test_task_queue_auto_retries_timed_out_task() -> None:
+    service = build_default_analysis_service(report_repository=InMemoryAnalysisReportRepository())
+    repository = InMemoryAnalysisTaskRepository()
+    queue = InMemoryAnalysisTaskQueue(service=service, repository=repository, executor=lambda operation: None)
+    expired = AnalysisTaskRecord(
+        task_id="task-timeout",
+        symbol="600519",
+        message="请全面分析",
+        status=AnalysisStatus.DEEP_ANALYSIS.value,
+        created_at="2026-07-01T00:00:00+00:00",
+        updated_at="2026-07-01T00:00:00+00:00",
+        started_at="2026-07-01T00:00:00+00:00",
+        timeout_s=1,
+        max_retries=1,
+        retry_count=0,
+    )
+    repository.save(expired)
+    queue._records[expired.task_id] = expired
+    queue._now = lambda: "2026-07-01T00:00:05+00:00"  # type: ignore[attr-defined]
+
+    task = queue.get_task("task-timeout")
+    retries = [record for record in queue.list_tasks(limit=20) if record.retry_of == "task-timeout"]
+
+    assert task is not None
+    assert task.status == AnalysisStatus.FAILED.value
+    assert task.error == "task timed out after 1s"
+    assert len(retries) == 1
+    assert retries[0].retry_count == 1
+
+
+def test_task_queue_start_watchdog_sweeps_timeouts() -> None:
+    service = build_default_analysis_service(report_repository=InMemoryAnalysisReportRepository())
+    repository = InMemoryAnalysisTaskRepository()
+    queue = InMemoryAnalysisTaskQueue(service=service, repository=repository, executor=lambda operation: None)
+    expired = AnalysisTaskRecord(
+        task_id="task-timeout",
+        symbol="600519",
+        message="请全面分析",
+        status=AnalysisStatus.DEEP_ANALYSIS.value,
+        created_at="2026-07-01T00:00:00+00:00",
+        updated_at="2026-07-01T00:00:00+00:00",
+        started_at="2026-07-01T00:00:00+00:00",
+        timeout_s=1,
+    )
+    repository.save(expired)
+    queue._records[expired.task_id] = expired
+    queue._now = lambda: "2026-07-01T00:00:05+00:00"  # type: ignore[attr-defined]
+
+    watchdog = queue.start_watchdog(interval_s=0.01, iterations=1)
+    watchdog.join(timeout=1)
+
+    task = queue.get_task("task-timeout")
+
+    assert task is not None
+    assert task.status == AnalysisStatus.FAILED.value

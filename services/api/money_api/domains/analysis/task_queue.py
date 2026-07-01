@@ -7,6 +7,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock, Thread
+import time
 from typing import Callable, Protocol
 from uuid import uuid4
 
@@ -24,6 +25,8 @@ class AnalysisTaskRecord:
     updated_at: str
     started_at: str | None = None
     timeout_s: int = 300
+    retry_count: int = 0
+    max_retries: int = 0
     report_id: str | None = None
     error: str | None = None
     retry_of: str | None = None
@@ -38,6 +41,8 @@ class AnalysisTaskRecord:
             "updated_at": self.updated_at,
             "started_at": self.started_at,
             "timeout_s": self.timeout_s,
+            "retry_count": self.retry_count,
+            "max_retries": self.max_retries,
             "report_id": self.report_id,
             "error": self.error,
             "retry_of": self.retry_of,
@@ -54,6 +59,8 @@ class AnalysisTaskRecord:
             updated_at=str(payload.get("updated_at", "")),
             started_at=str(payload.get("started_at")) if payload.get("started_at") is not None else None,
             timeout_s=int(payload.get("timeout_s", 300)),
+            retry_count=int(payload.get("retry_count", 0)),
+            max_retries=int(payload.get("max_retries", 0)),
             report_id=str(payload.get("report_id")) if payload.get("report_id") is not None else None,
             error=str(payload.get("error")) if payload.get("error") is not None else None,
             retry_of=str(payload.get("retry_of")) if payload.get("retry_of") is not None else None,
@@ -183,8 +190,14 @@ class InMemoryAnalysisTaskQueue:
         for record in self.repository.recover_incomplete("service restarted before task finished"):
             self._records[record.task_id] = record
 
-    def create_analysis_task(self, symbol: str, message: str, timeout_s: int | None = None) -> AnalysisTaskRecord:
-        return self._create_task_record(symbol=symbol, message=message, timeout_s=timeout_s)
+    def create_analysis_task(
+        self,
+        symbol: str,
+        message: str,
+        timeout_s: int | None = None,
+        max_retries: int | None = None,
+    ) -> AnalysisTaskRecord:
+        return self._create_task_record(symbol=symbol, message=message, timeout_s=timeout_s, max_retries=max_retries)
 
     def cancel_task(self, task_id: str) -> AnalysisTaskRecord | None:
         task = self.get_task(task_id)
@@ -201,9 +214,24 @@ class InMemoryAnalysisTaskQueue:
             return None
         if task.status not in {AnalysisStatus.FAILED.value, AnalysisStatus.CANCELLED.value}:
             return None
-        return self._create_task_record(symbol=task.symbol, message=task.message, retry_of=task.task_id, timeout_s=task.timeout_s)
+        return self._create_task_record(
+            symbol=task.symbol,
+            message=task.message,
+            retry_of=task.task_id,
+            timeout_s=task.timeout_s,
+            retry_count=task.retry_count + 1,
+            max_retries=task.max_retries,
+        )
 
-    def _create_task_record(self, symbol: str, message: str, retry_of: str | None = None, timeout_s: int | None = None) -> AnalysisTaskRecord:
+    def _create_task_record(
+        self,
+        symbol: str,
+        message: str,
+        retry_of: str | None = None,
+        timeout_s: int | None = None,
+        retry_count: int = 0,
+        max_retries: int | None = None,
+    ) -> AnalysisTaskRecord:
         now = datetime.now(timezone.utc).isoformat()
         task_id = f"task-{uuid4().hex}"
         record = AnalysisTaskRecord(
@@ -215,6 +243,8 @@ class InMemoryAnalysisTaskQueue:
             updated_at=now,
             started_at=now,
             timeout_s=int(timeout_s or self.default_timeout_s),
+            retry_count=retry_count,
+            max_retries=int(max_retries or 0),
             retry_of=retry_of,
         )
         with self._lock:
@@ -237,6 +267,20 @@ class InMemoryAnalysisTaskQueue:
 
     def _default_executor(self, operation: Callable[[], None]) -> None:
         Thread(target=operation, daemon=True).start()
+
+    def start_watchdog(self, interval_s: float = 1.0, iterations: int | None = None) -> Thread:
+        def watch() -> None:
+            run_count = 0
+            while iterations is None or run_count < iterations:
+                self.list_tasks(limit=10_000)
+                run_count += 1
+                if iterations is not None and run_count >= iterations:
+                    break
+                time.sleep(interval_s)
+
+        thread = Thread(target=watch, daemon=True)
+        thread.start()
+        return thread
 
     def _now(self) -> str:
         return datetime.now(timezone.utc).isoformat()
@@ -261,6 +305,7 @@ class InMemoryAnalysisTaskQueue:
         if (current - started_at).total_seconds() < record.timeout_s:
             return
         self._update(task_id, status=AnalysisStatus.FAILED.value, error=f"task timed out after {record.timeout_s}s")
+        self._maybe_retry(task_id)
 
     def _update(self, task_id: str, **changes: object) -> None:
         with self._lock:
@@ -272,6 +317,23 @@ class InMemoryAnalysisTaskQueue:
             )
             self._records[task_id] = updated
         self.repository.save(updated)
+
+    def _maybe_retry(self, task_id: str) -> None:
+        task = self.get_task(task_id)
+        if task is None:
+            return
+        if task.status != AnalysisStatus.FAILED.value:
+            return
+        if task.retry_count >= task.max_retries:
+            return
+        self._create_task_record(
+            symbol=task.symbol,
+            message=task.message,
+            retry_of=task.task_id,
+            timeout_s=task.timeout_s,
+            retry_count=task.retry_count + 1,
+            max_retries=task.max_retries,
+        )
 
     def _run_task(self, task_id: str) -> None:
         record = self.get_task(task_id)
@@ -293,6 +355,7 @@ class InMemoryAnalysisTaskQueue:
             if (current := self.get_task(task_id)) is not None and current.status == AnalysisStatus.CANCELLED.value:
                 return
             self._update(task_id, status=AnalysisStatus.FAILED.value, error=str(exc))
+            self._maybe_retry(task_id)
             return
         if (current := self.get_task(task_id)) is not None and current.status == AnalysisStatus.CANCELLED.value:
             return

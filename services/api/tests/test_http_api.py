@@ -105,6 +105,19 @@ def test_http_create_analysis_task_accepts_timeout() -> None:
     assert decode(response)["timeout_s"] == 12
 
 
+def test_http_create_analysis_task_accepts_max_retries() -> None:
+    app = build_app()
+
+    response = app.handle(
+        "POST",
+        "/tasks/analysis",
+        json.dumps({"symbol": "贵州茅台", "message": "请全面分析", "max_retries": 2}).encode("utf-8"),
+    )
+
+    assert response.status == 202
+    assert decode(response)["max_retries"] == 2
+
+
 def test_http_get_task_marks_timeout() -> None:
     service = build_default_analysis_service(report_repository=InMemoryAnalysisReportRepository())
     repository = InMemoryAnalysisTaskRepository()

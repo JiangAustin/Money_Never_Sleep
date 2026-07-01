@@ -101,6 +101,7 @@ class HttpApiApp:
         symbol = payload.get("symbol")
         message = payload.get("message")
         timeout_s = payload.get("timeout_s")
+        max_retries = payload.get("max_retries")
         if not isinstance(symbol, str) or not symbol.strip() or not isinstance(message, str) or not message.strip():
             return self._json(400, {"error": "symbol and message are required"})
 
@@ -110,7 +111,13 @@ class HttpApiApp:
             except (TypeError, ValueError):
                 return self._json(400, {"error": "timeout_s must be an integer"})
 
-        task = self.task_queue.create_analysis_task(symbol, message, timeout_s=timeout_s)
+        if max_retries is not None:
+            try:
+                max_retries = max(0, int(max_retries))
+            except (TypeError, ValueError):
+                return self._json(400, {"error": "max_retries must be an integer"})
+
+        task = self.task_queue.create_analysis_task(symbol, message, timeout_s=timeout_s, max_retries=max_retries)
         return self._json(202, task.to_dict())
 
     def _backtest_report(self, task_id: str, body: bytes) -> HttpResponse:

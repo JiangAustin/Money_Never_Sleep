@@ -48,6 +48,7 @@
 | MNS-BL-025 | 已完成 | P1 | 任务历史查询与重启恢复 | 阶段 5.6 任务全在内存中，服务重启后任务上下文会丢失 | 让近期任务可查询，并让中断任务有明确失败状态 | 已在阶段 5.7 完成 JSON task repository、`GET /tasks` 和中断任务恢复标记；验证：`115 passed, 3 skipped` | 阶段 5.7、`services/api/money_api/domains/analysis/task_queue.py` |
 | MNS-BL-026 | 已完成 | P1 | 任务取消与重试控制 | 阶段 5.7 任务可查询但不可控，用户无法取消长任务或基于失败任务重跑 | 为真实深度分析链路提供最小控制面 | 已在阶段 5.8 完成 cancel/retry 端点和 cancelled 状态；验证：`119 passed, 3 skipped` | 阶段 5.8、`services/api/money_api/domains/analysis/task_queue.py` |
 | MNS-BL-027 | 已完成 | P1 | 任务超时回收 | 阶段 5.8 已能取消与重试，但卡住任务仍可能无限轮询 | 让长任务在没有人工介入时也能收敛为明确失败状态 | 已在阶段 5.9 完成 `timeout_s`、`started_at` 和读取路径上的超时失败标记；验证：`122 passed, 3 skipped` | 阶段 5.9、`services/api/money_api/domains/analysis/task_queue.py` |
+| MNS-BL-028 | 已完成 | P1 | 任务 watchdog 与自动重试 | 阶段 5.9 的超时回收仍依赖读取路径，失败任务也需人工重试 | 让后台可主动收敛超时任务，并降低偶发失败的人肉介入成本 | 已在阶段 5.10 完成 watchdog 扫描、`max_retries` 和 `retry_count`；验证：`125 passed, 3 skipped` | 阶段 5.10、`services/api/money_api/domains/analysis/task_queue.py` |
 | MNS-BL-021 | 已完成 | P2 | 交易成本、滑点和复权参数 | 阶段 7.1 为保持 deterministic 最小闭环，不做成本和复权 | 提高回测结果可信度，避免过度乐观 | 已在阶段 7.4 完成 `BacktestOptions`、净收益/裸收益/成本影响和 Python/HTTP API 参数；真实复权价格转换仍是后续项 | 阶段 7.4 |
 | MNS-BL-019 | 已完成 | P1 | 组合风险预算 | 当前系统仍是单股分析，没有组合层持仓和风险预算 | 支持多标的仓位约束、集中度控制和组合视图 | 已在阶段 7.3 完成组合预算契约、预算器、Python API 和 HTTP API；验证：`100 passed, 3 skipped` | 阶段 7.3 |
 | MNS-BL-010 | 待设计 | P2 | Web 图表和行情可视化 | 阶段 5 静态工作台不做 K 线或图表 | 改善报告阅读和行情理解效率 | 先接真实 API，再选择轻量图表方案 | 阶段 5 后续 |
@@ -82,7 +83,7 @@
 ### 阶段 5：Web 工作台
 
 - Web 是零依赖静态版本，默认使用离线 mock 数据。
-- 阶段 5.9 已支持 `?api=` HTTP 任务模式、任务持久化、cancel/retry 和超时回收，但未提供对应前端按钮、更丰富的任务历史 UI 和自动重试。
+- 阶段 5.10 已支持 `?api=` HTTP 任务模式、任务持久化、cancel/retry、超时回收和服务端自动重试，但未提供对应前端按钮、更丰富的任务历史 UI 和重试策略配置。
 - 未引入前端框架、路由、状态管理、图表或自动化浏览器截图验证。
 
 ### 阶段 6：桌面端与本地体验
