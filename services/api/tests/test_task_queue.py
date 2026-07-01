@@ -225,6 +225,43 @@ def test_task_queue_watchdog_dispatches_scheduled_retry_when_due() -> None:
     assert due_retries[0].retry_count == 1
 
 
+def test_task_queue_retry_delay_supports_timeout_multiplier_and_jitter() -> None:
+    service = build_default_analysis_service(report_repository=InMemoryAnalysisReportRepository())
+    repository = InMemoryAnalysisTaskRepository()
+    queue = InMemoryAnalysisTaskQueue(
+        service=service,
+        repository=repository,
+        executor=lambda operation: None,
+        retry_backoff_base_s=2,
+        retry_backoff_factor=2,
+        retry_backoff_max_s=60,
+        retry_jitter_ratio=0.5,
+        retry_timeout_multiplier=2,
+    )
+    queue._retry_random = lambda: 1.0  # type: ignore[attr-defined]
+
+    failed = AnalysisTaskRecord(
+        task_id="task-failed-timeout",
+        symbol="600519",
+        message="请全面分析",
+        status=AnalysisStatus.FAILED.value,
+        created_at="2026-07-01T00:00:00+00:00",
+        updated_at="2026-07-01T00:00:00+00:00",
+        retry_count=1,
+        max_retries=2,
+        error="task timed out after 1s",
+    )
+    repository.save(failed)
+    queue._records[failed.task_id] = failed
+    queue._now = lambda: "2026-07-01T00:00:05+00:00"  # type: ignore[attr-defined]
+
+    queue.list_tasks(limit=20)
+    task = queue.get_task("task-failed-timeout")
+
+    assert task is not None
+    assert task.next_retry_at == "2026-07-01T00:00:17+00:00"
+
+
 def test_task_queue_start_watchdog_sweeps_timeouts() -> None:
     service = build_default_analysis_service(report_repository=InMemoryAnalysisReportRepository())
     repository = InMemoryAnalysisTaskRepository()

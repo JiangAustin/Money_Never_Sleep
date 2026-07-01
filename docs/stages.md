@@ -42,6 +42,7 @@
 | 5.11 Web 任务控制 UI | 已完成 | 让用户在页面上直接取消或重试任务 | 取消/重试按钮、当前任务状态跟踪、失败任务重试入口 | 真实 API 模式下用户可直接控制当前任务 |
 | 5.12 Web 任务历史视图 | 已完成 | 让用户看到近期任务，而不只看当前任务 | 最近任务列表、`GET /tasks?limit=`、操作后刷新 | 真实 API 模式下用户可查看近期任务状态和失败原因 |
 | 5.13 任务重试退避调度 | 已完成 | 让自动重试不再立即触发，并对下一次重试时间可解释 | `next_retry_at`、指数退避调度、watchdog 到点派生重试 | 失败任务会先进入计划重试状态，到点后再派生重试任务 |
+| 5.14 任务重试策略细化 | 已完成 | 让重试策略支持抖动与超时倍率，并保持默认兼容 | `retry_backoff_factor`、`retry_jitter_ratio`、`retry_timeout_multiplier` | timeout 类任务可应用更保守延迟，重试调度支持抖动 |
 | 6. 桌面端与本地体验 | 已完成 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | Electron 桌面壳、macOS 构建入口、Web 工作台资源打包 | macOS `.app` 可构建并能承载 Web 工作台 |
 | 6.1 桌面托管本地 API | 已完成 | 让桌面端默认尝试拉起本地 API，并使用更接近可用产品的 runtime service | runtime service factory、Electron 托管 server、打包 API 源码资源 | 桌面无需手动设置 API URL 也可尝试进入真实 HTTP 模式 |
 | 6.2 桌面启动诊断 | 已完成 | 让用户看到桌面当前运行模式和回退原因 | startup 上下文注入、mode pill、诊断面板启动区块 | 桌面能显示托管 API / 外部 API / 离线模式和最近错误 |
@@ -53,14 +54,15 @@
 
 ## 当前阶段结论
 
-阶段 5.13 已完成。当前系统已具备前后端贯通的异步 HTTP 任务控制与任务可见性闭环，并补齐了最小重试退避调度：
+阶段 5.14 已完成。当前系统已具备前后端贯通的异步 HTTP 任务控制与任务可见性闭环，并补齐了可配置重试策略：
 
 1. `POST /tasks/analysis` 可创建分析任务，`GET /tasks/{id}` 和 `GET /tasks?limit=` 可查询任务。
 2. 任务默认持久化到 JSON 文件目录 `data/cache/tasks`，服务重启时会把上次中断的运行中任务标记为 `failed`。
 3. `POST /tasks/{id}/cancel` 可取消非终态任务；`POST /tasks/{id}/retry` 可基于失败或已取消任务创建重试任务。
-4. 新增 `timeout_s`、`started_at`、`retry_count`、`max_retries` 和 `next_retry_at`，任务可在后台 watchdog 扫描时自动超时失败，并按指数退避到点后自动重试。
-5. Web 工作台现在提供 `取消任务` 和 `重试任务` 按钮，并展示最近任务历史列表。
-6. 取消不是底层线程/外部引擎的强制中断；当前仅实现最小指数退避（无抖动和策略配置），仍未实现分布式 worker、筛选分页或完整任务详情页。
+4. 新增 `timeout_s`、`started_at`、`retry_count`、`max_retries` 和 `next_retry_at`，任务可在后台 watchdog 扫描时自动超时失败，并按可配置指数退避到点后自动重试。
+5. 新增 `retry_backoff_factor`、`retry_jitter_ratio` 和 `retry_timeout_multiplier`，支持按错误类型（timeout）应用倍率并附加抖动。
+6. Web 工作台现在提供 `取消任务` 和 `重试任务` 按钮，并展示最近任务历史列表。
+7. 取消不是底层线程/外部引擎的强制中断；仍未实现分布式 worker、筛选分页或完整任务详情页。
 
 离线验证命令：
 
@@ -68,7 +70,7 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`126 passed, 3 skipped`。
+离线结果：`127 passed, 3 skipped`。
 
 Sina K 线真实网络 smoke 结果：`1 passed`。
 
@@ -84,7 +86,7 @@ HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.
 
 ## 下一阶段建议
 
-建议下一步在两个方向中二选一：补更细粒度的重试策略（抖动、策略配置、可观测字段），或继续回测与数据层的真实化增强。
+建议下一步在两个方向中二选一：补重试策略可观测字段和 API 暴露（例如 delay 来源/策略命中信息），或继续回测与数据层的真实化增强。
 
 ## 想法池
 

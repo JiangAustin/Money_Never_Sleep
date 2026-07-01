@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import random
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -183,6 +184,9 @@ class InMemoryAnalysisTaskQueue:
         default_timeout_s: int = 300,
         retry_backoff_base_s: int = 2,
         retry_backoff_max_s: int = 30,
+        retry_backoff_factor: int = 2,
+        retry_jitter_ratio: float = 0.0,
+        retry_timeout_multiplier: int = 1,
     ):
         self.service = service
         self.repository = repository or InMemoryAnalysisTaskRepository()
@@ -190,6 +194,10 @@ class InMemoryAnalysisTaskQueue:
         self.default_timeout_s = default_timeout_s
         self.retry_backoff_base_s = retry_backoff_base_s
         self.retry_backoff_max_s = retry_backoff_max_s
+        self.retry_backoff_factor = retry_backoff_factor
+        self.retry_jitter_ratio = retry_jitter_ratio
+        self.retry_timeout_multiplier = retry_timeout_multiplier
+        self._retry_random: Callable[[], float] = random.random
         self._records: dict[str, AnalysisTaskRecord] = {}
         self._lock = Lock()
         for record in self.repository.list_recent(limit=10_000):
@@ -337,7 +345,7 @@ class InMemoryAnalysisTaskQueue:
         if self._has_retry_child(task.task_id):
             return
         if task.next_retry_at is None:
-            delay_s = self._compute_retry_delay_s(task.retry_count)
+            delay_s = self._compute_retry_delay_s(task.retry_count, task.error)
             self._update(task_id, next_retry_at=(datetime.fromisoformat(self._now()) + timedelta(seconds=delay_s)).isoformat())
             return
         if datetime.fromisoformat(self._now()) < datetime.fromisoformat(task.next_retry_at):
@@ -355,9 +363,16 @@ class InMemoryAnalysisTaskQueue:
         with self._lock:
             return any(record.retry_of == task_id for record in self._records.values())
 
-    def _compute_retry_delay_s(self, retry_count: int) -> int:
-        delay = self.retry_backoff_base_s * (2 ** retry_count)
-        return min(self.retry_backoff_max_s, delay)
+    def _compute_retry_delay_s(self, retry_count: int, error: str | None = None) -> int:
+        delay = self.retry_backoff_base_s * (self.retry_backoff_factor ** retry_count)
+        normalized_error = (error or "").lower()
+        if "timeout" in normalized_error or "timed out" in normalized_error:
+            delay *= self.retry_timeout_multiplier
+        delay = min(self.retry_backoff_max_s, delay)
+        if self.retry_jitter_ratio > 0:
+            jitter = int(delay * self.retry_jitter_ratio * self._retry_random())
+            delay = min(self.retry_backoff_max_s, delay + jitter)
+        return max(1, delay)
 
     def _run_task(self, task_id: str) -> None:
         record = self.get_task(task_id)
