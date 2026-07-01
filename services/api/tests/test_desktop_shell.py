@@ -37,6 +37,8 @@ def test_desktop_main_loads_web_workbench() -> None:
     assert "/health" in main_js
     assert "PYTHONPATH" in main_js
     assert "before-quit" in main_js
+    assert "additionalArguments" in main_js
+    assert "--mns-startup=" in main_js
 
 
 def test_desktop_preload_exposes_versions() -> None:
@@ -44,3 +46,5 @@ def test_desktop_preload_exposes_versions() -> None:
 
     assert "contextBridge" in preload_js
     assert "moneyNeverSleep" in preload_js
+    assert "startup" in preload_js
+    assert "--mns-startup=" in preload_js

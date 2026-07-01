@@ -278,7 +278,25 @@ HTTP 入口：`POST /reports/{task_id}/backtest` 的 body 可传 `{ "options": {
 - `MONEY_MARKET_DATA_MODE`：默认 `tencent`。
 - `MONEY_DEEP_ENGINE`：默认 `mock`，可切到 `tradingagents`。
 
-未做事项：随应用打包 Python runtime、server 启动失败的前端可视化诊断、签名、公证、DMG、自动更新。
+未做事项：随应用打包 Python runtime、独立日志窗口、重试按钮、签名、公证、DMG、自动更新。
+
+### 阶段 6.2：桌面启动诊断
+
+做了什么：新增 desktop startup 上下文注入，renderer 可以看到当前模式、API URL、诊断列表和最近错误；Web 工作台头部和诊断面板会展示这些信息。
+
+为什么这么做：阶段 6.1 虽然可以自动拉起本地 API，但失败时会静默回退，用户无法判断当前是否真的连上 API。
+
+收益：用户能明确看到当前是托管 API、外部 API、桌面离线还是浏览器离线模式，并能直接从界面读取最近一次启动失败原因。
+
+关键文件：
+
+- `apps/desktop/src/main.js`
+- `apps/desktop/src/preload.js`
+- `apps/web/index.html`
+- `apps/web/src/app.js`
+- `services/api/tests/test_web_workbench.py`
+
+未做事项：独立日志窗口、重试按钮、更细粒度的 Python 探测和日志持久化。
 
 ## 当前验证命令
 
@@ -337,7 +355,7 @@ MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_
 ## 当前已知限制
 
 - Web 工作台默认仍是离线 mock；真实 HTTP API 需要通过 `?api=` 显式启用。
-- `apps/desktop` 已有 Electron 第一版壳、macOS `.app` 构建入口和托管本地 API server；但尚未签名、公证、打 DMG、设置图标，也未随应用打包 Python runtime。
+- `apps/desktop` 已有 Electron 第一版壳、macOS `.app` 构建入口、托管本地 API server 和启动诊断；但尚未签名、公证、打 DMG、设置图标，也未随应用打包 Python runtime。
 - 默认深度引擎仍是 mock；真实 TradingAgents 需要显式工厂和 opt-in smoke。
 - 数据层真实 provider 覆盖腾讯 quote 最小路径和 Sina 日线 K 线回测价格序列。
 - 报告 repository 使用 JSON 文件，适合第一版，不适合复杂查询和并发写入。
@@ -348,7 +366,7 @@ MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_
 
 ## 推荐下一步
 
-建议继续阶段 7 后续切片：真实复权价格转换、回测缓存、多 provider fallback，或组合预算的行业/相关性约束；如果更偏服务化和产品化，可以先做异步任务队列、状态轮询和桌面启动诊断。
+建议继续阶段 7 后续切片：真实复权价格转换、回测缓存、多 provider fallback，或组合预算的行业/相关性约束；如果更偏服务化和产品化，可以先做异步任务队列、状态轮询和更详细的桌面启动日志/重试控制。
 
 推荐第一版路径：
 

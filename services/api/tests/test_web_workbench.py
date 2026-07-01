@@ -23,6 +23,7 @@ def test_web_workbench_has_core_regions() -> None:
     assert 'id="report-list"' in html
     assert 'id="report-detail"' in html
     assert 'id="diagnostics-panel"' in html
+    assert 'id="mode-pill"' in html
 
 
 def test_mock_data_matches_report_contract() -> None:
@@ -56,6 +57,8 @@ def test_app_js_exposes_service_and_render_boundaries() -> None:
     assert "function renderReportList" in app_js
     assert "function renderReportDetail" in app_js
     assert "function renderDiagnostics" in app_js
+    assert "function getStartupContext" in app_js
+    assert "function renderModePill" in app_js
     assert "analysis-form" in app_js
     assert "risk_controls" in app_js
 
@@ -84,3 +87,10 @@ def test_app_js_exposes_http_service_boundary() -> None:
     assert "async function createHttpAnalysis" in app_js
     assert "fetch(`${apiBaseUrl}/analysis`" in app_js
     assert "createLocalAnalysis" in app_js
+
+
+def test_app_js_exposes_startup_diagnostics_boundary() -> None:
+    app_js = read_web_file("src/app.js")
+
+    assert "moneyNeverSleep" in app_js
+    assert "startup-diagnostics" in app_js or "启动模式" in app_js

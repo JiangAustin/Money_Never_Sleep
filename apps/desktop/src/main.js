@@ -6,6 +6,7 @@ const path = require("node:path");
 
 const DEFAULT_API_HOST = process.env.MONEY_API_HOST || "127.0.0.1";
 const DEFAULT_API_PORT = process.env.MONEY_API_PORT || "8000";
+const STARTUP_ARG_PREFIX = "--mns-startup=";
 
 let managedApiProcess = null;
 
@@ -99,14 +100,32 @@ function waitForApiHealth(apiUrl, attempts = 40) {
   });
 }
 
-async function ensureApiUrl() {
+function createStartupContext(overrides = {}) {
+  return {
+    mode: "desktop-offline",
+    apiUrl: "",
+    managed: false,
+    diagnostics: [],
+    lastError: "",
+    ...overrides,
+  };
+}
+
+async function ensureApiStartupContext() {
   if (process.env.MNS_DESKTOP_API_URL) {
-    return process.env.MNS_DESKTOP_API_URL;
+    return createStartupContext({
+      mode: "desktop-external-api",
+      apiUrl: process.env.MNS_DESKTOP_API_URL,
+      diagnostics: ["检测到 MNS_DESKTOP_API_URL，桌面已连接外部 HTTP API。"],
+    });
   }
 
   const python = resolvePythonCommand();
   if (!python) {
-    return "";
+    return createStartupContext({
+      diagnostics: ["未找到可用 Python，可执行文件；桌面已回退到离线工作台。"],
+      lastError: "python executable not found",
+    });
   }
 
   const apiUrl = getManagedApiUrl();
@@ -119,14 +138,27 @@ async function ensureApiUrl() {
 
   try {
     await waitForApiHealth(apiUrl);
-    return apiUrl;
+    return createStartupContext({
+      mode: "desktop-managed-api",
+      apiUrl,
+      managed: true,
+      diagnostics: [
+        `桌面已托管本地 API：${apiUrl}`,
+        `Python: ${python}`,
+        `market data mode: ${getManagedApiEnv().MONEY_MARKET_DATA_MODE}`,
+        `deep engine mode: ${getManagedApiEnv().MONEY_DEEP_ENGINE}`,
+      ],
+    });
   } catch (error) {
     console.error("Managed API server failed to start", error);
     if (managedApiProcess && !managedApiProcess.killed) {
       managedApiProcess.kill();
     }
     managedApiProcess = null;
-    return "";
+    return createStartupContext({
+      diagnostics: ["桌面尝试托管本地 API 失败，已回退到离线工作台。", `Python: ${python}`],
+      lastError: error.message || "managed api startup failed",
+    });
   }
 }
 
@@ -144,7 +176,11 @@ function getLoadOptions(apiUrl) {
   return { query: { api: apiUrl } };
 }
 
-function createWindow(apiUrl) {
+function getStartupArgument(startupContext) {
+  return `${STARTUP_ARG_PREFIX}${encodeURIComponent(JSON.stringify(startupContext))}`;
+}
+
+function createWindow(startupContext) {
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 860,
@@ -157,6 +193,7 @@ function createWindow(apiUrl) {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      additionalArguments: [getStartupArgument(startupContext)],
     },
   });
 
@@ -165,16 +202,16 @@ function createWindow(apiUrl) {
     return { action: "deny" };
   });
 
-  mainWindow.loadFile(getWebIndexPath(), getLoadOptions(apiUrl));
+  mainWindow.loadFile(getWebIndexPath(), getLoadOptions(startupContext.apiUrl));
 }
 
 app.whenReady().then(async () => {
-  const apiUrl = await ensureApiUrl();
-  createWindow(apiUrl);
+  const startupContext = await ensureApiStartupContext();
+  createWindow(startupContext);
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow(apiUrl);
+      createWindow(startupContext);
     }
   });
 });

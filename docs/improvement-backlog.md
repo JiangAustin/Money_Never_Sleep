@@ -43,6 +43,7 @@
 | MNS-BL-018 | 已完成 | P1 | 回测接口 | 阶段 7 第一版先做风控纪律，不做历史行情回放和收益归因 | 验证建议是否能被历史数据复盘，而不是只看当下结论 | 已在阶段 7.1 完成基于传入价格序列的 deterministic backtest request/result、Python API 和 HTTP API；验证：`87 passed, 2 skipped`，macOS `.app` 构建通过 | 阶段 7.1 |
 | MNS-BL-020 | 已完成 | P1 | 真实行情回测数据源 | 阶段 7.1 只接受调用者传入价格序列，不接真实 K 线 provider | 回测可以直接基于真实历史行情运行，减少手工输入 | 已在阶段 7.2 完成 Sina 日线 K 线 provider 和 provider 回测 API；验证：`93 passed, 3 skipped`，macOS `.app` 构建通过 | 阶段 7.2、`domains/market_data/` |
 | MNS-BL-022 | 已完成 | P1 | Sina K 线真实网络 smoke | 阶段 7.2 先做离线 parser/provider 测试，避免默认测试依赖外网 | 验证 Sina 当前真实接口能返回可用于回测的价格序列 | 已新增 opt-in smoke：默认 skip；`MNS_RUN_NETWORK_SMOKE=1 ...test_sina_kline_smoke.py` 验证 `1 passed` | 阶段 7.2、`services/api/tests/test_sina_kline_smoke.py` |
+| MNS-BL-023 | 已完成 | P1 | 桌面启动诊断 | 阶段 6.1 虽已托管本地 API，但失败回退对用户不可见 | 让用户知道当前是托管 API、外部 API 还是离线模式，并看到最近错误 | 已在阶段 6.2 完成 startup 上下文注入、mode pill 和诊断面板启动区块；验证：`107 passed, 3 skipped` | 阶段 6.2、`apps/desktop/src/main.js`、`apps/web/src/app.js` |
 | MNS-BL-021 | 已完成 | P2 | 交易成本、滑点和复权参数 | 阶段 7.1 为保持 deterministic 最小闭环，不做成本和复权 | 提高回测结果可信度，避免过度乐观 | 已在阶段 7.4 完成 `BacktestOptions`、净收益/裸收益/成本影响和 Python/HTTP API 参数；真实复权价格转换仍是后续项 | 阶段 7.4 |
 | MNS-BL-019 | 已完成 | P1 | 组合风险预算 | 当前系统仍是单股分析，没有组合层持仓和风险预算 | 支持多标的仓位约束、集中度控制和组合视图 | 已在阶段 7.3 完成组合预算契约、预算器、Python API 和 HTTP API；验证：`100 passed, 3 skipped` | 阶段 7.3 |
 | MNS-BL-010 | 待设计 | P2 | Web 图表和行情可视化 | 阶段 5 静态工作台不做 K 线或图表 | 改善报告阅读和行情理解效率 | 先接真实 API，再选择轻量图表方案 | 阶段 5 后续 |
@@ -83,7 +84,7 @@
 ### 阶段 6：桌面端与本地体验
 
 - 已选择 Electron 并补齐 macOS `.app` 构建入口。
-- 已支持桌面托管本地 Python API server，但仍未签名、公证、打 DMG、设置图标，也未随应用打包 Python runtime。
+- 已支持桌面托管本地 Python API server 和启动诊断，但仍未签名、公证、打 DMG、设置图标，也未随应用打包 Python runtime。
 
 ### 阶段 7：风控、回测与组合
 

@@ -3,10 +3,12 @@ const state = {
   reports,
   selectedTaskId: reports[0]?.task_id || null,
   apiBaseUrl: getApiBaseUrl(),
+  startup: getStartupContext(),
 };
 
 const elements = {
   form: document.getElementById("analysis-form"),
+  modePill: document.getElementById("mode-pill"),
   symbol: document.getElementById("symbol-input"),
   message: document.getElementById("message-input"),
   reportList: document.getElementById("report-list"),
@@ -45,6 +47,41 @@ function getApiBaseUrl() {
   const params = new URLSearchParams(window.location.search);
   const api = params.get("api");
   return api ? api.replace(/\/$/, "") : "";
+}
+
+function getStartupContext() {
+  const startup = window.moneyNeverSleep?.startup;
+  if (startup) {
+    return startup;
+  }
+  return {
+    mode: "browser-offline",
+    apiUrl: "",
+    managed: false,
+    diagnostics: ["当前在浏览器中直接打开工作台，未附带桌面启动上下文。"],
+    lastError: "",
+  };
+}
+
+function getModeLabel() {
+  const mode = state.startup.mode;
+  if (mode === "desktop-managed-api") {
+    return `桌面托管 API / ${state.startup.apiUrl || state.apiBaseUrl}`;
+  }
+  if (mode === "desktop-external-api") {
+    return `桌面外部 API / ${state.startup.apiUrl || state.apiBaseUrl}`;
+  }
+  if (mode === "desktop-offline") {
+    return "桌面离线模式 / 本地 API 未启动";
+  }
+  if (state.apiBaseUrl) {
+    return `浏览器 API 模式 / ${state.apiBaseUrl}`;
+  }
+  return "浏览器离线模式 / Mock 预览";
+}
+
+function renderModePill() {
+  elements.modePill.textContent = getModeLabel();
 }
 
 function createLocalAnalysis(symbol, message) {
@@ -227,12 +264,22 @@ function renderReportDetail() {
 function renderDiagnostics() {
   elements.diagnostics.replaceChildren();
   const report = getSelectedReport();
-  if (!report) {
-    elements.diagnostics.append(createElement("p", "empty-state", "暂无诊断信息"));
-    return;
-  }
 
   elements.diagnostics.append(createElement("h2", "", "数据诊断"));
+
+  const startupSection = createElement("section", "diagnostic-section startup-diagnostics");
+  startupSection.append(createElement("h3", "", "启动模式"));
+  startupSection.append(createElement("p", "summary", getModeLabel()));
+  appendList(startupSection, state.startup.diagnostics || [], "暂无启动诊断");
+  if (state.startup.lastError) {
+    startupSection.append(createElement("p", "empty-state", `最近错误：${state.startup.lastError}`));
+  }
+  elements.diagnostics.append(startupSection);
+
+  if (!report) {
+    elements.diagnostics.append(createElement("p", "empty-state", "暂无报告级诊断信息"));
+    return;
+  }
 
   const gaps = createElement("section", "diagnostic-section");
   gaps.append(createElement("h3", "", "Data gaps"));
@@ -264,6 +311,7 @@ function renderDiagnostics() {
 }
 
 function render() {
+  renderModePill();
   renderReportList();
   renderReportDetail();
   renderDiagnostics();
