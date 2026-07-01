@@ -37,18 +37,18 @@
 | 6. 桌面端与本地体验 | 已完成 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | Electron 桌面壳、macOS 构建入口、Web 工作台资源打包 | macOS `.app` 可构建并能承载 Web 工作台 |
 | 7. 风控、回测与组合 | 已完成 | 从单股建议扩展到纪律、验证和组合层面 | 风控纪律契约、默认风控策略、报告风险控制计划 | 建议输出带仓位、止损、止盈和免责声明 |
 | 7.1 回测接口 | 已完成 | 用历史价格序列复盘报告和风控纪律 | 回测契约、确定性回测引擎、Python/HTTP API | 报告可输出收益、回撤、退出原因和持有天数 |
-| 7.2 真实 K 线回测数据源 | 进行中 | 用真实日线价格序列驱动回测接口 | Sina K 线 provider、provider 回测 API | 回测可由行情 provider 自动获取价格序列 |
+| 7.2 真实 K 线回测数据源 | 已完成 | 用真实日线价格序列驱动回测接口 | Sina K 线 provider、provider 回测 API、opt-in 真实网络 smoke | 回测可由行情 provider 自动获取价格序列 |
 
 ## 当前阶段结论
 
-阶段 7.1 已完成。当前系统已具备最小确定性回测接口：
+阶段 7.2 已完成。当前系统已具备基于真实日线 K 线 provider 的回测入口：
 
-1. 新增 `BacktestPricePoint` 和 `BacktestResult` 契约。
-2. 新增 `SimpleBacktestEngine`，基于传入价格序列执行止损、止盈、时间退出判断。
-3. `AnalysisService`、Python API 和 HTTP API 均可执行报告回测。
-4. HTTP 路由新增 `POST /reports/{task_id}/backtest`。
+1. 阶段 7.1 已完成 `BacktestPricePoint`、`BacktestResult` 和 `SimpleBacktestEngine`。
+2. `AnalysisService`、Python API 和 HTTP API 均可执行报告回测。
+3. 阶段 7.2 新增 Sina 日线 K 线 provider，回测可通过 `source="sina"` 自动获取价格序列。
+4. 新增默认跳过的 Sina 真实网络 smoke，用 `MNS_RUN_NETWORK_SMOKE=1` 显式启用。
 5. Web mock 报告包含 backtest 示例字段。
-6. 真实行情、交易成本、滑点、复权和组合回测仍不属于第一版。
+6. 交易成本、滑点、复权、缓存、多 provider fallback 和组合回测仍不属于当前切片。
 
 离线验证命令：
 
@@ -56,7 +56,9 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`93 passed, 2 skipped`。
+离线结果：`93 passed, 3 skipped`。
+
+Sina K 线真实网络 smoke 结果：`1 passed`。
 
 macOS 构建结果：`apps/desktop/dist/mac-arm64/Money Never Sleep.app`。
 
@@ -68,7 +70,7 @@ HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.
 
 ## 下一阶段建议
 
-建议下一步在两个方向中二选一：为 Sina K 线增加 opt-in 真实网络 smoke，或继续组合风险预算切片。
+建议下一步在两个方向中二选一：继续组合风险预算切片，或先为回测补交易成本、滑点和复权参数。
 
 ## 想法池
 
