@@ -415,6 +415,22 @@ HTTP 入口：
 
 未做事项：完整任务历史面板、批量控制、重试策略可视化、任务列表级操作。
 
+### 阶段 5.12：Web 任务历史视图
+
+做了什么：在 Web 工作台增加最近任务历史列表，并在任务创建、取消、重试后刷新列表。
+
+为什么这么做：阶段 5.11 虽然可以控制当前任务，但用户依然看不到最近有哪些任务失败、取消或完成，任务可观察性不足。
+
+收益：真实 API 模式下，用户可以直接看到近期任务状态和失败原因，减少“当前任务结束后信息丢失”的体验断层。
+
+关键文件：
+
+- `apps/web/index.html`
+- `apps/web/src/app.js`
+- `services/api/tests/test_web_workbench.py`
+
+未做事项：任务详情页、筛选、分页、批量控制。
+
 ### 阶段 3 验证补充：真实 TradingAgents smoke
 
 做了什么：执行 `MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api ...test_tradingagents_smoke.py`。

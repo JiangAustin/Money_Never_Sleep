@@ -42,7 +42,7 @@
 | Sina K 线 provider | `services/api/money_api/domains/market_data/sina_kline.py` | `services/api/tests/test_sina_kline.py`、`services/api/tests/test_sina_kline_smoke.py` |
 | TradingAgents adapter | `services/api/money_api/domains/analysis/tradingagents_engine.py` | `services/api/money_api/integrations/tradingagents_runner.py`、`services/api/tests/test_tradingagents_smoke.py` |
 | 报告历史仓储 | `services/api/money_api/domains/analysis/report_repository.py` | `services/api/tests/test_report_repository.py` |
-| Web 工作台、启动模式与任务控制 | `apps/web/index.html` | `apps/web/src/`、`services/api/tests/test_web_workbench.py` |
+| Web 工作台、启动模式、任务控制与任务历史 | `apps/web/index.html` | `apps/web/src/`、`services/api/tests/test_web_workbench.py` |
 | 桌面端现状、托管 API 与启动诊断 | `apps/desktop/README.md` | `apps/desktop/package.json`、`apps/desktop/src/`、`services/api/tests/test_desktop_shell.py` |
 
 ## 做完之后写哪里
