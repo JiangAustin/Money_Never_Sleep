@@ -9,6 +9,8 @@ from money_api.domains.analysis.contracts import (
     ConfidenceLevel,
     DataContext,
     DecisionAction,
+    RiskControlPlan,
+    RiskControlRule,
     RiskFinding,
     StockIdentity,
 )
@@ -132,3 +134,16 @@ def test_analysis_report_round_trip_preserves_data_context() -> None:
 
     assert payload["data_context"]["quote"]["price"] == 1688.0
     assert restored == report
+
+
+def test_risk_control_plan_round_trip() -> None:
+    plan = RiskControlPlan(
+        max_position_pct=0.1,
+        stop_loss_pct=0.08,
+        take_profit_pct=0.15,
+        time_horizon="5-20 个交易日",
+        rules=[RiskControlRule(name="confidence", level="medium", message="中等置信度")],
+        disclaimer="非投资建议",
+    )
+
+    assert RiskControlPlan.from_dict(plan.to_dict()) == plan

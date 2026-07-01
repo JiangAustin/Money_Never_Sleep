@@ -58,6 +58,55 @@ class RiskFinding:
 
 
 @dataclass(frozen=True)
+class RiskControlRule:
+    name: str
+    level: str
+    message: str
+
+    def to_dict(self) -> dict[str, str]:
+        return {"name": self.name, "level": self.level, "message": self.message}
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "RiskControlRule":
+        return cls(
+            name=str(payload.get("name", "")),
+            level=str(payload.get("level", "")),
+            message=str(payload.get("message", "")),
+        )
+
+
+@dataclass(frozen=True)
+class RiskControlPlan:
+    max_position_pct: float
+    stop_loss_pct: float
+    take_profit_pct: float
+    time_horizon: str
+    rules: list[RiskControlRule]
+    disclaimer: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "max_position_pct": self.max_position_pct,
+            "stop_loss_pct": self.stop_loss_pct,
+            "take_profit_pct": self.take_profit_pct,
+            "time_horizon": self.time_horizon,
+            "rules": [rule.to_dict() for rule in self.rules],
+            "disclaimer": self.disclaimer,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "RiskControlPlan":
+        return cls(
+            max_position_pct=float(payload.get("max_position_pct", 0)),
+            stop_loss_pct=float(payload.get("stop_loss_pct", 0)),
+            take_profit_pct=float(payload.get("take_profit_pct", 0)),
+            time_horizon=str(payload.get("time_horizon", "")),
+            rules=[RiskControlRule.from_dict(item) for item in payload.get("rules", [])],
+            disclaimer=str(payload.get("disclaimer", "")),
+        )
+
+
+@dataclass(frozen=True)
 class AgentView:
     """Captures one analysis agent's conclusion for the final report."""
 
@@ -124,6 +173,7 @@ class AnalysisReport:
     risks: list[RiskFinding]
     agent_views: list[AgentView]
     data_context: DataContext
+    risk_controls: RiskControlPlan | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -139,6 +189,7 @@ class AnalysisReport:
             "data_gaps": list(self.data_context.gaps),
             "data_diagnostics": list(self.data_context.diagnostics),
             "data_context": self.data_context.to_dict(),
+            "risk_controls": self.risk_controls.to_dict() if self.risk_controls is not None else None,
         }
 
     @classmethod
@@ -154,6 +205,7 @@ class AnalysisReport:
             "gaps": list(payload.get("data_gaps", [])),
             "diagnostics": list(payload.get("data_diagnostics", [])),
         }
+        risk_controls_payload = payload.get("risk_controls")
         return cls(
             task_id=str(payload["task_id"]),
             stock=stock,
@@ -171,4 +223,5 @@ class AnalysisReport:
                 for item in payload.get("agent_views", [])
             ],
             data_context=DataContext.from_dict(context_payload),
+            risk_controls=RiskControlPlan.from_dict(risk_controls_payload) if risk_controls_payload else None,
         )
