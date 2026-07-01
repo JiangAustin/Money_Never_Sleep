@@ -40,7 +40,7 @@
 | MNS-BL-008 | 待设计 | P2 | 报告追问与分析会话 | 阶段 4 只保存最终报告，没有 conversation/session | 支持围绕历史报告继续提问、补证据、复盘 | 在报告持久化稳定后设计 `AnalysisSession` 和追问记录 | 阶段 4/5 |
 | MNS-BL-009 | 待设计 | P2 | 投资免责声明与风险提示治理 | 当前有风险字段，但没有统一产品级免责声明 | 降低误解为自动荐股的风险，统一 Web/API/报告表达 | 增加 report disclaimer 字段或 UI 固定风险说明 | README、Web、报告契约 |
 | MNS-BL-017 | 已完成 | P0 | 风控纪律层 | 此前报告只有 action/confidence/risks，没有统一仓位、止损、止盈和免责声明 | 让每份报告都有可复盘的纪律约束，避免只输出买卖结论 | 已在阶段 7 完成 `RiskControlPlan`、默认风险策略、Service/API 集成和 Web mock 兼容；验证：`79 passed, 2 skipped`，macOS `.app` 构建通过 | 阶段 7、`AnalysisReport` |
-| MNS-BL-018 | 待设计 | P1 | 回测接口 | 阶段 7 第一版先做风控纪律，不做历史行情回放和收益归因 | 验证建议是否能被历史数据复盘，而不是只看当下结论 | 风控纪律稳定后，设计 backtest request/result 契约 | 阶段 7 后续 |
+| MNS-BL-018 | 进行中 | P1 | 回测接口 | 阶段 7 第一版先做风控纪律，不做历史行情回放和收益归因 | 验证建议是否能被历史数据复盘，而不是只看当下结论 | 阶段 7.1 正在实现基于传入价格序列的 deterministic backtest request/result 契约 | 阶段 7.1 |
 | MNS-BL-019 | 待设计 | P1 | 组合风险预算 | 当前系统仍是单股分析，没有组合层持仓和风险预算 | 支持多标的仓位约束、集中度控制和组合视图 | 报告历史和风控计划稳定后设计 portfolio schema | 阶段 7 后续 |
 | MNS-BL-010 | 待设计 | P2 | Web 图表和行情可视化 | 阶段 5 静态工作台不做 K 线或图表 | 改善报告阅读和行情理解效率 | 先接真实 API，再选择轻量图表方案 | 阶段 5 后续 |
 | MNS-BL-011 | 待设计 | P2 | CI / 本地脚本统一入口 | 当前验证命令分散在阶段文档和对话中 | 降低换 agent 或换机器后的验证成本 | 增加 `scripts/test_api.sh`、后续 Web/Desktop 构建脚本 | `scripts/` |
