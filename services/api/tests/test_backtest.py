@@ -5,6 +5,7 @@ from money_api.domains.analysis.contracts import (
     AnalysisReport,
     AnalysisStatus,
     BacktestPricePoint,
+    BacktestOptions,
     ConfidenceLevel,
     DataContext,
     DecisionAction,
@@ -64,7 +65,23 @@ def test_backtest_time_exit_and_drawdown() -> None:
     assert result.exit_reason == "time_exit"
     assert result.exit_price == 103
     assert result.return_pct == 0.03
+    assert result.gross_return_pct == 0.03
+    assert result.cost_impact_pct == 0
     assert result.max_drawdown_pct == -0.02
+
+
+def test_backtest_applies_costs_and_slippage_to_net_return() -> None:
+    result = SimpleBacktestEngine().run(
+        build_report(),
+        prices(100, 112),
+        options=BacktestOptions(cost_pct=0.001, slippage_pct=0.002, adjustment="qfq"),
+    )
+
+    assert result.exit_reason == "time_exit"
+    assert result.gross_return_pct == 0.12
+    assert result.return_pct == 0.1133
+    assert result.cost_impact_pct == -0.0067
+    assert result.options.adjustment == "qfq"
 
 
 def test_backtest_requires_two_prices() -> None:

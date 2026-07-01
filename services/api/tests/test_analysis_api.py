@@ -82,6 +82,22 @@ def test_backtest_analysis_report_returns_result() -> None:
     assert result["exit_reason"] == "take_profit"
 
 
+def test_backtest_analysis_report_accepts_options() -> None:
+    payload = analyze_stock("贵州茅台", "请全面分析并给出投资建议")
+    result = backtest_analysis_report(
+        payload["task_id"],
+        [
+            {"date": "2026-07-01", "close": 100.0},
+            {"date": "2026-07-02", "close": 112.0},
+        ],
+        options={"cost_pct": 0.001, "slippage_pct": 0.002, "adjustment": "qfq"},
+    )
+
+    assert result["gross_return_pct"] == 0.12
+    assert result["return_pct"] == 0.1133
+    assert result["options"]["adjustment"] == "qfq"
+
+
 def test_backtest_analysis_report_accepts_price_provider() -> None:
     class FakePriceProvider:
         def get_price_series(self, stock, limit=60):

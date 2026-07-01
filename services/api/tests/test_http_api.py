@@ -83,6 +83,28 @@ def test_http_backtest_report() -> None:
     assert decode(backtest_response)["exit_reason"] == "take_profit"
 
 
+def test_http_backtest_report_accepts_options() -> None:
+    app = build_app()
+    response = app.handle("POST", "/analysis", json.dumps({"symbol": "贵州茅台", "message": "请全面分析"}).encode("utf-8"))
+    payload = decode(response)
+    backtest_response = app.handle(
+        "POST",
+        f"/reports/{payload['task_id']}/backtest",
+        json.dumps(
+            {
+                "prices": [{"date": "2026-07-01", "close": 100.0}, {"date": "2026-07-03", "close": 112.0}],
+                "options": {"cost_pct": 0.001, "slippage_pct": 0.002, "adjustment": "qfq"},
+            }
+        ).encode("utf-8"),
+    )
+
+    assert backtest_response.status == 200
+    payload = decode(backtest_response)
+    assert payload["gross_return_pct"] == 0.12
+    assert payload["return_pct"] == 0.1133
+    assert payload["options"]["adjustment"] == "qfq"
+
+
 def test_http_backtest_report_with_sina_source() -> None:
     app = build_app()
     response = app.handle("POST", "/analysis", json.dumps({"symbol": "贵州茅台", "message": "请全面分析"}).encode("utf-8"))

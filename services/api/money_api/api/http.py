@@ -6,6 +6,7 @@ import json
 from urllib.parse import parse_qs, urlparse
 
 from money_api.api.v1.router import build_default_analysis_service
+from money_api.domains.analysis.contracts import BacktestOptions
 from money_api.domains.analysis.service import AnalysisService
 from money_api.domains.market_data.sina_kline import SinaKLineProvider
 from money_api.main import health
@@ -73,15 +74,16 @@ class HttpApiApp:
         prices = payload.get("prices")
         source = payload.get("source")
         limit = self._parse_limit(str(payload.get("limit", "60")))
+        options = BacktestOptions.from_dict(payload.get("options"))
         try:
             if source == "sina":
-                result = self.service.backtest_report_from_provider(task_id, self.price_providers["sina"], limit=limit)
+                result = self.service.backtest_report_from_provider(task_id, self.price_providers["sina"], limit=limit, options=options)
             else:
                 if not isinstance(prices, list):
                     return self._json(400, {"error": "prices are required"})
                 from money_api.domains.analysis.contracts import BacktestPricePoint
 
-                result = self.service.backtest_report(task_id, [BacktestPricePoint.from_dict(price) for price in prices])
+                result = self.service.backtest_report(task_id, [BacktestPricePoint.from_dict(price) for price in prices], options=options)
         except ValueError as exc:
             return self._json(400, {"error": str(exc)})
         if result is None:

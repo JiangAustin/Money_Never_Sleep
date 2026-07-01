@@ -9,6 +9,7 @@ from money_api.domains.analysis.contracts import (
     AgentView,
     AnalysisReport,
     AnalysisStatus,
+    BacktestOptions,
     BacktestPricePoint,
     BacktestResult,
     ConfidenceLevel,
@@ -77,20 +78,20 @@ class AnalysisService:
     def list_reports(self, limit: int = 20) -> list[AnalysisReportRecord]:
         return self.report_repository.list_recent(limit=limit)
 
-    def backtest_report(self, task_id: str, prices: list[BacktestPricePoint]) -> BacktestResult | None:
+    def backtest_report(self, task_id: str, prices: list[BacktestPricePoint], options: BacktestOptions | None = None) -> BacktestResult | None:
         report = self.get_report(task_id)
         if report is None:
             return None
-        return self.backtest_engine.run(report, prices)
+        return self.backtest_engine.run(report, prices, options=options)
 
-    def backtest_report_from_provider(self, task_id: str, provider, limit: int = 60) -> BacktestResult | None:
+    def backtest_report_from_provider(self, task_id: str, provider, limit: int = 60, options: BacktestOptions | None = None) -> BacktestResult | None:
         report = self.get_report(task_id)
         if report is None:
             return None
         result: ProviderResult = provider.get_price_series(report.stock, limit=limit)
         if not result.ok:
             raise ValueError(result.error_message or "price series provider failed")
-        return self.backtest_engine.run(report, list(result.data))
+        return self.backtest_engine.run(report, list(result.data), options=options)
 
     def build_portfolio_risk_budget(self, task_ids: list[str] | None = None, limit: int = 20) -> PortfolioRiskBudget:
         if task_ids:

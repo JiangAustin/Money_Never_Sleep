@@ -29,10 +29,11 @@ def backtest_analysis_report(
     prices: list[dict[str, object]] | None = None,
     source: str | None = None,
     limit: int = 60,
+    options: dict[str, object] | None = None,
 ) -> dict[str, object] | None:
     from money_api.api.v1.router import backtest_analysis_report as backtest_analysis_report_v1
 
-    return backtest_analysis_report_v1(task_id=task_id, prices=prices, source=source, limit=limit)
+    return backtest_analysis_report_v1(task_id=task_id, prices=prices, source=source, limit=limit, options=options)
 
 
 def build_portfolio_risk_budget(task_ids: list[str] | None = None, limit: int = 20) -> dict[str, object]:

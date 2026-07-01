@@ -5,7 +5,7 @@ from collections.abc import Callable
 from money_api.core.config import settings
 from money_api.domains.analysis.agent_engine import MockDeepResearchEngine, QuickAgentRouter
 from money_api.domains.analysis.context_builder import DataContextBuilder, StaticMarketDataProvider
-from money_api.domains.analysis.contracts import BacktestPricePoint, StockIdentity
+from money_api.domains.analysis.contracts import BacktestOptions, BacktestPricePoint, StockIdentity
 from money_api.domains.analysis.report_repository import AnalysisReportRepository, JsonFileAnalysisReportRepository
 from money_api.domains.analysis.service import AnalysisService
 from money_api.domains.analysis.tradingagents_engine import (
@@ -119,12 +119,14 @@ def backtest_analysis_report(
     prices: list[dict[str, object]] | None = None,
     source: str | None = None,
     limit: int = 60,
+    options: dict[str, object] | None = None,
 ) -> dict[str, object] | None:
+    backtest_options = BacktestOptions.from_dict(options)
     if source == "sina":
-        result = _analysis_service.backtest_report_from_provider(task_id, SinaKLineProvider(), limit=limit)
+        result = _analysis_service.backtest_report_from_provider(task_id, SinaKLineProvider(), limit=limit, options=backtest_options)
     else:
         price_points = [BacktestPricePoint.from_dict(price) for price in (prices or [])]
-        result = _analysis_service.backtest_report(task_id, price_points)
+        result = _analysis_service.backtest_report(task_id, price_points, options=backtest_options)
     return result.to_dict() if result is not None else None
 
 

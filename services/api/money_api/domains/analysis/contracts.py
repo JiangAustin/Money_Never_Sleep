@@ -120,6 +120,32 @@ class BacktestPricePoint:
 
 
 @dataclass(frozen=True)
+class BacktestOptions:
+    cost_pct: float = 0
+    slippage_pct: float = 0
+    adjustment: str = "none"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "cost_pct": self.cost_pct,
+            "slippage_pct": self.slippage_pct,
+            "adjustment": self.adjustment,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any] | None) -> "BacktestOptions":
+        payload = payload or {}
+        adjustment = str(payload.get("adjustment", "none"))
+        if adjustment not in {"none", "qfq", "hfq"}:
+            adjustment = "none"
+        return cls(
+            cost_pct=max(0, float(payload.get("cost_pct", 0))),
+            slippage_pct=max(0, float(payload.get("slippage_pct", 0))),
+            adjustment=adjustment,
+        )
+
+
+@dataclass(frozen=True)
 class BacktestResult:
     task_id: str
     entry_date: str
@@ -127,10 +153,13 @@ class BacktestResult:
     entry_price: float
     exit_price: float
     return_pct: float
+    gross_return_pct: float
+    cost_impact_pct: float
     max_drawdown_pct: float
     holding_days: int
     exit_reason: str
     price_path: list[BacktestPricePoint]
+    options: BacktestOptions = field(default_factory=BacktestOptions)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -140,10 +169,13 @@ class BacktestResult:
             "entry_price": self.entry_price,
             "exit_price": self.exit_price,
             "return_pct": self.return_pct,
+            "gross_return_pct": self.gross_return_pct,
+            "cost_impact_pct": self.cost_impact_pct,
             "max_drawdown_pct": self.max_drawdown_pct,
             "holding_days": self.holding_days,
             "exit_reason": self.exit_reason,
             "price_path": [point.to_dict() for point in self.price_path],
+            "options": self.options.to_dict(),
         }
 
     @classmethod
@@ -155,10 +187,13 @@ class BacktestResult:
             entry_price=float(payload.get("entry_price", 0)),
             exit_price=float(payload.get("exit_price", 0)),
             return_pct=float(payload.get("return_pct", 0)),
+            gross_return_pct=float(payload.get("gross_return_pct", payload.get("return_pct", 0))),
+            cost_impact_pct=float(payload.get("cost_impact_pct", 0)),
             max_drawdown_pct=float(payload.get("max_drawdown_pct", 0)),
             holding_days=int(payload.get("holding_days", 0)),
             exit_reason=str(payload.get("exit_reason", "")),
             price_path=[BacktestPricePoint.from_dict(item) for item in payload.get("price_path", [])],
+            options=BacktestOptions.from_dict(payload.get("options")),
         )
 
 
