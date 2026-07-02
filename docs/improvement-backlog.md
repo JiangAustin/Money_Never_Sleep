@@ -75,6 +75,7 @@
 | MNS-BL-052 | 已完成 | P2 | 投资计划正负证据拆线 | 只有总证据范围还不够，正向依据和风险依据仍然混在同一条解释里 | 让 `InvestmentPlan` 分别展示做多依据和防守依据的标题/正文命中来源 | 已完成正向/风险证据拆线与测试补强；验证：compileall + pytest | `services/api/money_api/domains/analysis/service.py`、`docs/decision-log.md` |
 | MNS-BL-053 | 已完成 | P2 | 投资计划证据展示 | 后端已经拆出正负证据，但 Web 详情页还要把它直接呈现给用户 | 让投资计划区块显示一个轻量“证据来源”小节 | 已完成 Web 详情展示和 mock 补齐；验证：`node --check apps/web/src/app.js` | `apps/web/src/app.js`、`apps/web/src/mockData.js` |
 | MNS-BL-054 | 已完成 | P2 | 报告列表证据摘要 | 详情页已经能看到证据来源，但列表页仍然只能看总摘要 | 让报告列表卡片也展示一行证据方向摘要 | 已完成列表页证据摘要和 mock 补齐；验证：`node --check apps/web/src/app.js && node --check apps/web/src/mockData.js` | `apps/web/src/app.js`、`docs/decision-log.md` |
+| MNS-BL-055 | 已完成 | P2 | 任务历史证据摘要 | 任务历史页只显示状态和重试信息，还看不到证据方向 | 让任务历史行也展示同源证据摘要 | 已完成任务历史证据摘要和缓存回填；验证：`node --check apps/web/src/app.js` | `apps/web/src/app.js`、`docs/decision-log.md` |
 | MNS-BL-021 | 已完成 | P2 | 交易成本、滑点和复权参数 | 阶段 7.1 为保持 deterministic 最小闭环，不做成本和复权 | 提高回测结果可信度，避免过度乐观 | 已在阶段 7.4 完成 `BacktestOptions`、净收益/裸收益/成本影响和 Python/HTTP API 参数；真实复权价格转换仍是后续项 | 阶段 7.4 |
 | MNS-BL-019 | 已完成 | P1 | 组合风险预算 | 当前系统仍是单股分析，没有组合层持仓和风险预算 | 支持多标的仓位约束、集中度控制和组合视图 | 已在阶段 7.3 完成组合预算契约、预算器、Python API 和 HTTP API；验证：`100 passed, 3 skipped` | 阶段 7.3 |
 | MNS-BL-010 | 待设计 | P2 | Web 图表和行情可视化 | 阶段 5 静态工作台不做 K 线或图表 | 改善报告阅读和行情理解效率 | 先接真实 API，再选择轻量图表方案 | 阶段 5 后续 |

@@ -447,6 +447,11 @@ function renderReportList() {
   });
 }
 
+function getPlanEvidenceSummary(report) {
+  const plan = report?.investment_plan || {};
+  return [plan.positive_evidence_summary, plan.negative_evidence_summary].filter(Boolean).join(" / ");
+}
+
 function renderTaskHistory() {
   elements.taskHistoryList.replaceChildren();
   if (!state.apiBaseUrl) {
@@ -463,11 +468,16 @@ function renderTaskHistory() {
     const retryMeta = task.next_retry_at
       ? `下次重试 ${task.next_retry_at}${task.next_retry_policy ? ` / 策略 ${task.next_retry_policy}` : ""}${Number.isInteger(task.next_retry_delay_s) ? ` / 延迟 ${task.next_retry_delay_s}s` : ""}`
       : task.error || task.message || "任务已创建";
+    const report = state.reports.find((item) => item.task_id === task.report_id) || null;
+    const evidenceSummary = getPlanEvidenceSummary(report);
     item.append(
       createElement("span", "report-title", `${task.symbol} / ${task.status}`),
       createElement("span", "report-meta", task.task_id),
       createElement("span", "report-summary", retryMeta)
     );
+    if (evidenceSummary) {
+      item.append(createElement("span", "report-meta", evidenceSummary));
+    }
     elements.taskHistoryList.append(item);
   });
 }
@@ -1127,7 +1137,27 @@ async function refreshTaskHistory() {
     return;
   }
   try {
-    state.tasks = await fetchTaskHistory(state.apiBaseUrl, 10);
+    const tasks = await fetchTaskHistory(state.apiBaseUrl, 10);
+    const reportsById = new Map(state.reports.map((report) => [report.task_id, report]));
+    const withEvidence = await Promise.all(
+      tasks.map(async (task) => {
+        if (!task.report_id) {
+          return task;
+        }
+        if (reportsById.has(task.report_id)) {
+          return task;
+        }
+        try {
+          const report = await fetchReport(state.apiBaseUrl, task.report_id);
+          reportsById.set(report.task_id, report);
+          state.reports.unshift(report);
+          return task;
+        } catch {
+          return task;
+        }
+      })
+    );
+    state.tasks = withEvidence;
   } catch {
     state.tasks = [];
   }

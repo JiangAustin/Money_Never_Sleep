@@ -70,6 +70,7 @@
 | 5.38 投资计划正负证据拆线 | 已完成 | 让投资计划的正向依据和风险依据分别展示来源，增强可执行性 | `InvestmentPlan` 正向/风险证据拆线、理由/风险说明分流 | 用户可分别看出做多依据和防守依据各自主要来自标题、正文还是两者都命中 |
 | 5.39 投资计划证据展示 | 已完成 | 让 Web 报告详情页直接显示投资计划的证据来源摘要 | 投资计划区块新增“证据来源”小节、离线 mock 同步字段 | 用户可在投资计划区块里直接看到正向证据和风险证据摘要 |
 | 5.40 报告列表证据摘要 | 已完成 | 让报告列表页也能直接扫到投资计划的证据方向 | 报告列表卡片新增证据摘要、离线 mock 同步字段 | 用户可在列表页直接看出当前报告偏正向还是偏风险 |
+| 5.41 任务历史证据摘要 | 已完成 | 让任务历史页也能扫到同源证据摘要 | 任务历史行新增证据摘要、报告缓存回填 | 用户可在任务历史里直接看出已完成任务的证据方向 |
 | 6. 桌面端与本地体验 | 已完成 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | Electron 桌面壳、macOS 构建入口、Web 工作台资源打包 | macOS `.app` 可构建并能承载 Web 工作台 |
 | 6.1 桌面托管本地 API | 已完成 | 让桌面端默认尝试拉起本地 API，并使用更接近可用产品的 runtime service | runtime service factory、Electron 托管 server、打包 API 源码资源 | 桌面无需手动设置 API URL 也可尝试进入真实 HTTP 模式 |
 | 6.2 桌面启动诊断 | 已完成 | 让用户看到桌面当前运行模式和回退原因 | startup 上下文注入、mode pill、诊断面板启动区块 | 桌面能显示托管 API / 外部 API / 离线模式和最近错误 |
@@ -140,6 +141,7 @@ review 补强目标测试结果：`25 passed`。
 阶段 5.38 定向验证结果：`22 passed`，`python3 -m compileall -q services/api/money_api services/api/tests` 和 `PYTHONPATH=services/api pytest -q services/api/tests/test_analysis_service.py services/api/tests/test_analysis_api.py` 通过。
 阶段 5.39 定向验证结果：`node --check apps/web/src/app.js` 通过。
 阶段 5.40 定向验证结果：`node --check apps/web/src/app.js` 和 `node --check apps/web/src/mockData.js` 通过。
+阶段 5.41 定向验证结果：待补，后续将跑 `node --check apps/web/src/app.js`。
 
 Sina K 线真实网络 smoke 结果：`1 passed`。
 

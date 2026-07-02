@@ -75,6 +75,13 @@
 - 验证：`node --check apps/web/src/app.js`；`node --check apps/web/src/mockData.js`。
 - 下一步：如果还要继续压缩列表信息，只保留一行证据摘要，不再增加第二层卡片结构。
 
+## 2026-07-03 任务历史证据摘要
+
+- 做了什么：把任务历史也接上了证据摘要，`report_ready` 任务在任务列表里会优先复用已加载报告，必要时再补拉一次 `/reports/{id}`，从而显示同源的正向/风险证据摘要。
+- 为什么：任务历史是异步链路的中间层，如果这里完全看不到证据来源，用户还是得跳回详情页才能判断这单任务是偏正向还是偏防守。
+- 验证：`node --check apps/web/src/app.js`。
+- 下一步：如果后面要继续增强任务层，只扩轻量摘要，不把任务历史做成第二个详情页。
+
 ## 2026-07-02 结构化事件流与引擎可见性
 
 - 做了什么：新增 `MarketEvent` 契约、结构化事件分类器、`DataContext.events`、报告 provenance 字段（`data_sources` / `engine_source` / `engine_mode` / `fallback_reason`），并把这些信息展示到 Web 工作台和诊断区。
