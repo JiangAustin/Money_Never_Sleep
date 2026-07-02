@@ -68,6 +68,13 @@
 - 验证：`node --check apps/web/src/app.js`。
 - 下一步：如果再扩展这个展示，只在计划区块里做轻量补充，不另起新面板。
 
+## 2026-07-03 报告列表证据摘要
+
+- 做了什么：把 `InvestmentPlan` 的正向/风险证据摘要同步到报告列表卡片，让列表页也能直接扫到当前报告的证据方向。
+- 为什么：列表页是进入报告的第一眼，如果这里只显示标题和总摘要，用户还要点进去才知道这份计划是偏多还是偏防守；把证据摘要放进列表能减少上下文切换。
+- 验证：`node --check apps/web/src/app.js`；`node --check apps/web/src/mockData.js`。
+- 下一步：如果还要继续压缩列表信息，只保留一行证据摘要，不再增加第二层卡片结构。
+
 ## 2026-07-02 结构化事件流与引擎可见性
 
 - 做了什么：新增 `MarketEvent` 契约、结构化事件分类器、`DataContext.events`、报告 provenance 字段（`data_sources` / `engine_source` / `engine_mode` / `fallback_reason`），并把这些信息展示到 Web 工作台和诊断区。

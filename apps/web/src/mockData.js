@@ -242,8 +242,8 @@ window.MNS_MOCK_REPORTS = [
       observation_window: "5-20 个交易日",
       review_conditions: ["每日复核一次", "新的高置信事件出现时复核"],
       rationale: ["估值处于低位区间", "技术面仍缺少趋势突破", "新闻上下文较少"],
-      positive_evidence_summary: "",
-      negative_evidence_summary: "",
+      positive_evidence_summary: "正向证据主要来自标题命中的弱信号。",
+      negative_evidence_summary: "风险证据主要来自新闻缺口和离线回退。",
       risk_notes: ["新闻数据缺口较大，计划只能维持观察仓位"],
     },
     backtest: {

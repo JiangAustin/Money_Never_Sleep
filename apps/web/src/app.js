@@ -432,7 +432,13 @@ function renderReportList() {
     const title = createElement("span", "report-title", `${report.stock.name} ${report.action.toUpperCase()}`);
     const meta = createElement("span", "report-meta", `${report.confidence} / ${report.status}`);
     const summary = createElement("span", "report-summary", report.summary);
-    button.append(title, meta, summary);
+    const plan = report.investment_plan || {};
+    const evidenceLine = [plan.positive_evidence_summary, plan.negative_evidence_summary].filter(Boolean).join(" / ");
+    if (evidenceLine) {
+      button.append(title, meta, summary, createElement("span", "report-meta", evidenceLine));
+    } else {
+      button.append(title, meta, summary);
+    }
     button.addEventListener("click", () => {
       state.selectedTaskId = report.task_id;
       render();
