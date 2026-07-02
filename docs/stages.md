@@ -73,6 +73,7 @@
 | 5.41 任务历史证据摘要 | 已完成 | 让任务历史页也能扫到同源证据摘要 | 任务历史行新增证据摘要、报告缓存回填 | 用户可在任务历史里直接看出已完成任务的证据方向 |
 | 5.42 auto 回退提示 | 已完成 | 让 auto 模式在真实 TradingAgents 缺少凭据或运行失败时给出可读回退提示 | auto 回退说明、凭据提示、失败原因展开 | 用户可直接看懂为什么当前回退到了工具驱动分析 |
 | 5.43 任务历史筛选与细节 | 已完成 | 让任务历史支持状态筛选并能查看单条任务详情 | 任务历史筛选按钮、任务详情卡、报告证据摘要 | 用户可快速浏览进行中/已完成/需关注任务，并查看任务细节 |
+| 5.44 真实 TradingAgents 主路径强化 | 已完成 | 让真实 TradingAgents 成为更可验收的 agent 分析主路径 | 7 analyst 默认配置、完整 state 映射、运行 diagnostics、Web 命中摘要 | 用户可看到真实 TradingAgents 是否命中、用了哪些角色/模型、耗时和失败回退 |
 | 6. 桌面端与本地体验 | 已完成 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | Electron 桌面壳、macOS 构建入口、Web 工作台资源打包 | macOS `.app` 可构建并能承载 Web 工作台 |
 | 6.1 桌面托管本地 API | 已完成 | 让桌面端默认尝试拉起本地 API，并使用更接近可用产品的 runtime service | runtime service factory、Electron 托管 server、打包 API 源码资源 | 桌面无需手动设置 API URL 也可尝试进入真实 HTTP 模式 |
 | 6.2 桌面启动诊断 | 已完成 | 让用户看到桌面当前运行模式和回退原因 | startup 上下文注入、mode pill、诊断面板启动区块 | 桌面能显示托管 API / 外部 API / 离线模式和最近错误 |
@@ -84,7 +85,7 @@
 
 ## 当前阶段结论
 
-阶段 5.38 已完成。当前系统已具备前后端贯通的异步 HTTP 任务控制与任务可见性闭环，并继续补齐真实输入面：
+阶段 5.44 已完成。当前系统已具备前后端贯通的异步 HTTP 任务控制与任务可见性闭环，并继续补齐真实输入面：
 
 1. `POST /tasks/analysis` 可创建分析任务，`GET /tasks/{id}` 和 `GET /tasks?limit=` 可查询任务。
 2. 任务默认持久化到 JSON 文件目录 `data/cache/tasks`，服务重启时会把上次中断的运行中任务标记为 `failed`。
@@ -119,6 +120,9 @@
 31. 研究信号摘要现在直接显示计划方向、目标仓位和止损/止盈，并判断当前研究信号和计划是否一致，形成更强的前端语义对齐。
 32. `InvestmentPlan` 的理由和风险说明现在会显式回写高优先级事件的证据范围，让计划层能说明本次建议主要依赖标题、正文还是两者都命中。
 33. `InvestmentPlan` 的正向证据和风险证据现在可以分别回写来源，让做多依据和防守依据不再混在同一段解释里。
+34. 真实 `TradingAgentsGraphRunner` 现在默认使用 A 股 7 analyst，并把 analyst 报告、投研辩论、风险辩论和组合经理结论映射回 `AgentView`。
+35. TradingAgents diagnostics 现在会记录 provider、deep/quick 模型、角色列表、results/cache 路径、耗时、错误类型和 Money_Never_sleep 的 `context_snapshot`，便于判断真实引擎是否命中和为何回退。
+36. Web 报告详情和任务历史现在会显示真实 TradingAgents 命中/回退摘要、模型、耗时和角色列表。
 
 离线验证命令：
 
@@ -146,6 +150,7 @@ review 补强目标测试结果：`25 passed`。
 阶段 5.41 定向验证结果：`node --check apps/web/src/app.js` 通过。
 阶段 5.42 定向验证结果：`node --check apps/web/src/app.js` 通过。
 阶段 5.43 定向验证结果：`node --check apps/web/src/app.js`、`node --check apps/web/src/mockData.js` 和 `PYTHONPATH=services/api pytest -q services/api/tests/test_web_workbench.py` 通过。
+阶段 5.44 验证结果：`PYTHONPATH=services/api pytest -q services/api/tests` 结果 `170 passed, 3 skipped`；`python3 -m compileall -q services/api/money_api services/api/tests`、`node --check apps/web/src/app.js && node --check apps/web/src/mockData.js` 通过。
 
 Sina K 线真实网络 smoke 结果：`1 passed`。
 

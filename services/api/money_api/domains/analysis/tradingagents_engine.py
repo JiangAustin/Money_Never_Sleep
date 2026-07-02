@@ -108,15 +108,20 @@ class TradingAgentsDeepResearchEngine:
             diagnostics=diagnostics,
         )
         if result.ok:
+            normalized_decision = result.final_decision.upper()
+            action = _ACTION_MAP.get(normalized_decision, DecisionAction.WATCH)
+            risks = [RiskFinding(level="low", message="真实引擎输出仍需人工复核")]
+            if normalized_decision not in _ACTION_MAP:
+                risks.append(RiskFinding(level="medium", message=f"TradingAgents 决策 {result.final_decision} 无法识别，已降级为观察"))
             return AnalysisReport(
                 task_id=task_id,
                 stock=context.stock,
                 status=AnalysisStatus.REPORT_READY,
-                action=_ACTION_MAP.get(result.final_decision.upper(), DecisionAction.WATCH),
+                action=action,
                 confidence=ConfidenceLevel.LOW if context.gaps else ConfidenceLevel.MEDIUM,
                 summary=result.summary,
                 reasons=["TradingAgents 深度投研引擎已返回结果"],
-                risks=[RiskFinding(level="low", message="真实引擎输出仍需人工复核")],
+                risks=risks,
                 agent_views=[
                     AgentView(agent=f"TradingAgents {name}", conclusion=report)
                     for name, report in result.agent_reports.items()
@@ -162,11 +167,12 @@ class AutoFallbackDeepResearchEngine:
         if primary_report.status != AnalysisStatus.FAILED:
             return primary_report
 
+        fallback_source = "mock-fallback" if isinstance(self.fallback, MockDeepResearchEngine) else "tool-driven"
         diagnostics = list(primary_report.data_context.diagnostics)
         diagnostics.append(
             {
                 "kind": "deep_engine",
-                "source": "tool-driven",
+                "source": fallback_source,
                 "ok": True,
                 "error_type": primary_report.data_context.diagnostics[-1].get("error_type") if primary_report.data_context.diagnostics else None,
                 "error_message": primary_report.data_context.diagnostics[-1].get("error_message") if primary_report.data_context.diagnostics else None,

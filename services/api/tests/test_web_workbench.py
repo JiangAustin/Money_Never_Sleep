@@ -66,6 +66,9 @@ def test_mock_data_matches_report_contract() -> None:
         assert field in mock_data
 
     assert "window.MNS_MOCK_REPORTS" in mock_data
+    assert "TradingAgents portfolio_manager" in mock_data
+    assert "真实 TradingAgents 命中" in mock_data
+    assert "auto-fallback-demo" in mock_data
 
 
 def test_app_js_exposes_service_and_render_boundaries() -> None:
@@ -86,6 +89,7 @@ def test_app_js_exposes_service_and_render_boundaries() -> None:
     assert "function getTaskHistoryDetail" in app_js
     assert "function getPlanEvidenceSummary" in app_js
     assert "function renderTaskHistorySearch" in app_js
+    assert "function getEngineRunSummaryLines" in app_js
     assert "analysis-form" in app_js
     assert "taskHistoryFilter" in app_js
     assert "taskHistorySearch" in app_js
@@ -118,6 +122,12 @@ def test_app_js_exposes_service_and_render_boundaries() -> None:
     assert "净流入" in app_js or "净流出" in app_js
     assert "资金流：" in app_js
     assert "公告：" in app_js
+    assert "真实 TradingAgents 命中" in app_js
+    assert "模型：" in app_js
+    assert "耗时：" in app_js
+    assert "角色：" in app_js
+    assert "引擎命中：" in app_js
+    assert "provider" in app_js
 
 
 def test_web_styles_define_workbench_layout() -> None:

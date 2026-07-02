@@ -221,3 +221,10 @@
 - 为什么：增持是 A 股里很常见且对方向判断有用的正向信号，适合继续验证“事件层可以改变投资计划”这条链路。
 - 验证：`PYTHONPATH=services/api .venv/bin/python -m pytest services/api/tests/test_market_events.py services/api/tests/test_analysis_service.py services/api/tests/test_analysis_api.py services/api/tests/test_http_api.py services/api/tests/test_analysis_contracts.py services/api/tests/test_web_workbench.py -q` 结果 `76 passed`；`python -m compileall -q services/api/money_api`；`node --check apps/web/src/app.js && node --check apps/web/src/mockData.js`。
 - 下一步：继续扩正文级高价值类别，再考虑是否需要独立的事件排序/评分模块。
+
+## 2026-07-03 真实 TradingAgents 主路径强化第一版
+
+- 做了什么：把 `TradingAgentsGraphRunner` 默认 analyst 扩到 A 股 7 角色，合并 TradingAgents-astock 默认配置和本仓库缓存路径，记录 provider、模型、耗时、角色、上下文快照和失败详情；同时把完整 state 中的 analyst、投研辩论、风险辩论和组合经理输出映射为 `AgentView`，Web 详情和任务历史也能展示真实命中/回退摘要。
+- 为什么：用户决定优先走真实 TradingAgents 主路径上线；此前 runner 虽能调用真实 graph，但只映射少量报告字段，命中信息和运行上下文不足，不利于判断是否真正跑到了多 Agent 分析。
+- 验证：`PYTHONPATH=services/api pytest -q services/api/tests` 结果 `170 passed, 3 skipped`；`python3 -m compileall -q services/api/money_api services/api/tests` 通过；`node --check apps/web/src/app.js && node --check apps/web/src/mockData.js` 通过。
+- 下一步：在配置真实 LLM key 后跑一次 `MNS_RUN_TRADINGAGENTS_SMOKE=1 MONEY_DEEP_ENGINE=tradingagents` 的真实 smoke；后续再评估是否把 Money_Never_sleep 的 provider 注入 TradingAgents 工具层。

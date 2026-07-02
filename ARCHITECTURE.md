@@ -16,7 +16,7 @@ Backend runtime, orchestration, and domain logic.
 - `money_api/api/v1/router.py`: runtime service factories and top-level API functions.
 - `money_api/domains/analysis/`: analysis contracts, reporting, task queue, risk policy, backtest, provenance, and engine adapters.
 - `money_api/domains/market_data/`: online data providers and provider result contracts.
-- `money_api/integrations/`: optional external engine adapters such as TradingAgents.
+- `money_api/integrations/`: optional external engine adapters such as TradingAgents; the runtime `auto` path treats TradingAgents as the primary deep engine when the environment is ready.
 
 ### 2. `apps/web`
 
@@ -73,6 +73,7 @@ flowchart TD
 
 - Online first, but fail open with explicit provenance.
 - Never hide fallback; always surface `data_sources`, `engine_source`, `engine_mode`, and `fallback_reason`.
+- TradingAgents main-path reports must expose analyst roles, provider/model metadata, runtime, context snapshot, and failure details through diagnostics.
 - Prefer thin, reusable slices: bulletin headlines can be enriched with bulletin bodies before introducing a new data family.
 - Keep Money_Never_sleep as its own platform boundary; reference repos are assets, not direct forks.
 - Prefer small, testable increments over broad rewrites.

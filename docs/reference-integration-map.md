@@ -1,7 +1,7 @@
 # 参考项目整合地图
 
 状态：活文档
-最近更新：2026-07-02
+最近更新：2026-07-03
 
 本文档把三个外部开源项目作为长期架构资产管理。Money_Never_sleep 不直接整体 fork，但允许按模块借鉴、复制、适配和重设计；每次相关计划都要写清楚来源、取舍和验证口径。
 
@@ -16,7 +16,7 @@
 
 | 参考项目 | 可借鉴能力 | 可复制/迁移候选 | 重设计原则 | 当前接入状态 | 下一步 |
 | --- | --- | --- | --- | --- | --- |
-| `simonlin1212/TradingAgents-astock` | 多 Agent 投研流程、A 股角色分工、辩论/复核机制、深度研究报告结构 | runner 壳、agent prompt、工具调用约定、A 股语境分析模板 | 只作为 `DeepResearchEngine` 后端实现；Money_Never_sleep 保持自己的 `DataContext`、`AnalysisReport`、任务队列和风控契约 | 已有 TradingAgents adapter、`auto` fallback、事件上下文快照、工具驱动回退；现在又补了可直接调用的研究工具入口和资金流/龙虎榜/解禁薄切片，真实工具消费仍需继续对齐真实 runner | 把结构化事件、数据可信度和风险约束注入真实 runner；补真实引擎命中/失败的成本与耗时观测，并把 agent 工具层接到真实多 Agent 流程 |
+| `simonlin1212/TradingAgents-astock` | 多 Agent 投研流程、A 股角色分工、辩论/复核机制、深度研究报告结构 | runner 壳、agent prompt、工具调用约定、A 股语境分析模板 | 只作为 `DeepResearchEngine` 后端实现；Money_Never_sleep 保持自己的 `DataContext`、`AnalysisReport`、任务队列和风控契约 | 已有 TradingAgents adapter、`auto` fallback、事件上下文快照、工具驱动回退；已吸收 A 股 7 analyst 默认角色、`examples/run_cases.py` 的完整 state 字段整理方式、provider/model/runtime diagnostics 和 Web 命中摘要；真实工具消费暂时仍由 TradingAgents-astock 自身工具链负责 | 配置真实 LLM key 后跑产品级 smoke；再评估通过 adapter/provider 把 Money_Never_sleep 的结构化事件、数据可信度和风险约束注入 TradingAgents 工具层 |
 | `ZhuLinsen/daily_stock_analysis` | 数据源 fallback、定时报表、报告持久化、通知/自动化、轻量服务边界 | provider 编排、报告模板、调度任务、通知渠道设计 | 借鉴“日常可运行”的工程化，不把本项目退化成单次脚本；报告必须可追溯、可复盘、可查询 | 已有 provider diagnostics、JSON 报告仓储、任务持久化、HTTP/Web/Desktop 壳；现在又吸收了 fail-open provider 形状与在线/离线自动回退 | 设计日/周研究任务、报告标签和通知摘要；评估 SQLite 仓储与报告搜索 |
 | `ArvinLovegood/go-stock` | 桌面体验、行情图表、工具分组、本地应用组织方式 | 图表交互、行情页面结构、桌面导航、用户工作台布局 | 不迁移 Go/Wails 底座；在当前 Electron + 零依赖 Web 壳内吸收体验设计 | 已有 Electron 桌面壳和启动诊断；同时借鉴了工具分组命名和 Eastmoney / iWenCai 工具入口组织方式 | 研究引擎稳定后补 K 线/指标图表、报告与行情联动、桌面导航分区 |
 

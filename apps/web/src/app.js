@@ -137,6 +137,31 @@ function getEngineFallbackPrompt(report) {
   return `真实 TradingAgents 执行失败，当前已自动回退到工具驱动分析。失败原因：${reason}`;
 }
 
+function getEngineRunSummaryLines(report) {
+  const diagnostics = Array.isArray(report?.data_diagnostics) ? report.data_diagnostics : [];
+  const deepEngine = [...diagnostics].reverse().find((item) => item && item.kind === "deep_engine");
+  const lines = [];
+  if (report?.engine_source === "tradingagents") {
+    lines.push("真实 TradingAgents 命中");
+  } else if (report?.engine_mode === "auto" && report?.engine_source === "tool-driven") {
+    lines.push("真实 TradingAgents 未命中，已回退到工具驱动分析");
+  }
+  if (!deepEngine) {
+    return lines;
+  }
+  const provider = deepEngine.provider || "unknown";
+  const deepModel = deepEngine.deep_model || "unknown";
+  const quickModel = deepEngine.quick_model || "unknown";
+  const runtimeMs = Number(deepEngine.runtime_ms || 0);
+  const analysts = Array.isArray(deepEngine.selected_analysts) ? deepEngine.selected_analysts.join("、") : "";
+  lines.push(`模型：provider ${provider} / deep ${deepModel} / quick ${quickModel}`);
+  lines.push(`耗时：${runtimeMs}ms`);
+  if (analysts) {
+    lines.push(`角色：${analysts}`);
+  }
+  return lines;
+}
+
 function createLocalAnalysis(symbol, message) {
   const stock = normalizeSymbol(symbol);
   const createdAt = new Date().toISOString();
@@ -502,6 +527,7 @@ function getTaskHistoryDetail(task) {
       task.error ? `错误：${task.error}` : "当前无错误",
       report ? `报告摘要：${report.summary}` : "当前任务尚未关联报告",
       report ? `报告计划：${report.investment_plan?.direction || "unknown"} / ${formatOptionalPercent(report.investment_plan?.target_position_pct)}` : "暂无计划信息",
+      report ? `引擎命中：${getEngineRunSummaryLines(report)[0] || "暂无"}` : "暂无引擎命中信息",
       report ? `证据摘要：${getPlanEvidenceSummary(report) || "暂无"}` : "暂无证据摘要",
     ],
   };
@@ -1170,6 +1196,10 @@ function renderReportDetail() {
   const fallbackPrompt = getEngineFallbackPrompt(report);
   if (fallbackPrompt) {
     provenance.append(createElement("p", "empty-state", fallbackPrompt));
+  }
+  const runSummaryLines = getEngineRunSummaryLines(report);
+  if (runSummaryLines.length > 0) {
+    appendList(provenance, runSummaryLines, "暂无真实引擎运行摘要");
   }
 
   const signalSummary = getResearchSignalSummary(report);

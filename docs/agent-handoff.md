@@ -740,6 +740,25 @@ HTTP 入口：
 
 意义：确认当前 Money_Never_sleep 到 TradingAgents-astock 的真实 runner 链路在本机环境下可被调起，不再只是 mock 或设计级接入。
 
+### 阶段 5.44：真实 TradingAgents 主路径强化
+
+做了什么：`TradingAgentsGraphRunner` 默认 analyst 扩为 `market/social/news/fundamentals/policy/hot_money/lockup`，真实运行时合并 TradingAgents-astock 默认配置和本仓库 `TRADINGAGENTS_*` 缓存路径，并把 analyst 报告、投研辩论、风险辩论和组合经理结论映射到 `AgentView`。
+
+为什么这么做：用户决定优先完成真实 agent 分析上线。此前真实 runner 可以调起 graph，但输出映射和可观测字段太薄，无法判断这次是否真正命中了多 Agent 主路径。
+
+收益：报告和任务历史现在可以看到真实 TradingAgents 命中/回退、provider、deep/quick 模型、角色、耗时和上下文快照；`auto` 仍能失败后回退到工具驱动分析。
+
+关键文件：
+
+- `services/api/money_api/integrations/tradingagents_runner.py`
+- `services/api/money_api/domains/analysis/tradingagents_engine.py`
+- `apps/web/src/app.js`
+- `apps/web/src/mockData.js`
+- `services/api/tests/test_tradingagents_runner.py`
+- `services/api/tests/test_web_workbench.py`
+
+未做事项：尚未把 Money_Never_sleep 的 provider 直接注入 TradingAgents-astock 工具层；真实 smoke 仍需要本机 LLM provider/API key 环境就绪。
+
 ## 当前验证命令
 
 后端和 Web 结构默认验证：
@@ -794,11 +813,21 @@ MNS_RUN_NETWORK_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/
 MNS_RUN_TRADINGAGENTS_SMOKE=1 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests/test_tradingagents_smoke.py -v
 ```
 
+阶段 5.44 定向验证：
+
+```bash
+PYTHONPATH=services/api pytest -q services/api/tests
+python3 -m compileall -q services/api/money_api services/api/tests
+node --check apps/web/src/app.js && node --check apps/web/src/mockData.js
+```
+
+结果：`170 passed, 3 skipped`，Python 语法检查和 Web JS 语法检查通过。
+
 ## 当前已知限制
 
 - Web 工作台默认仍是离线 mock；真实 HTTP API 需要通过 `?api=` 显式启用。
 - `apps/desktop` 已有 Electron 第一版壳、macOS `.app` 构建入口、托管本地 API server 和启动诊断；但尚未签名、公证、打 DMG、设置图标，也未随应用打包 Python runtime。
-- 默认深度引擎仍是 mock；真实 TradingAgents 需要显式工厂和 opt-in smoke。
+- runtime 默认深度引擎是 `auto`：优先真实 TradingAgents，失败后回退工具驱动分析；显式 `MONEY_DEEP_ENGINE=tradingagents` 用于严格真实引擎诊断。
 - 数据层真实 provider 覆盖腾讯 quote 最小路径和 Sina 日线 K 线回测价格序列。
 - 报告 repository 使用 JSON 文件，适合第一版，不适合复杂查询和并发写入。
 - 已有第一版任务持久化、状态轮询、中断恢复标记、cancel/retry 控制、超时回收、自动重试和最小前端入口，但还没有真正的恢复执行、强制中断和复杂退避语义。

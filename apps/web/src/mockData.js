@@ -9,8 +9,10 @@ window.MNS_MOCK_REPORTS = [
     reasons: ["价格位于主要均线附近", "估值数据已进入上下文", "当前报告来自 Web 离线演示数据"],
     risks: [{ level: "medium", message: "短期波动可能放大，需结合真实数据复核" }],
     agent_views: [
-      { agent: "Market Analyst", conclusion: "价格结构保持韧性，但量能确认不足" },
-      { agent: "Risk Analyst", conclusion: "建议控制仓位并等待确认信号" }
+      { agent: "TradingAgents market", conclusion: "价格结构保持韧性，但量能确认不足" },
+      { agent: "TradingAgents news", conclusion: "公告与新闻未出现重大负面冲击" },
+      { agent: "TradingAgents hot_money", conclusion: "资金参与度仍需等待放量确认" },
+      { agent: "TradingAgents portfolio_manager", conclusion: "组合层面建议观察仓位，等待量价和事件共振" }
     ],
     data_sources: ["tencent", "eastmoney+cls+sina-bulletin"],
     engine_source: "tradingagents",
@@ -18,7 +20,20 @@ window.MNS_MOCK_REPORTS = [
     fallback_reason: null,
     data_gaps: ["fund_flow"],
     data_diagnostics: [
-      { kind: "quote", source: "tencent", ok: true, error_type: null, error_message: null, fetched_at: null, is_stale: false }
+      { kind: "quote", source: "tencent", ok: true, error_type: null, error_message: null, fetched_at: null, is_stale: false },
+      {
+        kind: "deep_engine",
+        source: "tradingagents",
+        ok: true,
+        selected_analysts: ["market", "social", "news", "fundamentals", "policy", "hot_money", "lockup"],
+        provider: "minimax",
+        deep_model: "MiniMax-M2.7",
+        quick_model: "MiniMax-M2.7-highspeed",
+        results_dir: "data/cache/tradingagents/results",
+        cache_dir: "data/cache/tradingagents/cache",
+        runtime_ms: 4820,
+        context_snapshot: { events: [], gaps: ["fund_flow"] }
+      }
     ],
     data_trust: {
       score: 82,
@@ -43,7 +58,7 @@ window.MNS_MOCK_REPORTS = [
       engine_mode: "tradingagents",
       failure_type: null,
       failure_reason: null,
-      notes: ["真实 TradingAgents 运行成功"],
+      notes: ["真实 TradingAgents 命中", "真实 TradingAgents 运行成功"],
     },
     engine_cost_guardrail: {
       status: "over_budget",
@@ -163,25 +178,39 @@ window.MNS_MOCK_REPORTS = [
     }
   },
   {
-    task_id: "analysis-demo-000001",
+    task_id: "auto-fallback-demo-000001",
     stock: { code: "000001", name: "平安银行", market: "cn" },
     status: "report_ready",
     action: "watch",
     confidence: "low",
-    summary: "银行板块处于修复观察区，需等待基本面和资金面共同确认。",
-    reasons: ["估值处于低位区间", "技术面仍缺少趋势突破", "新闻上下文较少"],
+    summary: "真实 TradingAgents 未命中，已回退到工具驱动分析。",
+    reasons: ["估值处于低位区间", "技术面仍缺少趋势突破", "TradingAgents auto 模式失败后已回退到工具驱动分析"],
     risks: [{ level: "low", message: "报告使用离线演示数据，不构成投资建议" }],
     agent_views: [
       { agent: "Fundamentals Analyst", conclusion: "估值具备观察价值，但盈利弹性仍需验证" },
       { agent: "News Analyst", conclusion: "缺少新的高置信事件驱动" }
     ],
     data_sources: ["static"],
-    engine_source: "mock",
-    engine_mode: "mock",
-    fallback_reason: null,
+    engine_source: "tool-driven",
+    engine_mode: "auto",
+    fallback_reason: "TradingAgents 执行失败: Missing credentials",
     data_gaps: ["news"],
     data_diagnostics: [
-      { kind: "news", source: "static", ok: false, error_type: "MissingData", error_message: "离线演示新闻不足", fetched_at: null, is_stale: false }
+      { kind: "news", source: "static", ok: false, error_type: "MissingData", error_message: "离线演示新闻不足", fetched_at: null, is_stale: false },
+      {
+        kind: "deep_engine",
+        source: "tradingagents",
+        ok: false,
+        selected_analysts: ["market", "social", "news", "fundamentals", "policy", "hot_money", "lockup"],
+        provider: "openai",
+        deep_model: "gpt-5.4",
+        quick_model: "gpt-5.4-mini",
+        runtime_ms: 0,
+        error_type: "MissingCredentials",
+        error_message: "Missing credentials",
+        context_snapshot: { events: [], gaps: ["news"] }
+      },
+      { kind: "deep_engine", source: "tool-driven", ok: true, error_type: "MissingCredentials", error_message: "Missing credentials", fetched_at: null, is_stale: false }
     ],
     data_trust: {
       score: 52,
@@ -193,20 +222,20 @@ window.MNS_MOCK_REPORTS = [
       data_gaps: ["news"],
       diagnostics_ok: 0,
       diagnostics_failed: 1,
-      engine_source: "mock",
-      engine_mode: "mock",
-      fallback_reason: null,
+      engine_source: "tool-driven",
+      engine_mode: "auto",
+      fallback_reason: "TradingAgents 执行失败: Missing credentials",
     },
     engine_telemetry: {
       runtime_ms: 12,
       execution_path: "quick",
       cost_tier: "low",
       estimated_request_count: 1,
-      engine_source: "mock",
-      engine_mode: "mock",
-      failure_type: null,
-      failure_reason: null,
-      notes: ["离线演示结果，不触发真实引擎"],
+      engine_source: "tool-driven",
+      engine_mode: "auto",
+      failure_type: "MissingCredentials",
+      failure_reason: "Missing credentials",
+      notes: ["真实 TradingAgents 未命中", "已回退到工具驱动分析"],
     },
     engine_cost_guardrail: {
       status: "ok",
@@ -218,8 +247,8 @@ window.MNS_MOCK_REPORTS = [
       runtime_ms: 12,
       estimated_request_count: 1,
       cost_tier: "low",
-      engine_source: "mock",
-      engine_mode: "mock",
+      engine_source: "tool-driven",
+      engine_mode: "auto",
     },
     risk_controls: {
       max_position_pct: 0.05,
