@@ -1,7 +1,7 @@
 # 阶段路线图
 
 状态：活文档
-最近更新：2026-07-02
+最近更新：2026-07-03
 
 本文档用于记录 Money_Never_sleep 每个阶段要完成什么、验收标准、当前状态和后续想法。后续有新的判断、优先级变化或产品想法时，优先更新本文档，再进入实现计划。
 
@@ -66,6 +66,7 @@
 | 5.34 研究工具薄切片扩展 | 已完成 | 在研究工具目录上补齐资金流、龙虎榜和解禁入口 | `POST /research/capital-flow`、`/research/longhubang`、`/research/unlocks`、对应 Python wrapper | 外部 agent 或上层工作流可以直接按资金流、龙虎榜和解禁粒度拉取在线研究数据 |
 | 5.35 Web 研究工具调试面板 | 已完成 | 让 Web 工作台直接查看研究工具的原始返回值，便于验证 provider 和调试回退 | 诊断区调试面板、自动拉取 `context / quote / technicals / fundamentals / news / capital-flow / longhubang / unlocks`、可展开原始 JSON | 用户可以在 Web 里直接看见各研究工具返回内容，而不是只看整份分析报告 |
 | 5.36 公告正文薄切片 | 已完成 | 让公告标题流升级为标题+正文薄切片，提升结构化事件命中质量 | `SinaBulletinProvider` 正文抓取与清洗、公告详情页解析、`news`/`events` 直接消费正文 | 用户在报告里看到的不再只是公告标题，还能看到公告正文命中的事件线索 |
+| 5.37 投资计划证据范围回写 | 已完成 | 让投资计划理由和风险说明显式展示证据范围，避免计划层继续黑箱化 | `InvestmentPlan` 理由/风险说明回写、标题/正文命中解释、计划解释文本更新 | 用户可直接从计划里看出本次建议主要依赖标题、正文还是两者都命中 |
 | 6. 桌面端与本地体验 | 已完成 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | Electron 桌面壳、macOS 构建入口、Web 工作台资源打包 | macOS `.app` 可构建并能承载 Web 工作台 |
 | 6.1 桌面托管本地 API | 已完成 | 让桌面端默认尝试拉起本地 API，并使用更接近可用产品的 runtime service | runtime service factory、Electron 托管 server、打包 API 源码资源 | 桌面无需手动设置 API URL 也可尝试进入真实 HTTP 模式 |
 | 6.2 桌面启动诊断 | 已完成 | 让用户看到桌面当前运行模式和回退原因 | startup 上下文注入、mode pill、诊断面板启动区块 | 桌面能显示托管 API / 外部 API / 离线模式和最近错误 |
@@ -77,7 +78,7 @@
 
 ## 当前阶段结论
 
-阶段 5.36 已完成。当前系统已具备前后端贯通的异步 HTTP 任务控制与任务可见性闭环，并继续补齐真实输入面：
+阶段 5.37 已完成。当前系统已具备前后端贯通的异步 HTTP 任务控制与任务可见性闭环，并继续补齐真实输入面：
 
 1. `POST /tasks/analysis` 可创建分析任务，`GET /tasks/{id}` 和 `GET /tasks?limit=` 可查询任务。
 2. 任务默认持久化到 JSON 文件目录 `data/cache/tasks`，服务重启时会把上次中断的运行中任务标记为 `failed`。
@@ -110,6 +111,7 @@
 29. 研究工具调试面板里的龙虎榜摘要已经能直接看出净流入、净流出或持平，避免只读数值不看方向。
 30. Web 报告详情页新增了“研究信号”摘要区，会把资金流、龙虎榜、公告线索和结构化事件压成一段和投资计划相邻的判读，帮助用户快速理解研究工具对计划的影响。
 31. 研究信号摘要现在直接显示计划方向、目标仓位和止损/止盈，并判断当前研究信号和计划是否一致，形成更强的前端语义对齐。
+32. `InvestmentPlan` 的理由和风险说明现在会显式回写高优先级事件的证据范围，让计划层能说明本次建议主要依赖标题、正文还是两者都命中。
 
 离线验证命令：
 
@@ -130,6 +132,7 @@ review 补强目标测试结果：`25 passed`。
 阶段 5.29 定向验证结果：`74 passed`，`python -m compileall -q services/api/money_api` 和 `node --check apps/web/src/app.js && node --check apps/web/src/mockData.js` 通过。
 阶段 5.30 定向验证结果：`74 passed`，`python -m compileall -q services/api/money_api` 和 `node --check apps/web/src/app.js && node --check apps/web/src/mockData.js` 通过。
 阶段 5.31 定向验证结果：`76 passed`，`python -m compileall -q services/api/money_api` 和 `node --check apps/web/src/app.js && node --check apps/web/src/mockData.js` 通过。
+阶段 5.37 定向验证结果：`29 passed`，`python -m compileall -q services/api/money_api services/api/tests` 通过，`PYTHONPATH=services/api pytest -q services/api/tests/test_analysis_service.py services/api/tests/test_analysis_api.py services/api/tests/test_web_workbench.py` 通过。
 
 Sina K 线真实网络 smoke 结果：`1 passed`。
 

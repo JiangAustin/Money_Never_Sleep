@@ -1,7 +1,7 @@
 # 决策日志
 
 状态：活文档
-最近更新：2026-07-02
+最近更新：2026-07-03
 
 这个文件记录每一次工作切片的短记忆，目标是防止对话压缩后丢失“做了什么、为什么做、验证到什么程度、下一步是什么”。内容尽量短，保留可检索性。
 
@@ -46,6 +46,13 @@
 - 为什么：用户需要看到的不只是研究数据，还要看到这些信号为什么支撑当前计划，或者为什么需要更保守。
 - 验证：`python3 -m compileall -q services/api/money_api services/api/tests`；`node --check apps/web/src/app.js`；`PYTHONPATH=services/api pytest -q services/api/tests/test_web_workbench.py services/api/tests/test_sina_bulletin.py services/api/tests/test_analysis_api.py` 结果 `27 passed`。
 - 下一步：如果继续增强联动，可以把这段判读再回写到后端计划理由，但前提是能证明比当前前端对齐更有价值。
+
+## 2026-07-03 投资计划证据范围回写
+
+- 做了什么：把 `InvestmentPlan` 的理由和风险说明继续回写为证据可见文本，新增对高优先级事件证据范围的解释，让计划层能说明这次建议更依赖标题、正文还是两者都命中。
+- 为什么：研究信号摘要已经能告诉用户“发生了什么”，但计划层还需要说明“这次建议主要基于什么证据、证据来自哪里、有没有回退到更弱的线索”，否则 `auto` 或结构化事件仍容易被误读成黑箱结论。
+- 验证：`python3 -m compileall -q services/api/money_api services/api/tests`；`PYTHONPATH=services/api pytest -q services/api/tests/test_analysis_service.py services/api/tests/test_analysis_api.py services/api/tests/test_web_workbench.py` 结果 `29 passed`。
+- 下一步：继续把证据范围回写到更多计划解释位，但保持最小闭环，不再新增并列计划模型。
 
 ## 2026-07-02 结构化事件流与引擎可见性
 
