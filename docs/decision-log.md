@@ -82,6 +82,13 @@
 - 验证：`node --check apps/web/src/app.js`。
 - 下一步：如果后面要继续增强任务层，只扩轻量摘要，不把任务历史做成第二个详情页。
 
+## 2026-07-03 auto 回退提示
+
+- 做了什么：给 Web 报告详情页补了一条 `auto` 引擎回退提示，当真实 TradingAgents 因凭据缺失或运行失败而回退到工具驱动时，页面会直接显示可读说明，而不是只露出原始异常。
+- 为什么：`fallback_reason` 虽然能保留原始错误，但用户看见它时常不知道下一步该补什么；把凭据缺失、真实引擎失败和自动回退这三层意思拆开，能减少误判。
+- 验证：`node --check apps/web/src/app.js`。
+- 下一步：如果后面要继续完善这层提示，再考虑把任务历史和列表页也同样补一条简短说明。
+
 ## 2026-07-02 结构化事件流与引擎可见性
 
 - 做了什么：新增 `MarketEvent` 契约、结构化事件分类器、`DataContext.events`、报告 provenance 字段（`data_sources` / `engine_source` / `engine_mode` / `fallback_reason`），并把这些信息展示到 Web 工作台和诊断区。

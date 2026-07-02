@@ -117,6 +117,20 @@ function renderTaskStatus() {
   elements.taskRetryButton.disabled = !state.apiBaseUrl || !state.latestFailedTaskId;
 }
 
+function getEngineFallbackPrompt(report) {
+  if (!report || report.engine_mode !== "auto" || report.engine_source !== "tool-driven") {
+    return "";
+  }
+  const reason = String(report.fallback_reason || "");
+  if (!reason) {
+    return "真实 TradingAgents 未命中，当前已自动回退到工具驱动分析。";
+  }
+  if (reason.includes("Missing credentials") || reason.includes("OPENAI_API_KEY") || reason.includes("OPENAI_ADMIN_KEY")) {
+    return "真实 TradingAgents 未配置凭据，当前已自动回退到工具驱动分析。需要配置 OPENAI_API_KEY 或 OPENAI_ADMIN_KEY 才能优先尝试真实引擎。";
+  }
+  return `真实 TradingAgents 执行失败，当前已自动回退到工具驱动分析。失败原因：${reason}`;
+}
+
 function createLocalAnalysis(symbol, message) {
   const stock = normalizeSymbol(symbol);
   const createdAt = new Date().toISOString();
@@ -1005,6 +1019,10 @@ function renderReportDetail() {
   );
   if (report.fallback_reason) {
     provenance.append(createElement("p", "empty-state", `回退原因：${report.fallback_reason}`));
+  }
+  const fallbackPrompt = getEngineFallbackPrompt(report);
+  if (fallbackPrompt) {
+    provenance.append(createElement("p", "empty-state", fallbackPrompt));
   }
 
   const signalSummary = getResearchSignalSummary(report);
