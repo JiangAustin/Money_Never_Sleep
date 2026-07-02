@@ -131,8 +131,12 @@ class AnalysisService:
             rationale.append(event_signal["summary"])
         if event_signal["evidence_summary"]:
             rationale.append(event_signal["evidence_summary"])
+        if event_signal["positive_evidence_summary"]:
+            rationale.append(event_signal["positive_evidence_summary"])
         if event_signal["risk_note"]:
             risk_notes.append(event_signal["risk_note"])
+        if event_signal["negative_evidence_summary"]:
+            risk_notes.append(event_signal["negative_evidence_summary"])
         if event_signal["evidence_note"]:
             risk_notes.append(event_signal["evidence_note"])
 
@@ -193,14 +197,46 @@ class AnalysisService:
         title_count = sum(1 for event in high_priority_events if getattr(event, "evidence_scope", "") == "title")
         content_count = sum(1 for event in high_priority_events if getattr(event, "evidence_scope", "") == "content")
         mixed_count = sum(1 for event in high_priority_events if getattr(event, "evidence_scope", "") == "title+content")
+        positive_title_count = sum(
+            1 for event in high_priority_events if event.event_type in positive_types and getattr(event, "evidence_scope", "") == "title"
+        )
+        positive_content_count = sum(
+            1 for event in high_priority_events if event.event_type in positive_types and getattr(event, "evidence_scope", "") == "content"
+        )
+        positive_mixed_count = sum(
+            1 for event in high_priority_events if event.event_type in positive_types and getattr(event, "evidence_scope", "") == "title+content"
+        )
+        negative_title_count = sum(
+            1 for event in high_priority_events if event.event_type in negative_types and getattr(event, "evidence_scope", "") == "title"
+        )
+        negative_content_count = sum(
+            1 for event in high_priority_events if event.event_type in negative_types and getattr(event, "evidence_scope", "") == "content"
+        )
+        negative_mixed_count = sum(
+            1 for event in high_priority_events if event.event_type in negative_types and getattr(event, "evidence_scope", "") == "title+content"
+        )
         evidence_summary = ""
         evidence_note = ""
+        positive_evidence_summary = ""
+        negative_evidence_summary = ""
         if mixed_count > 0:
             evidence_summary = f"高优先级事件证据覆盖标题与正文 {mixed_count} 条。"
         elif content_count > 0:
             evidence_summary = f"高优先级事件主要来自正文命中 {content_count} 条。"
         elif title_count > 0:
             evidence_summary = f"高优先级事件主要来自标题命中 {title_count} 条。"
+        if positive_mixed_count > 0:
+            positive_evidence_summary = f"正向证据覆盖标题与正文 {positive_mixed_count} 条。"
+        elif positive_content_count > 0:
+            positive_evidence_summary = f"正向证据主要来自正文命中 {positive_content_count} 条。"
+        elif positive_title_count > 0:
+            positive_evidence_summary = f"正向证据主要来自标题命中 {positive_title_count} 条。"
+        if negative_mixed_count > 0:
+            negative_evidence_summary = f"风险证据覆盖标题与正文 {negative_mixed_count} 条。"
+        elif negative_content_count > 0:
+            negative_evidence_summary = f"风险证据主要来自正文命中 {negative_content_count} 条。"
+        elif negative_title_count > 0:
+            negative_evidence_summary = f"风险证据主要来自标题命中 {negative_title_count} 条。"
         if content_count > 0:
             evidence_note = "正文命中已进入计划解释，说明公告/资讯正文正在提供可复核信号。"
         elif mixed_count > 0:
@@ -214,6 +250,8 @@ class AnalysisService:
                 "summary": f"高优先级正向事件占优：{positive_count} 条。",
                 "risk_note": "正向事件占优，可提升计划激进度，但仍需结合风险控制。",
                 "evidence_summary": evidence_summary,
+                "positive_evidence_summary": positive_evidence_summary,
+                "negative_evidence_summary": negative_evidence_summary,
                 "evidence_note": evidence_note,
             }
         if negative_count > positive_count and negative_count > 0:
@@ -223,6 +261,8 @@ class AnalysisService:
                 "summary": f"高优先级风险事件占优：{negative_count} 条。",
                 "risk_note": "风险事件占优，计划应收缩到观察或退出。",
                 "evidence_summary": evidence_summary,
+                "positive_evidence_summary": positive_evidence_summary,
+                "negative_evidence_summary": negative_evidence_summary,
                 "evidence_note": evidence_note,
             }
         if positive_count > 0 and negative_count > 0:
@@ -232,6 +272,8 @@ class AnalysisService:
                 "summary": f"高优先级正负事件并存：正向 {positive_count} 条、风险 {negative_count} 条。",
                 "risk_note": "正负事件并存，建议保持中性仓位并密切复核。",
                 "evidence_summary": evidence_summary,
+                "positive_evidence_summary": positive_evidence_summary,
+                "negative_evidence_summary": negative_evidence_summary,
                 "evidence_note": evidence_note,
             }
         if positive_count > 0:
@@ -241,6 +283,8 @@ class AnalysisService:
                 "summary": f"高优先级正向事件 {positive_count} 条。",
                 "risk_note": "",
                 "evidence_summary": evidence_summary,
+                "positive_evidence_summary": positive_evidence_summary,
+                "negative_evidence_summary": negative_evidence_summary,
                 "evidence_note": evidence_note,
             }
         if negative_count > 0:
@@ -250,6 +294,8 @@ class AnalysisService:
                 "summary": f"高优先级风险事件 {negative_count} 条。",
                 "risk_note": "",
                 "evidence_summary": evidence_summary,
+                "positive_evidence_summary": positive_evidence_summary,
+                "negative_evidence_summary": negative_evidence_summary,
                 "evidence_note": evidence_note,
             }
         return {
@@ -258,5 +304,7 @@ class AnalysisService:
             "summary": "",
             "risk_note": "",
             "evidence_summary": evidence_summary,
+            "positive_evidence_summary": positive_evidence_summary,
+            "negative_evidence_summary": negative_evidence_summary,
             "evidence_note": evidence_note,
         }

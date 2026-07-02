@@ -304,6 +304,7 @@ def test_runtime_analysis_service_uses_tencent_quote_by_default(monkeypatch) -> 
     assert payload["data_context"]["events"][0]["priority"] == "high"
     assert "担保" in payload["data_context"]["events"][0]["evidence_excerpt"]
     assert any("高优先级事件证据覆盖" in text or "高优先级事件主要来自正文命中" in text or "高优先级事件主要来自标题命中" in text for text in payload["investment_plan"]["rationale"])
+    assert any("风险证据覆盖标题与正文" in text or "风险证据主要来自正文命中" in text or "风险证据主要来自标题命中" in text for text in payload["investment_plan"]["risk_notes"])
     assert any("正文命中已进入计划解释" in text or "当前高优先级信号主要来自标题" in text or "标题与正文同时命中的事件较多" in text for text in payload["investment_plan"]["risk_notes"])
     assert payload["agent_views"][0]["agent"] == "TradingAgents market"
 

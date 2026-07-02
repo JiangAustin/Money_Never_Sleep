@@ -95,6 +95,12 @@ def test_high_priority_risk_events_push_plan_to_wait() -> None:
         for text in report.investment_plan.rationale
     )
     assert any("风险事件占优" in text for text in report.investment_plan.risk_notes)
+    assert any(
+        "风险证据覆盖标题与正文" in text
+        or "风险证据主要来自正文命中" in text
+        or "风险证据主要来自标题命中" in text
+        for text in report.investment_plan.risk_notes
+    )
     assert any("正文命中已进入计划解释" in text or "当前高优先级信号主要来自标题" in text for text in report.investment_plan.risk_notes)
 
 
@@ -125,6 +131,47 @@ def test_high_priority_positive_events_push_plan_to_buy() -> None:
         or "高优先级事件主要来自标题命中" in text
         or "高优先级事件主要来自标题与正文" in text
         for text in report.investment_plan.rationale
+    )
+    assert any(
+        "正向证据覆盖标题与正文" in text
+        or "正向证据主要来自正文命中" in text
+        or "正向证据主要来自标题命中" in text
+        for text in report.investment_plan.rationale
+    )
+
+
+def test_mixed_high_priority_events_split_positive_and_risk_explanations() -> None:
+    service = AnalysisService(
+        resolver=StockResolver(name_map={"贵州茅台": "600519"}),
+        context_builder=DataContextBuilder(
+            StaticMarketDataProvider(
+                quote={"price": 1688.0},
+                technicals={"ma5": 1660.0},
+                fundamentals={"pe_ttm": 28.5},
+                news=[
+                    {"title": "控股股东拟增持公司股份", "content": "计划在未来 6 个月内增持不超过 2% 股份"},
+                    {"title": "控股股东股权质押进展公告", "content": "质押比例上升"},
+                ],
+            )
+        ),
+        quick_router=QuickAgentRouter(),
+        deep_engine=MockDeepResearchEngine(),
+    )
+
+    report = service.create_single_stock_analysis("贵州茅台", "请全面分析并给出投资建议")
+
+    assert report.investment_plan is not None
+    assert any(
+        "正向证据覆盖标题与正文" in text
+        or "正向证据主要来自正文命中" in text
+        or "正向证据主要来自标题命中" in text
+        for text in report.investment_plan.rationale
+    )
+    assert any(
+        "风险证据覆盖标题与正文" in text
+        or "风险证据主要来自正文命中" in text
+        or "风险证据主要来自标题命中" in text
+        for text in report.investment_plan.risk_notes
     )
 
 

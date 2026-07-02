@@ -54,6 +54,13 @@
 - 验证：`python3 -m compileall -q services/api/money_api services/api/tests`；`PYTHONPATH=services/api pytest -q services/api/tests/test_analysis_service.py services/api/tests/test_analysis_api.py services/api/tests/test_web_workbench.py` 结果 `29 passed`。
 - 下一步：继续把证据范围回写到更多计划解释位，但保持最小闭环，不再新增并列计划模型。
 
+## 2026-07-03 投资计划正负证据拆线
+
+- 做了什么：把 `InvestmentPlan` 的解释进一步拆成正向证据和风险证据两条线，正向信号和风险信号现在可以分别说明自己主要来自标题、正文还是两者都命中。
+- 为什么：总证据范围能减少黑箱感，但对于基金经理式计划来说，还需要明确“做多的依据”和“防守的依据”各自来自哪里，才能让 rationale / risk_notes 更像可执行的研究笔记。
+- 验证：`python3 -m compileall -q services/api/money_api services/api/tests`；`PYTHONPATH=services/api pytest -q services/api/tests/test_analysis_service.py services/api/tests/test_analysis_api.py`。
+- 下一步：如果继续补计划解释位，优先把这条拆线复用到更复杂的事件组合，不要再堆第三种同义总结。
+
 ## 2026-07-02 结构化事件流与引擎可见性
 
 - 做了什么：新增 `MarketEvent` 契约、结构化事件分类器、`DataContext.events`、报告 provenance 字段（`data_sources` / `engine_source` / `engine_mode` / `fallback_reason`），并把这些信息展示到 Web 工作台和诊断区。
