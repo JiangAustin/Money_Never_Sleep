@@ -176,6 +176,24 @@ textarea {
   margin-top: 12px;
 }
 
+.task-history-search {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.task-history-search input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 11px;
+  color: var(--ink);
+  background: #fbfbf8;
+}
+
 .filter-chip {
   border: 1px solid var(--line);
   border-radius: 999px;

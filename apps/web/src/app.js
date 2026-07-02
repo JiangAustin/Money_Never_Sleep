@@ -10,6 +10,7 @@ const state = {
   latestFailedTaskId: null,
   tasks: [],
   taskHistoryFilter: "all",
+  taskHistorySearch: "",
   selectedTaskHistoryId: null,
   researchDebug: {
     reportId: null,
@@ -39,6 +40,7 @@ const elements = {
   taskStatus: document.getElementById("task-status"),
   taskCancelButton: document.getElementById("task-cancel-button"),
   taskRetryButton: document.getElementById("task-retry-button"),
+  taskHistorySearch: document.getElementById("task-history-search"),
   taskHistoryFilters: document.getElementById("task-history-filters"),
   taskHistoryDetail: document.getElementById("task-history-detail"),
   taskHistoryList: document.getElementById("task-history-list"),
@@ -443,16 +445,34 @@ function getTaskHistoryFilterOptions() {
 
 function filterTaskHistory(tasks) {
   const activeStatuses = new Set(["queued", "collecting_data", "quick_screening", "deep_analysis", "risk_review"]);
+  const search = state.taskHistorySearch.trim().toLowerCase();
   if (state.taskHistoryFilter === "active") {
-    return tasks.filter((task) => activeStatuses.has(task.status));
+    tasks = tasks.filter((task) => activeStatuses.has(task.status));
   }
   if (state.taskHistoryFilter === "finished") {
-    return tasks.filter((task) => task.status === "report_ready");
+    tasks = tasks.filter((task) => task.status === "report_ready");
   }
   if (state.taskHistoryFilter === "attention") {
-    return tasks.filter((task) => ["failed", "cancelled"].includes(task.status));
+    tasks = tasks.filter((task) => ["failed", "cancelled"].includes(task.status));
   }
-  return tasks;
+  if (!search) {
+    return tasks;
+  }
+  return tasks.filter((task) => {
+    const haystack = [
+      task.task_id,
+      task.symbol,
+      task.message,
+      task.status,
+      task.error,
+      task.next_retry_policy,
+      task.retry_of,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(search);
+  });
 }
 
 function getTaskHistoryReport(task) {
@@ -505,6 +525,13 @@ function renderTaskHistoryFilters() {
     });
     elements.taskHistoryFilters.append(button);
   });
+}
+
+function renderTaskHistorySearch() {
+  if (!elements.taskHistorySearch) {
+    return;
+  }
+  elements.taskHistorySearch.value = state.taskHistorySearch;
 }
 
 function renderTaskHistoryDetail(task) {
@@ -569,6 +596,7 @@ function formatOptionalPercent(value) {
 }
 
 function renderTaskHistory() {
+  renderTaskHistorySearch();
   renderTaskHistoryFilters();
   elements.taskHistoryList.replaceChildren();
   if (!state.apiBaseUrl) {
@@ -1377,5 +1405,11 @@ async function handleRetryTask() {
 elements.form.addEventListener("submit", handleSubmit);
 elements.taskCancelButton.addEventListener("click", handleCancelTask);
 elements.taskRetryButton.addEventListener("click", handleRetryTask);
+elements.taskHistorySearch.addEventListener("input", () => {
+  state.taskHistorySearch = elements.taskHistorySearch.value || "";
+  const filtered = filterTaskHistory(state.tasks);
+  state.selectedTaskHistoryId = filtered[0]?.task_id || null;
+  render();
+});
 render();
 refreshTaskHistory();

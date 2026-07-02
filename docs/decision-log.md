@@ -96,6 +96,13 @@
 - 验证：`node --check apps/web/src/app.js`；`node --check apps/web/src/mockData.js`；`PYTHONPATH=services/api pytest -q services/api/tests/test_web_workbench.py` 结果 `8 passed`。
 - 下一步：如果还要继续增强任务历史，优先补状态计数或搜索，不再扩成独立页面。
 
+## 2026-07-03 任务历史搜索
+
+- 做了什么：给任务历史再补了一个轻量搜索框，支持按股票名、任务 ID、状态和错误信息过滤；筛选、搜索和详情卡一起工作。
+- 为什么：状态筛选能解决“这批任务处于什么阶段”，但还是不够快；搜索框让人可以直接定位某个股票或某次失败任务，不必滚列表。
+- 验证：`node --check apps/web/src/app.js`；`node --check apps/web/src/mockData.js`；`PYTHONPATH=services/api pytest -q services/api/tests/test_web_workbench.py` 结果 `8 passed`。
+- 下一步：如果再增强任务历史，优先做状态计数徽章或最近失败任务快捷跳转，不再继续加重交互。
+
 ## 2026-07-02 结构化事件流与引擎可见性
 
 - 做了什么：新增 `MarketEvent` 契约、结构化事件分类器、`DataContext.events`、报告 provenance 字段（`data_sources` / `engine_source` / `engine_mode` / `fallback_reason`），并把这些信息展示到 Web 工作台和诊断区。

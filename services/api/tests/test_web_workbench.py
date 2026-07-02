@@ -27,6 +27,7 @@ def test_web_workbench_has_core_regions() -> None:
     assert 'id="task-status"' in html
     assert 'id="task-cancel-button"' in html
     assert 'id="task-retry-button"' in html
+    assert 'id="task-history-search"' in html
     assert 'id="task-history-filters"' in html
     assert 'id="task-history-detail"' in html
     assert 'id="task-history-list"' in html
@@ -84,8 +85,10 @@ def test_app_js_exposes_service_and_render_boundaries() -> None:
     assert "function getTaskHistoryFilterOptions" in app_js
     assert "function getTaskHistoryDetail" in app_js
     assert "function getPlanEvidenceSummary" in app_js
+    assert "function renderTaskHistorySearch" in app_js
     assert "analysis-form" in app_js
     assert "taskHistoryFilter" in app_js
+    assert "taskHistorySearch" in app_js
     assert "selectedTaskHistoryId" in app_js
     assert "filterTaskHistory" in app_js
     assert "risk_controls" in app_js
@@ -122,6 +125,7 @@ def test_web_styles_define_workbench_layout() -> None:
 
     assert ".workbench-shell" in css
     assert ".filter-row" in css
+    assert ".task-history-search" in css
     assert ".filter-chip" in css
     assert ".task-history-card" in css
     assert ".side-panel" in css
