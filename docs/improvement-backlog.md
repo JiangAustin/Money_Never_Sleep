@@ -77,6 +77,7 @@
 | MNS-BL-054 | 已完成 | P2 | 报告列表证据摘要 | 详情页已经能看到证据来源，但列表页仍然只能看总摘要 | 让报告列表卡片也展示一行证据方向摘要 | 已完成列表页证据摘要和 mock 补齐；验证：`node --check apps/web/src/app.js && node --check apps/web/src/mockData.js` | `apps/web/src/app.js`、`docs/decision-log.md` |
 | MNS-BL-055 | 已完成 | P2 | 任务历史证据摘要 | 任务历史页只显示状态和重试信息，还看不到证据方向 | 让任务历史行也展示同源证据摘要 | 已完成任务历史证据摘要和缓存回填；验证：`node --check apps/web/src/app.js` | `apps/web/src/app.js`、`docs/decision-log.md` |
 | MNS-BL-056 | 已完成 | P2 | auto 回退提示 | `auto` 模式只显示原始 fallback reason 时不够直观，用户难以判断是凭据问题还是运行失败 | 让详情页直接显示可读的 auto 回退提示 | 已完成凭据缺失/运行失败提示；验证：`node --check apps/web/src/app.js` | `apps/web/src/app.js`、`docs/decision-log.md` |
+| MNS-BL-057 | 已完成 | P2 | 任务历史筛选与细节 | 任务历史页只有平铺列表，无法快速筛选状态或查看单条任务详情 | 让任务历史支持状态筛选并显示任务详情卡 | 已完成筛选按钮、详情卡和证据摘要；验证：`node --check apps/web/src/app.js`、`node --check apps/web/src/mockData.js`、`pytest test_web_workbench.py` | `apps/web/src/app.js`、`apps/web/index.html` |
 | MNS-BL-021 | 已完成 | P2 | 交易成本、滑点和复权参数 | 阶段 7.1 为保持 deterministic 最小闭环，不做成本和复权 | 提高回测结果可信度，避免过度乐观 | 已在阶段 7.4 完成 `BacktestOptions`、净收益/裸收益/成本影响和 Python/HTTP API 参数；真实复权价格转换仍是后续项 | 阶段 7.4 |
 | MNS-BL-019 | 已完成 | P1 | 组合风险预算 | 当前系统仍是单股分析，没有组合层持仓和风险预算 | 支持多标的仓位约束、集中度控制和组合视图 | 已在阶段 7.3 完成组合预算契约、预算器、Python API 和 HTTP API；验证：`100 passed, 3 skipped` | 阶段 7.3 |
 | MNS-BL-010 | 待设计 | P2 | Web 图表和行情可视化 | 阶段 5 静态工作台不做 K 线或图表 | 改善报告阅读和行情理解效率 | 先接真实 API，再选择轻量图表方案 | 阶段 5 后续 |

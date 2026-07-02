@@ -89,6 +89,13 @@
 - 验证：`node --check apps/web/src/app.js`。
 - 下一步：如果后面要继续完善这层提示，再考虑把任务历史和列表页也同样补一条简短说明。
 
+## 2026-07-03 任务历史筛选与细节
+
+- 做了什么：给任务历史区加了状态筛选和任务细节卡，支持按全部/进行中/已完成/需关注过滤，并在详情里显示任务 ID、时间、重试信息、错误和同源报告证据摘要。
+- 为什么：任务历史原来只有平铺列表和状态提示，无法快速判断一批任务里哪些正在跑、哪些已完成、哪些需要关注；加筛选和细节卡能让异步链路更像可操作的工作台，而不是日志桶。
+- 验证：`node --check apps/web/src/app.js`；`node --check apps/web/src/mockData.js`；`PYTHONPATH=services/api pytest -q services/api/tests/test_web_workbench.py` 结果 `8 passed`。
+- 下一步：如果还要继续增强任务历史，优先补状态计数或搜索，不再扩成独立页面。
+
 ## 2026-07-02 结构化事件流与引擎可见性
 
 - 做了什么：新增 `MarketEvent` 契约、结构化事件分类器、`DataContext.events`、报告 provenance 字段（`data_sources` / `engine_source` / `engine_mode` / `fallback_reason`），并把这些信息展示到 Web 工作台和诊断区。

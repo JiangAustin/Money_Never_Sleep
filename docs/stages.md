@@ -72,6 +72,7 @@
 | 5.40 报告列表证据摘要 | 已完成 | 让报告列表页也能直接扫到投资计划的证据方向 | 报告列表卡片新增证据摘要、离线 mock 同步字段 | 用户可在列表页直接看出当前报告偏正向还是偏风险 |
 | 5.41 任务历史证据摘要 | 已完成 | 让任务历史页也能扫到同源证据摘要 | 任务历史行新增证据摘要、报告缓存回填 | 用户可在任务历史里直接看出已完成任务的证据方向 |
 | 5.42 auto 回退提示 | 已完成 | 让 auto 模式在真实 TradingAgents 缺少凭据或运行失败时给出可读回退提示 | auto 回退说明、凭据提示、失败原因展开 | 用户可直接看懂为什么当前回退到了工具驱动分析 |
+| 5.43 任务历史筛选与细节 | 已完成 | 让任务历史支持状态筛选并能查看单条任务详情 | 任务历史筛选按钮、任务详情卡、报告证据摘要 | 用户可快速浏览进行中/已完成/需关注任务，并查看任务细节 |
 | 6. 桌面端与本地体验 | 已完成 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | Electron 桌面壳、macOS 构建入口、Web 工作台资源打包 | macOS `.app` 可构建并能承载 Web 工作台 |
 | 6.1 桌面托管本地 API | 已完成 | 让桌面端默认尝试拉起本地 API，并使用更接近可用产品的 runtime service | runtime service factory、Electron 托管 server、打包 API 源码资源 | 桌面无需手动设置 API URL 也可尝试进入真实 HTTP 模式 |
 | 6.2 桌面启动诊断 | 已完成 | 让用户看到桌面当前运行模式和回退原因 | startup 上下文注入、mode pill、诊断面板启动区块 | 桌面能显示托管 API / 外部 API / 离线模式和最近错误 |
@@ -144,6 +145,7 @@ review 补强目标测试结果：`25 passed`。
 阶段 5.40 定向验证结果：`node --check apps/web/src/app.js` 和 `node --check apps/web/src/mockData.js` 通过。
 阶段 5.41 定向验证结果：`node --check apps/web/src/app.js` 通过。
 阶段 5.42 定向验证结果：`node --check apps/web/src/app.js` 通过。
+阶段 5.43 定向验证结果：`node --check apps/web/src/app.js`、`node --check apps/web/src/mockData.js` 和 `PYTHONPATH=services/api pytest -q services/api/tests/test_web_workbench.py` 通过。
 
 Sina K 线真实网络 smoke 结果：`1 passed`。
 

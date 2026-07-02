@@ -27,6 +27,8 @@ def test_web_workbench_has_core_regions() -> None:
     assert 'id="task-status"' in html
     assert 'id="task-cancel-button"' in html
     assert 'id="task-retry-button"' in html
+    assert 'id="task-history-filters"' in html
+    assert 'id="task-history-detail"' in html
     assert 'id="task-history-list"' in html
 
 
@@ -77,7 +79,15 @@ def test_app_js_exposes_service_and_render_boundaries() -> None:
     assert "function getResearchToolSummaryLines" in app_js
     assert "function getStartupContext" in app_js
     assert "function renderModePill" in app_js
+    assert "function renderTaskHistoryFilters" in app_js
+    assert "function renderTaskHistoryDetail" in app_js
+    assert "function getTaskHistoryFilterOptions" in app_js
+    assert "function getTaskHistoryDetail" in app_js
+    assert "function getPlanEvidenceSummary" in app_js
     assert "analysis-form" in app_js
+    assert "taskHistoryFilter" in app_js
+    assert "selectedTaskHistoryId" in app_js
+    assert "filterTaskHistory" in app_js
     assert "risk_controls" in app_js
     assert "investment_plan" in app_js
     assert "data_trust" in app_js
@@ -111,6 +121,9 @@ def test_web_styles_define_workbench_layout() -> None:
     css = read_web_file("src/styles.css")
 
     assert ".workbench-shell" in css
+    assert ".filter-row" in css
+    assert ".filter-chip" in css
+    assert ".task-history-card" in css
     assert ".side-panel" in css
     assert ".report-detail" in css
     assert "@media" in css

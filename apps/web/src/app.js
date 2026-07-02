@@ -9,6 +9,8 @@ const state = {
   currentTaskState: null,
   latestFailedTaskId: null,
   tasks: [],
+  taskHistoryFilter: "all",
+  selectedTaskHistoryId: null,
   researchDebug: {
     reportId: null,
     loading: false,
@@ -37,6 +39,8 @@ const elements = {
   taskStatus: document.getElementById("task-status"),
   taskCancelButton: document.getElementById("task-cancel-button"),
   taskRetryButton: document.getElementById("task-retry-button"),
+  taskHistoryFilters: document.getElementById("task-history-filters"),
+  taskHistoryDetail: document.getElementById("task-history-detail"),
   taskHistoryList: document.getElementById("task-history-list"),
   reportList: document.getElementById("report-list"),
   reportCount: document.getElementById("report-count"),
@@ -428,6 +432,100 @@ function getSelectedReport() {
   return state.reports.find((report) => report.task_id === state.selectedTaskId) || state.reports[0] || null;
 }
 
+function getTaskHistoryFilterOptions() {
+  return [
+    { key: "all", label: "全部" },
+    { key: "active", label: "进行中" },
+    { key: "finished", label: "已完成" },
+    { key: "attention", label: "需关注" },
+  ];
+}
+
+function filterTaskHistory(tasks) {
+  const activeStatuses = new Set(["queued", "collecting_data", "quick_screening", "deep_analysis", "risk_review"]);
+  if (state.taskHistoryFilter === "active") {
+    return tasks.filter((task) => activeStatuses.has(task.status));
+  }
+  if (state.taskHistoryFilter === "finished") {
+    return tasks.filter((task) => task.status === "report_ready");
+  }
+  if (state.taskHistoryFilter === "attention") {
+    return tasks.filter((task) => ["failed", "cancelled"].includes(task.status));
+  }
+  return tasks;
+}
+
+function getTaskHistoryReport(task) {
+  if (!task?.report_id) {
+    return null;
+  }
+  return state.reports.find((report) => report.task_id === task.report_id) || null;
+}
+
+function getTaskHistoryDetail(task) {
+  if (!task) {
+    return null;
+  }
+  const report = getTaskHistoryReport(task);
+  return {
+    title: `${task.symbol} / ${task.status}`,
+    summary: task.message || "暂无任务消息",
+    lines: [
+      `任务 ID：${task.task_id}`,
+      `创建时间：${task.created_at || "暂无"}`,
+      `更新时间：${task.updated_at || "暂无"}`,
+      `状态：${task.status}`,
+      `报告 ID：${task.report_id || "暂无"}`,
+      `重试来源：${task.retry_of || "无"}`,
+      `超时：${task.timeout_s}s / 重试 ${task.retry_count}/${task.max_retries}`,
+      task.next_retry_at ? `下次重试：${task.next_retry_at}${task.next_retry_policy ? ` / 策略 ${task.next_retry_policy}` : ""}` : "当前无计划重试",
+      task.error ? `错误：${task.error}` : "当前无错误",
+      report ? `报告摘要：${report.summary}` : "当前任务尚未关联报告",
+      report ? `报告计划：${report.investment_plan?.direction || "unknown"} / ${formatOptionalPercent(report.investment_plan?.target_position_pct)}` : "暂无计划信息",
+      report ? `证据摘要：${getPlanEvidenceSummary(report) || "暂无"}` : "暂无证据摘要",
+    ],
+  };
+}
+
+function renderTaskHistoryFilters() {
+  if (!elements.taskHistoryFilters) {
+    return;
+  }
+  elements.taskHistoryFilters.replaceChildren();
+  const filters = getTaskHistoryFilterOptions();
+  filters.forEach((filter) => {
+    const button = createElement("button", "filter-chip", filter.label);
+    button.type = "button";
+    button.classList.toggle("is-active", state.taskHistoryFilter === filter.key);
+    button.addEventListener("click", () => {
+      state.taskHistoryFilter = filter.key;
+      const filtered = filterTaskHistory(state.tasks);
+      state.selectedTaskHistoryId = filtered[0]?.task_id || null;
+      render();
+    });
+    elements.taskHistoryFilters.append(button);
+  });
+}
+
+function renderTaskHistoryDetail(task) {
+  if (!elements.taskHistoryDetail) {
+    return;
+  }
+  elements.taskHistoryDetail.replaceChildren();
+  if (!task) {
+    elements.taskHistoryDetail.append(createElement("p", "empty-state", "选择一条任务查看细节"));
+    return;
+  }
+  const detail = getTaskHistoryDetail(task);
+  const card = createElement("article", "task-history-card");
+  card.append(
+    createElement("h3", "", detail.title),
+    createElement("p", "summary", detail.summary)
+  );
+  appendList(card, detail.lines, "暂无任务详情", "detail-list");
+  elements.taskHistoryDetail.append(card);
+}
+
 function renderReportList() {
   elements.reportList.replaceChildren();
   elements.reportCount.textContent = String(state.reports.length);
@@ -466,19 +564,36 @@ function getPlanEvidenceSummary(report) {
   return [plan.positive_evidence_summary, plan.negative_evidence_summary].filter(Boolean).join(" / ");
 }
 
+function formatOptionalPercent(value) {
+  return Number.isFinite(value) ? `${(value * 100).toFixed(1)}%` : "暂无";
+}
+
 function renderTaskHistory() {
+  renderTaskHistoryFilters();
   elements.taskHistoryList.replaceChildren();
   if (!state.apiBaseUrl) {
+    renderTaskHistoryDetail(null);
     elements.taskHistoryList.append(createElement("p", "empty-state", "离线模式下不显示真实任务历史"));
     return;
   }
-  if (!state.tasks.length) {
+  const filteredTasks = filterTaskHistory(state.tasks);
+  if (!filteredTasks.length) {
+    renderTaskHistoryDetail(null);
     elements.taskHistoryList.append(createElement("p", "empty-state", "暂无任务历史"));
     return;
   }
 
-  state.tasks.forEach((task) => {
+  if (!state.selectedTaskHistoryId || !filteredTasks.some((task) => task.task_id === state.selectedTaskHistoryId)) {
+    state.selectedTaskHistoryId = filteredTasks[0].task_id;
+  }
+
+  const selectedTask = filteredTasks.find((task) => task.task_id === state.selectedTaskHistoryId) || filteredTasks[0] || null;
+  renderTaskHistoryDetail(selectedTask);
+
+  filteredTasks.forEach((task) => {
     const item = createElement("article", "report-item");
+    item.dataset.taskId = task.task_id;
+    item.classList.toggle("is-active", task.task_id === state.selectedTaskHistoryId);
     const retryMeta = task.next_retry_at
       ? `下次重试 ${task.next_retry_at}${task.next_retry_policy ? ` / 策略 ${task.next_retry_policy}` : ""}${Number.isInteger(task.next_retry_delay_s) ? ` / 延迟 ${task.next_retry_delay_s}s` : ""}`
       : task.error || task.message || "任务已创建";
@@ -492,6 +607,10 @@ function renderTaskHistory() {
     if (evidenceSummary) {
       item.append(createElement("span", "report-meta", evidenceSummary));
     }
+    item.addEventListener("click", () => {
+      state.selectedTaskHistoryId = task.task_id;
+      render();
+    });
     elements.taskHistoryList.append(item);
   });
 }
@@ -1168,7 +1287,9 @@ async function refreshTaskHistory() {
         try {
           const report = await fetchReport(state.apiBaseUrl, task.report_id);
           reportsById.set(report.task_id, report);
-          state.reports.unshift(report);
+          if (!state.reports.some((item) => item.task_id === report.task_id)) {
+            state.reports.unshift(report);
+          }
           return task;
         } catch {
           return task;
@@ -1176,6 +1297,10 @@ async function refreshTaskHistory() {
       })
     );
     state.tasks = withEvidence;
+    const filtered = filterTaskHistory(state.tasks);
+    if (!state.selectedTaskHistoryId || !filtered.some((task) => task.task_id === state.selectedTaskHistoryId)) {
+      state.selectedTaskHistoryId = filtered[0]?.task_id || null;
+    }
   } catch {
     state.tasks = [];
   }
