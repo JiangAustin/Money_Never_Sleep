@@ -198,6 +198,8 @@ function createLocalAnalysis(symbol, message) {
       observation_window: "5-20 个交易日",
       review_conditions: ["每个交易日收盘后复核", "新增结构化事件后立即复核"],
       rationale: ["价格结构保持韧性，但量能确认不足", "存在资金流数据缺口，需要继续观察"],
+      positive_evidence_summary: "正向证据主要来自标题与正文同时命中的事件。",
+      negative_evidence_summary: "风险证据主要来自正文命中的风险事件。",
       risk_notes: ["短期波动可能放大，需结合真实数据复核"],
     },
     data_context: {
@@ -538,11 +540,19 @@ function renderInvestmentPlan(parent, plan) {
   rationale.append(createElement("h4", "", "计划依据"));
   appendList(rationale, plan.rationale, "暂无计划依据");
 
+  const evidence = createElement("section", "plan-subsection");
+  evidence.append(createElement("h4", "", "证据来源"));
+  appendList(
+    evidence,
+    [plan.positive_evidence_summary, plan.negative_evidence_summary].filter(Boolean),
+    "暂无证据来源说明"
+  );
+
   const notes = createElement("section", "plan-subsection");
   notes.append(createElement("h4", "", "风险备注"));
   appendList(notes, plan.risk_notes, "暂无风险备注");
 
-  parent.append(entry, exit, review, rationale, notes);
+  parent.append(entry, exit, review, rationale, evidence, notes);
 }
 
 function renderDataTrust(parent, trust) {

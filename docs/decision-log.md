@@ -61,6 +61,13 @@
 - 验证：`python3 -m compileall -q services/api/money_api services/api/tests`；`PYTHONPATH=services/api pytest -q services/api/tests/test_analysis_service.py services/api/tests/test_analysis_api.py`。
 - 下一步：如果继续补计划解释位，优先把这条拆线复用到更复杂的事件组合，不要再堆第三种同义总结。
 
+## 2026-07-03 投资计划证据展示
+
+- 做了什么：在 Web 报告详情页的“投资计划”区块新增了轻量“证据来源”小节，直接展示正向证据和风险证据的来源摘要；离线 mock 也同步补齐同名字段。
+- 为什么：后端已经把计划解释拆到正负证据两条线，但如果 Web 只显示理由和风险备注，用户还是得在研究信号里猜来源；把证据来源贴回计划区块更符合基金经理式阅读路径。
+- 验证：`node --check apps/web/src/app.js`。
+- 下一步：如果再扩展这个展示，只在计划区块里做轻量补充，不另起新面板。
+
 ## 2026-07-02 结构化事件流与引擎可见性
 
 - 做了什么：新增 `MarketEvent` 契约、结构化事件分类器、`DataContext.events`、报告 provenance 字段（`data_sources` / `engine_source` / `engine_mode` / `fallback_reason`），并把这些信息展示到 Web 工作台和诊断区。
