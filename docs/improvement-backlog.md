@@ -1,7 +1,7 @@
 # 改进台账
 
 状态：活文档
-最近更新：2026-07-01
+最近更新：2026-07-02
 
 本文档集中记录所有第一版暂时未做、需要改善、需要回头补齐的事项。后续任何 agent 在做阶段计划、实现、收尾或发现范围外问题时，都应更新这里，而不是把待办散落在对话、commit message 或临时文件中。
 
@@ -34,8 +34,8 @@
 | MNS-BL-014 | 已完成 | P1 | 异步任务队列与状态轮询 | 阶段 5.5 只做同步 HTTP 调用，避免一次性引入队列和 worker | 长耗时 TradingAgents 分析可被 Web/桌面稳定轮询和恢复 | 已在阶段 5.6 完成 in-memory task queue、`POST /tasks/analysis`、`GET /tasks/{id}` 和 Web 轮询；任务持久化/取消/恢复仍是后续项 | 阶段 5.6、`AnalysisStatus` |
 | MNS-BL-003 | 已完成 | P1 | 真实 TradingAgents smoke | 阶段 3 只提供 opt-in smoke，默认测试不能依赖 LLM/API key | 验证真实多 Agent 投研链路可被 Money_Never_sleep 调起 | 已运行 `MNS_RUN_TRADINGAGENTS_SMOKE=1 ...test_tradingagents_smoke.py`，结果 `1 passed` | 阶段 3、`services/api/tests/test_tradingagents_smoke.py` |
 | MNS-BL-004 | 待设计 | P1 | JSON 报告仓储升级为 SQLite 或可迁移仓储 | 阶段 4 为降低复杂度先使用 JSON 文件 | 提升查询、筛选、分页和并发写入能力 | 在 Web API 接入后评估 SQLite schema 和迁移策略 | 阶段 4、`report_repository.py` |
-| MNS-BL-005 | 待设计 | P1 | 真实 K 线、技术指标和估值扩展 | 阶段 2 只接入腾讯 quote 最小真实路径 | 提高深度分析上下文质量，减少 mock/fixture 依赖 | 设计 provider bundle 的 K 线与 fundamentals 扩展，保持 diagnostics/gaps 语义 | 阶段 2、`domains/market_data/` |
-| MNS-BL-006 | 进行中 | P1 | 新闻、公告、资金流、龙虎榜和解禁 provider | 阶段 2 明确不接宽数据面 | 支撑 A 股政策、游资、解禁等 TradingAgents 角色 | 新闻、市场快讯和公告标题已接入；下一步优先补结构化事件流（业绩预告/担保/减持/解禁），再考虑资金流和龙虎榜 | 阶段 2/3、TradingAgents-astock 参考 |
+| MNS-BL-005 | 已完成 | P1 | 真实 K 线、技术指标和估值扩展 | 阶段 2 只接入腾讯 quote 最小真实路径 | 提高深度分析上下文质量，减少 mock/fixture 依赖 | 已在阶段 5.32 完成 runtime provider bundle：腾讯 quote、Sina K 线技术指标、东财 F10 基本面和可选同花顺问财；验证：compileall + 在线 smoke | 阶段 2/5.32、`domains/market_data/` |
+| MNS-BL-006 | 进行中 | P1 | 新闻、公告、资金流、龙虎榜和解禁 provider | 阶段 2 明确不接宽数据面 | 支撑 A 股政策、游资、解禁等 TradingAgents 角色 | 新闻、市场快讯、公告标题和在线基本面/技术面已接入；研究工具目录已补齐资金流、龙虎榜和解禁三类薄切片；结构化事件第一切片已扩展到回购/质押/增持等高价值事件，并新增优先级、证据范围和证据片段字段且已影响计划方向；下一步继续补公告正文 | 阶段 2/3、TradingAgents-astock 参考 |
 | MNS-BL-007 | 已完成 | P1 | 分析任务持久化与恢复 | 当前阶段 5.6 已有内存队列和状态轮询，但任务生命周期不持久 | 支持服务重启后恢复、历史任务查询、取消与重试 | 已在阶段 5.7 完成 JSON task repository、`GET /tasks` 和中断任务恢复为 failed；取消与重试仍是后续项 | 阶段 5.7、`AnalysisStatus` |
 | MNS-BL-008 | 待设计 | P2 | 报告追问与分析会话 | 阶段 4 只保存最终报告，没有 conversation/session | 支持围绕历史报告继续提问、补证据、复盘 | 在报告持久化稳定后设计 `AnalysisSession` 和追问记录 | 阶段 4/5 |
 | MNS-BL-009 | 待设计 | P2 | 投资免责声明与风险提示治理 | 当前有风险字段，但没有统一产品级免责声明 | 降低误解为自动荐股的风险，统一 Web/API/报告表达 | 增加 report disclaimer 字段或 UI 固定风险说明 | README、Web、报告契约 |
@@ -58,8 +58,19 @@
 | MNS-BL-035 | 已完成 | P1 | runtime 默认深度引擎 auto 模式 | 虽已具备真实 TradingAgents 集成边界，但默认路径仍固定 mock，无法优先尝试真实引擎 | 让默认链路在环境就绪时优先走真实 TradingAgents，同时保留安全回退 | 已在阶段 5.17 完成 `AutoFallbackDeepResearchEngine`、runtime/desktop 默认 `auto` 和 runner 路径引导；验证：`133 passed, 3 skipped` | 阶段 5.17、`services/api/money_api/domains/analysis/tradingagents_engine.py` |
 | MNS-BL-036 | 已完成 | P1 | runtime 市场快讯接入 | 默认 news 上下文只有个股新闻，缺少政策、情绪与突发事件层输入 | 让默认分析上下文同时覆盖个股与市场层资讯，提升真实 TradingAgents 的输入广度 | 已在阶段 5.18 完成 `ClsMarketFlashProvider`、`CompositeNewsProvider` 和 runtime news 合并；验证：`137 passed, 3 skipped` | 阶段 5.18、`services/api/money_api/domains/market_data/cls_market_flash.py` |
 | MNS-BL-037 | 已完成 | P1 | runtime 公司公告标题流接入 | 默认 news 上下文已有个股新闻和市场快讯，但缺少公司正式公告标题 | 让默认分析上下文覆盖更接近公司事件面的正式公告流，为后续事件分类与结构化公告打基础 | 已在阶段 5.19 完成 `SinaBulletinProvider` 和 runtime news 合并；验证：`140 passed, 3 skipped` | 阶段 5.19、`services/api/money_api/domains/market_data/sina_bulletin.py` |
-| MNS-BL-038 | 待设计 | P1 | 结构化事件流 | 当前已接入个股新闻、市场快讯和公告标题，但公司事件仍停留在标题/摘要层，TradingAgents 无法直接消费“业绩预告/担保/减持/解禁”的结构化字段 | 让默认分析上下文从资讯层提升到事件层，为真实投研和风险分析提供更高信噪比输入 | 优先选择 1 个最薄事件源切片，例如业绩预告或减持/担保标题流，保持并入现有 `news` 或新增最小 `events` 契约二选一 | 阶段 5.20+、`services/api/money_api/domains/market_data/` |
-| MNS-BL-039 | 待设计 | P1 | auto 模式前端可见性 | 虽然默认 deep engine 已是 `auto`，但当前用户从 Web/桌面界面无法直接判断这次分析究竟命中了真实 TradingAgents 还是回退到了 mock | 减少“看起来像真实分析其实已回退”的误解，便于后续问题定位和产品验收 | 在 Web/桌面诊断区块或报告详情中展示 deep engine source、fallback 原因和最近一次 runner 错误 | 阶段 5.20+、`apps/web/src/app.js`、`apps/desktop/src/main.js` |
+| MNS-BL-038 | 已完成 | P1 | 结构化事件流 | 当前已接入个股新闻、市场快讯和公告标题，但公司事件仍停留在标题/摘要层，TradingAgents 无法直接消费“业绩预告/担保/减持/解禁”的结构化字段 | 让默认分析上下文从资讯层提升到事件层，为真实投研和风险分析提供更高信噪比输入 | 已完成 `MarketEvent` 契约、关键词分类器、`DataContext.events` 和 Web/报告展示；验证：`143 passed, 3 skipped` | 阶段 5.20、`services/api/money_api/domains/analysis/` |
+| MNS-BL-039 | 已完成 | P1 | auto 模式前端可见性 | 虽然默认 deep engine 已是 `auto`，但当前用户从 Web/桌面界面无法直接判断这次分析究竟命中了真实 TradingAgents 还是回退到了 mock | 减少“看起来像真实分析其实已回退”的误解，便于后续问题定位和产品验收 | 已完成 `data_sources` / `engine_source` / `engine_mode` / `fallback_reason` 展示和诊断面板渲染；验证：`143 passed, 3 skipped` | 阶段 5.20、`apps/web/src/app.js` |
+| MNS-BL-040 | 已完成 | P1 | 结构化事件兼容性修复 | review 发现未知 `event_type` 会导致反序列化异常，且单条标题同时命中多类事件时只保留第一类 | 提高事件契约前向兼容性，避免旧报告/新事件类型破坏读取，并减少事件漏报 | 已完成未知类型降级为 `other`、单条资讯多事件输出、旧 JSON 报告列表 provenance 回填；验证：目标测试 `25 passed` | 阶段 5.20 review、`contracts.py`、`market_events.py`、`report_repository.py` |
+| MNS-BL-041 | 已完成 | P1 | 投资计划输出契约 | 当前报告已有 action、confidence、risk plan，但还不是专业基金经理式的完整执行计划 | 让建议从“方向判断”升级为“可跟踪计划”，包含买入条件、仓位、卖出条件、止损、止盈、观察窗口和复盘条件 | 已完成 `InvestmentPlan` 契约、报告序列化、服务端自动生成和 Web 展示；验证：定向测试 `64 passed` | 阶段 5.20 后续、`docs/reference-integration-map.md` |
+| MNS-BL-042 | 已完成 | P1 | 数据可信度评分 | 当前 diagnostics 和 gaps 可见，但缺少统一可信度评分和结论置信来源解释 | 用户能区分真实数据、fallback、过期数据、缺失数据和真实引擎是否消费过证据 | 已完成 `DataTrustScore` 契约、评分逻辑、报告序列化、服务端自动生成和 Web 展示；验证：定向测试 `65 passed` | 数据层、报告契约 |
+| MNS-BL-043 | 已完成 | P1 | 模型/引擎成本与失败治理 | `auto` 已显示命中与回退，但此前尚未记录成本、耗时、调用次数和失败类型 | 控制真实 TradingAgents/LLM 成本，避免长周期使用时失控 | 已完成 `EngineTelemetry`、`EngineCostGuardrail`、成本阈值、告警和预算限制的第一版运行治理；验证：定向测试 `67 passed` | TradingAgents adapter、任务队列 |
+| MNS-BL-044 | 已完成 | P1 | 参考项目能力矩阵 | 此前只在交接文档零散提到三个参考项目，缺少长期跟踪位置 | 防止后续压缩记忆后遗失“可借鉴、可复制、需重设计”的资产判断 | 已新增 `docs/reference-integration-map.md`，并把写回规则补入信息地图和全局规则 | `docs/reference-integration-map.md` |
+| MNS-BL-045 | 已完成 | P1 | 研究工具 API | 之前只有整份分析报告和少量 Python wrapper，没有面向 agent 的细粒度研究入口 | 让外部 agent 或上层工作流可以按 `context / quote / technicals / fundamentals / news` 直接取在线研究数据 | 已完成 `ResearchToolService` 和 HTTP `/research/*` 入口；验证：compileall + smoke | `services/api/money_api/domains/analysis/research_tools.py`、`services/api/money_api/api/http.py` |
+| MNS-BL-046 | 已完成 | P1 | 研究工具薄切片扩展 | 研究工具 API 第一版只覆盖上下文、行情、技术面、基本面和新闻 | 让外部 agent 或上层工作流可以继续按资金流、龙虎榜和解禁粒度直接查数据 | 已完成 `capital_flow / longhubang / unlocks` 三类入口；验证：compileall + smoke | `services/api/money_api/domains/analysis/research_tools.py`、`services/api/money_api/api/http.py` |
+| MNS-BL-047 | 已完成 | P2 | Web 研究工具调试面板 | 研究工具 API 已有，但 Web 端仍只能看整份报告，无法直接检查工具返回值 | 让用户和 agent 能在浏览器里直接验证 provider 返回、回退语义和数据缺口 | 已完成诊断区调试面板，自动拉取 `context / quote / technicals / fundamentals / news / capital-flow / longhubang / unlocks`；验证：`12 passed`、compileall、`node --check apps/web/src/app.js` | `apps/web/src/app.js`、`docs/decision-log.md` |
+| MNS-BL-048 | 已完成 | P1 | 公告正文薄切片 | 研究工具和事件流已经接了公告标题，但正文里往往才有真正的信号 | 先用最小代价把公告正文接进同一条 `news`/`events` 管线，提高结构化事件命中质量 | 已完成 `SinaBulletinProvider` 正文抓取与清洗；验证：`27 passed`、compileall、`node --check apps/web/src/app.js` | `services/api/money_api/domains/market_data/sina_bulletin.py`、`services/api/tests/test_sina_bulletin.py` |
+| MNS-BL-049 | 已完成 | P2 | 研究信号联动摘要 | 调试面板能看原始数据，但用户还需要一眼知道这些信号对计划意味着什么 | 把资金流、龙虎榜、公告线索和结构化事件压成与投资计划相邻的判读 | 已完成 Web 报告详情页“研究信号”摘要区；验证：`27 passed`、compileall、`node --check apps/web/src/app.js` | `apps/web/src/app.js`、`docs/decision-log.md` |
+| MNS-BL-050 | 已完成 | P2 | 研究信号与计划对齐 | 只有研究信号摘要还不够，用户还需要知道它和当前投资计划是否一致 | 直接显示计划方向、目标仓位和止损/止盈，并给出一致/分歧判读 | 已完成前端对齐文案；验证：`27 passed`、compileall、`node --check apps/web/src/app.js` | `apps/web/src/app.js`、`docs/decision-log.md` |
 | MNS-BL-021 | 已完成 | P2 | 交易成本、滑点和复权参数 | 阶段 7.1 为保持 deterministic 最小闭环，不做成本和复权 | 提高回测结果可信度，避免过度乐观 | 已在阶段 7.4 完成 `BacktestOptions`、净收益/裸收益/成本影响和 Python/HTTP API 参数；真实复权价格转换仍是后续项 | 阶段 7.4 |
 | MNS-BL-019 | 已完成 | P1 | 组合风险预算 | 当前系统仍是单股分析，没有组合层持仓和风险预算 | 支持多标的仓位约束、集中度控制和组合视图 | 已在阶段 7.3 完成组合预算契约、预算器、Python API 和 HTTP API；验证：`100 passed, 3 skipped` | 阶段 7.3 |
 | MNS-BL-010 | 待设计 | P2 | Web 图表和行情可视化 | 阶段 5 静态工作台不做 K 线或图表 | 改善报告阅读和行情理解效率 | 先接真实 API，再选择轻量图表方案 | 阶段 5 后续 |
@@ -94,8 +105,8 @@
 ### 阶段 5：Web 工作台
 
 - Web 是零依赖静态版本，默认使用离线 mock 数据。
-- 阶段 5.19 已支持 `?api=` HTTP 任务模式、任务持久化、cancel/retry、超时回收、带延迟退避的服务端自动重试和最近任务历史，接入真实个股新闻、CLS 市场快讯、公司公告标题，并让默认深度引擎进入 `auto` 模式；但仍未提供交易所公告正文/资金流、筛选分页、批量控制和完整任务详情页。
-- 如果继续沿当前主线推进，下一优先级不是再加一个通用页面，而是把“结构化事件流”和“auto 模式可见性”补上。
+- 阶段 5.20 已支持 `?api=` HTTP 任务模式、任务持久化、cancel/retry、超时回收、带延迟退避的服务端自动重试和最近任务历史，接入真实个股新闻、CLS 市场快讯、公司公告标题、结构化事件第一切片，并让默认深度引擎进入 `auto` 模式；但仍未提供交易所公告正文/资金流、筛选分页、批量控制和完整任务详情页。
+- 如果继续沿当前主线推进，下一优先级不是再加一个通用页面，而是把结构化事件流扩成更完整的正文/分类/优先级体系，再考虑资金流和龙虎榜。
 - 未引入前端框架、路由、状态管理、图表或自动化浏览器截图验证。
 
 ### 阶段 6：桌面端与本地体验

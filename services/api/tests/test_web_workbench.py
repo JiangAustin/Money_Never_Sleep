@@ -45,9 +45,20 @@ def test_mock_data_matches_report_contract() -> None:
         "agent_views",
         "data_gaps",
         "data_diagnostics",
+        "data_sources",
+        "engine_source",
+        "engine_mode",
+        "fallback_reason",
         "data_context",
+        "evidence_scope",
+        "evidence_excerpt",
         "risk_controls",
+        "investment_plan",
+        "data_trust",
+        "engine_telemetry",
+        "engine_cost_guardrail",
         "backtest",
+        "events",
     ):
         assert field in mock_data
 
@@ -61,10 +72,39 @@ def test_app_js_exposes_service_and_render_boundaries() -> None:
     assert "function renderReportList" in app_js
     assert "function renderReportDetail" in app_js
     assert "function renderDiagnostics" in app_js
+    assert "function renderResearchDebug" in app_js
+    assert "function fetchResearchTool" in app_js
+    assert "function getResearchToolSummaryLines" in app_js
     assert "function getStartupContext" in app_js
     assert "function renderModePill" in app_js
     assert "analysis-form" in app_js
     assert "risk_controls" in app_js
+    assert "investment_plan" in app_js
+    assert "data_trust" in app_js
+    assert "engine_telemetry" in app_js
+    assert "engine_cost_guardrail" in app_js
+    assert "evidence_scope" in app_js
+    assert "evidence_excerpt" in app_js
+    assert "engine_source" in app_js
+    assert "data_sources" in app_js
+    assert "renderStructuredEvents" in app_js
+    assert "/research/context" in app_js
+    assert "/research/quote" in app_js
+    assert "/research/technicals" in app_js
+    assert "/research/fundamentals" in app_js
+    assert "/research/news" in app_js
+    assert "/research/capital-flow" in app_js
+    assert "/research/longhubang" in app_js
+    assert "/research/unlocks" in app_js
+    assert "研究工具调试" in app_js
+    assert "研究信号" in app_js
+    assert "计划对齐" in app_js
+    assert "当前计划方向" in app_js
+    assert "主力净流入" in app_js
+    assert "龙虎榜净额" in app_js
+    assert "净流入" in app_js or "净流出" in app_js
+    assert "资金流：" in app_js
+    assert "公告：" in app_js
 
 
 def test_web_styles_define_workbench_layout() -> None:
@@ -101,6 +141,7 @@ def test_app_js_exposes_http_service_boundary() -> None:
     assert "createLocalAnalysis" in app_js
     assert "next_retry_at" in app_js
     assert "next_retry_policy" in app_js
+    assert "fallback_reason" in app_js
 
 
 def test_app_js_exposes_startup_diagnostics_boundary() -> None:

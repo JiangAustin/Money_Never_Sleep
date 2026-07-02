@@ -1,7 +1,7 @@
 # 阶段路线图
 
 状态：活文档
-最近更新：2026-07-01
+最近更新：2026-07-02
 
 本文档用于记录 Money_Never_sleep 每个阶段要完成什么、验收标准、当前状态和后续想法。后续有新的判断、优先级变化或产品想法时，优先更新本文档，再进入实现计划。
 
@@ -48,6 +48,24 @@
 | 5.17 runtime 默认深度引擎 auto 模式 | 已完成 | 让默认链路优先尝试真实 TradingAgents，失败时自动回退 mock | `AutoFallbackDeepResearchEngine`、runtime default `auto`、桌面默认值同步 | 默认 runtime 具备“真实优先、失败回退”的深度分析语义 |
 | 5.18 runtime 市场快讯接入 | 已完成 | 让默认 news 上下文同时覆盖个股新闻与市场快讯 | `ClsMarketFlashProvider`、`CompositeNewsProvider`、runtime news 合并 | 默认 runtime 的 `news` 同时包含东方财富个股新闻和 CLS 快讯 |
 | 5.19 runtime 公司公告标题流接入 | 已完成 | 让默认 news 上下文继续覆盖公司正式公告标题 | `SinaBulletinProvider`、runtime news 合并 | 默认 runtime 的 `news` 同时包含个股新闻、市场快讯和公告标题 |
+| 5.20 结构化事件流与引擎可见性 | 已完成 | 把新闻/公告标题升级为首个结构化事件切片，并让报告显式展示数据来源、引擎来源和回退原因 | `MarketEvent`、事件分类器、report provenance、Web/diagnostics 展示 | 报告和 UI 能显示结构化事件、`data_sources`、`engine_source`、`engine_mode` 与 `fallback_reason` |
+| 5.20 review 补强 | 已完成 | 采纳 review 中必须修改和建议修改，补兼容性、多事件抽取和长期计划规则 | 未知事件降级、单条资讯多事件、旧报告 provenance 回填、参考项目整合地图、模型使用规则 | 目标测试通过，后续计划能追踪三个参考项目和治理事项 |
+| 5.21 投资计划契约 | 已完成 | 让报告输出更接近基金经理式的执行计划层 | `InvestmentPlan`、`AnalysisReport` 序列化、`AnalysisService` 自动生成、Web 详情展示 | 报告可直接显示入场条件、退出条件、复核条件和观察窗口 |
+| 5.22 数据可信度评分 | 已完成 | 让报告显式给出数据可信度、扣分项和正向信号 | `DataTrustScore`、评分逻辑、报告序列化、`AnalysisService` 自动生成、Web 详情展示 | 报告可直接显示可信度分数、等级、数据源、缺口和诊断计数 |
+| 5.23 引擎运行画像 | 已完成 | 让报告显式给出运行时长、执行路径、请求次数和失败信息 | `EngineTelemetry`、运行时统计、报告序列化、`AnalysisService` 自动生成、Web 详情展示 | 报告可直接显示引擎路径、成本层级、耗时和失败原因 |
+| 5.24 引擎成本治理 | 已完成 | 让报告显式给出成本阈值、告警和预算命中情况 | `EngineCostGuardrail`、阈值判断、告警列表、报告序列化、Web 详情展示 | 报告可直接显示是否超预算、触发了哪些告警以及建议的治理结论 |
+| 5.25 结构化事件覆盖扩展 | 已完成 | 在第一版事件切片上继续补充更高价值的回购和股权质押事件 | `MarketEventType` 扩展、事件规则扩展、Web mock 事件样例 | 报告和 UI 可展示回购、质押等更高价值的 A 股事件信号 |
+| 5.26 结构化事件优先级 | 已完成 | 让事件层显式携带优先级，方便后续计划层排序和解释 | `MarketEvent.priority`、分类优先级映射、Web 事件展示 | 报告和 UI 可直接看出哪些事件属于高优先级信号 |
+| 5.27 事件优先级驱动计划 | 已完成 | 让高优先级事件直接影响投资计划方向和仓位 | `AnalysisService` 事件信号汇总、计划方向推导、仓位调整 | 报告能根据正负高优先级事件把 `watch` 推向 `buy` 或 `wait` |
+| 5.28 结构化事件证据范围 | 已完成 | 让事件层显式区分命中来自标题、正文还是两者 | `MarketEvent.evidence_scope`、标题/正文命中判定、Web 事件展示 | 报告和 UI 可直接看出事件证据是标题、正文还是两者都命中 |
+| 5.29 结构化事件证据片段 | 已完成 | 让事件层给出实际命中的原文片段 | `MarketEvent.evidence_excerpt`、命中片段截取、Web 事件展示 | 报告和 UI 可直接看出触发事件的标题或正文片段 |
+| 5.30 结构化事件正文可读性 | 已完成 | 让正文命中的事件在报告里更容易被直接读懂 | `MarketEvent.evidence_excerpt`、正文片段展示、Web 事件展示 | 报告和 UI 可直接读出正文命中的具体原文片段 |
+| 5.31 结构化事件增持信号 | 已完成 | 在高价值事件流中补充股东增持这一正向信号 | `MarketEventType.SHARE_INCREASE`、事件规则扩展、Web mock 事件样例 | 报告和 UI 可展示股东增持事件，并把它纳入计划方向推导 |
+| 5.32 在线工具数据层与工具驱动回退 | 已完成 | 把 runtime 从“半真实原型”升级成“在线数据优先、工具驱动兜底”的研究助手 | 腾讯 quote、Sina 技术指标、东财 F10 基本面、可选同花顺问财、tool-driven fallback | tencent runtime 模式下 quote/technicals/fundamentals/news 均可来自真实或可配置在线源，auto 失败后回退到工具驱动报告 |
+| 5.33 Agent 研究工具入口 | 已完成 | 把现有在线数据层包装成可直接调用的研究工具目录 | `ResearchToolService`、`POST /research/context`、`/research/quote`、`/research/technicals`、`/research/fundamentals`、`/research/news` | 外部 agent 或上层工作流可直接按工具粒度拉取在线研究数据，而不是只能调用整份分析报告 |
+| 5.34 研究工具薄切片扩展 | 已完成 | 在研究工具目录上补齐资金流、龙虎榜和解禁入口 | `POST /research/capital-flow`、`/research/longhubang`、`/research/unlocks`、对应 Python wrapper | 外部 agent 或上层工作流可以直接按资金流、龙虎榜和解禁粒度拉取在线研究数据 |
+| 5.35 Web 研究工具调试面板 | 已完成 | 让 Web 工作台直接查看研究工具的原始返回值，便于验证 provider 和调试回退 | 诊断区调试面板、自动拉取 `context / quote / technicals / fundamentals / news / capital-flow / longhubang / unlocks`、可展开原始 JSON | 用户可以在 Web 里直接看见各研究工具返回内容，而不是只看整份分析报告 |
+| 5.36 公告正文薄切片 | 已完成 | 让公告标题流升级为标题+正文薄切片，提升结构化事件命中质量 | `SinaBulletinProvider` 正文抓取与清洗、公告详情页解析、`news`/`events` 直接消费正文 | 用户在报告里看到的不再只是公告标题，还能看到公告正文命中的事件线索 |
 | 6. 桌面端与本地体验 | 已完成 | 决定 Electron、Tauri 或 Wails，并提供本地应用体验 | Electron 桌面壳、macOS 构建入口、Web 工作台资源打包 | macOS `.app` 可构建并能承载 Web 工作台 |
 | 6.1 桌面托管本地 API | 已完成 | 让桌面端默认尝试拉起本地 API，并使用更接近可用产品的 runtime service | runtime service factory、Electron 托管 server、打包 API 源码资源 | 桌面无需手动设置 API URL 也可尝试进入真实 HTTP 模式 |
 | 6.2 桌面启动诊断 | 已完成 | 让用户看到桌面当前运行模式和回退原因 | startup 上下文注入、mode pill、诊断面板启动区块 | 桌面能显示托管 API / 外部 API / 离线模式和最近错误 |
@@ -59,19 +77,39 @@
 
 ## 当前阶段结论
 
-阶段 5.19 已完成。当前系统已具备前后端贯通的异步 HTTP 任务控制与任务可见性闭环，并继续补齐真实输入面：
+阶段 5.36 已完成。当前系统已具备前后端贯通的异步 HTTP 任务控制与任务可见性闭环，并继续补齐真实输入面：
 
 1. `POST /tasks/analysis` 可创建分析任务，`GET /tasks/{id}` 和 `GET /tasks?limit=` 可查询任务。
 2. 任务默认持久化到 JSON 文件目录 `data/cache/tasks`，服务重启时会把上次中断的运行中任务标记为 `failed`。
 3. `POST /tasks/{id}/cancel` 可取消非终态任务；`POST /tasks/{id}/retry` 可基于失败或已取消任务创建重试任务。
 4. 新增 `timeout_s`、`started_at`、`retry_count`、`max_retries`、`next_retry_at`、`next_retry_delay_s` 和 `next_retry_policy`，任务可在后台 watchdog 扫描时自动超时失败，并保留下一次重试的决策信息。
 5. `retry_backoff_factor`、`retry_jitter_ratio` 和 `retry_timeout_multiplier` 支持按错误类型（timeout）应用倍率并附加抖动。
-6. runtime service 在 `MONEY_MARKET_DATA_MODE=tencent` 下，`quote` 来自腾讯，`news` 来自东方财富个股新闻，`technicals/fundamentals` 仍使用 fallback。
-7. runtime service 现在会把东方财富个股新闻和 CLS 市场快讯合并到同一个 `news` 上下文中，保持现有 schema 不变。
-8. runtime service 现在会把新浪公告标题流继续合并到同一个 `news` 上下文中，默认 `news` 可同时覆盖个股新闻、市场快讯与公司公告。
-9. runtime deep engine 默认值现在是 `auto`：优先尝试真实 TradingAgents，若导入或运行失败则自动回退到 mock，并在 diagnostics 中保留失败来源。
-10. Web 工作台现在提供 `取消任务` 和 `重试任务` 按钮，并在最近任务列表中展示下一次重试时间、策略标签和延迟秒数。
-11. 取消不是底层线程/外部引擎的强制中断；当前公告只接入标题流，仍未实现交易所公告正文、资金流、分布式 worker、筛选分页或完整任务详情页。
+6. runtime service 在 `MONEY_MARKET_DATA_MODE=tencent` / `online` 下，`quote` 来自腾讯，`technicals` 来自 Sina K 线，`fundamentals` 来自东财 F10 + 可选同花顺问财，`news` 来自东方财富个股新闻、CLS 市场快讯和新浪公告标题。
+7. runtime service 现在会把东方财富个股新闻、CLS 市场快讯和新浪公告标题合并到同一个 `news` 上下文中，保持现有 schema 不变。
+8. runtime deep engine 默认值现在是 `auto`：优先尝试真实 TradingAgents，若导入或运行失败则自动回退到工具驱动分析，并在 diagnostics 中保留失败来源。
+9. runtime service 现在会把 Sina K 线、东财 F10 和可选同花顺问财接成同一个在线数据层，不再依赖静态 fixture 作为默认输入。
+10. 报告现在会显式带上 `data_sources`、`engine_source`、`engine_mode` 和 `fallback_reason`，Web/diagnostics 区域也会把这些 provenance 信息直接展示出来。
+11. Web 工作台现在提供 `取消任务` 和 `重试任务` 按钮，并在最近任务列表中展示下一次重试时间、策略标签和延迟秒数。
+12. 结构化事件流目前已经扩展到业绩预告、减持、担保、解禁、回购和股权质押等高价值事件类型，并为事件补上了优先级；同一条资讯同时命中多类事件时会保留多条结构化事件，但还不是完整事件抽取引擎。
+13. 事件优先级已经进入 `InvestmentPlan` 生成：高优先级正向事件在深度分析时可以把 `watch` 推向 `buy`，高优先级风险事件可以把计划收缩到 `wait`。
+14. 结构化事件现在还能标出证据范围：标题命中、正文命中或标题与正文都命中，便于后续判断置信解释和抽取质量。
+15. 结构化事件现在还能给出实际命中的原文片段，用户不需要回头翻原文就能看见触发信号的出处。
+16. 结构化事件的正文命中现在更容易直接阅读，正文片段会在报告中以可读原文展示出来。
+17. 结构化事件流已经补进股东增持这一正向信号，它会进入事件优先级和计划方向推导。
+18. 报告历史列表兼容旧 JSON 格式：如果顶层缺少 provenance 字段，会从内层 `report` 回填。
+19. 投资计划层已经有第一版 `InvestmentPlan`，但仍是基于报告和风控的规则化生成，不是从真实多 Agent 结论中学习出来的优化器。
+20. 数据可信度层已经有第一版 `DataTrustScore`，但仍是基于现有 sources/gaps/diagnostics 的规则化打分，不是学习型或在线估计模型。
+21. 引擎运行画像已经有第一版 `EngineTelemetry`，但仍是基于现有路径和结果的规则化治理视图，不是成本预算器或告警系统。
+22. 引擎成本治理已经有第一版 `EngineCostGuardrail`，但它仍是报告级规则化阈值视图，不是能主动调度资源的预算控制器。
+23. 三个参考项目已进入长期资产管理：后续吸收 `TradingAgents-astock`、`daily_stock_analysis` 或 `go-stock` 的能力时，必须更新 `docs/reference-integration-map.md`。
+24. 取消不是底层线程/外部引擎的强制中断；当前公告只接入标题流，仍未实现交易所公告正文、资金流、分布式 worker、筛选分页或完整任务详情页。
+25. 同花顺问财目前作为可选在线源工作，未配置 API key 时会自动退回到东财 F10 和其他在线源，不会伪造数据。
+26. 研究工具入口已经开放了 `context / quote / technicals / fundamentals / news` 五类调用，同时又补齐了 `capital_flow / longhubang / unlocks` 三类薄切片，但目前还是 HTTP/Python 目录级能力，还没有把它封装成完整的多 agent 工具编排层或 MCP 风格的动态工具市场。
+27. Web 工作台现在新增了研究工具调试面板，可以直接查看当前报告股票对应的原始工具返回值，但这仍是调试层能力，不是独立业务数据源。
+28. 公告标题流已经升级到公告正文薄切片，`SinaBulletinProvider` 会尝试抓公告详情页正文，结构化事件抽取会直接消费正文内容，但仍不是完整公告解析引擎。
+29. 研究工具调试面板里的龙虎榜摘要已经能直接看出净流入、净流出或持平，避免只读数值不看方向。
+30. Web 报告详情页新增了“研究信号”摘要区，会把资金流、龙虎榜、公告线索和结构化事件压成一段和投资计划相邻的判读，帮助用户快速理解研究工具对计划的影响。
+31. 研究信号摘要现在直接显示计划方向、目标仓位和止损/止盈，并判断当前研究信号和计划是否一致，形成更强的前端语义对齐。
 
 离线验证命令：
 
@@ -79,7 +117,19 @@
 PYTHONPATH=services/api /Users/jxc/VS/Money_Never_sleep/.venv/bin/python -m pytest services/api/tests -v
 ```
 
-离线结果：`140 passed, 3 skipped`。
+阶段 5.20 离线结果：`143 passed, 3 skipped`。
+review 补强目标测试结果：`25 passed`。
+阶段 5.21 定向验证结果：`64 passed`，`python -m compileall -q services/api/money_api` 和 `node --check apps/web/src/app.js` 通过。
+阶段 5.22 定向验证结果：`65 passed`，`python -m compileall -q services/api/money_api` 和 `node --check apps/web/src/app.js` 通过。
+阶段 5.23 定向验证结果：`66 passed`，`python -m compileall -q services/api/money_api` 和 `node --check apps/web/src/app.js` 通过。
+阶段 5.24 定向验证结果：`67 passed`，`python -m compileall -q services/api/money_api` 和 `node --check apps/web/src/app.js` 通过。
+阶段 5.25 定向验证结果：`35 passed`，`python -m compileall -q services/api/money_api` 和 `node --check apps/web/src/app.js` 通过。
+阶段 5.26 定向验证结果：`49 passed`，`python -m compileall -q services/api/money_api` 和 `node --check apps/web/src/app.js && node --check apps/web/src/mockData.js` 通过。
+阶段 5.27 定向验证结果：`72 passed`，`python -m compileall -q services/api/money_api` 和 `node --check apps/web/src/app.js && node --check apps/web/src/mockData.js` 通过。
+阶段 5.28 定向验证结果：`74 passed`，`python -m compileall -q services/api/money_api` 和 `node --check apps/web/src/app.js && node --check apps/web/src/mockData.js` 通过。
+阶段 5.29 定向验证结果：`74 passed`，`python -m compileall -q services/api/money_api` 和 `node --check apps/web/src/app.js && node --check apps/web/src/mockData.js` 通过。
+阶段 5.30 定向验证结果：`74 passed`，`python -m compileall -q services/api/money_api` 和 `node --check apps/web/src/app.js && node --check apps/web/src/mockData.js` 通过。
+阶段 5.31 定向验证结果：`76 passed`，`python -m compileall -q services/api/money_api` 和 `node --check apps/web/src/app.js && node --check apps/web/src/mockData.js` 通过。
 
 Sina K 线真实网络 smoke 结果：`1 passed`。
 
@@ -95,7 +145,13 @@ HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.
 
 ## 下一阶段建议
 
-建议下一步按既定顺序继续：补更结构化的公告/事件流（如业绩预告、减持、担保、解禁），然后把 `auto` 模式的命中/回退状态显式展示到 Web/桌面。
+建议下一步继续扩展结构化事件流的覆盖面，例如补事件正文、更多高价值事件类型和更细的分类规则，同时把这些事件直接串到更专业的投资计划模板里。
+
+下一阶段如果继续推进在线化，优先补资金流、龙虎榜、解禁和公告正文，再考虑把工具层做成更完整的 agent 可调用目录。
+
+下一阶段做计划时使用当前可用最新模型；执行开发、测试和文档落地使用次一级性价比模型。计划必须显式说明借鉴三个参考项目中的哪些能力，以及哪些能力选择复制、适配或重设计。
+
+当前计划层的最小闭环已经有了：`RiskControlPlan` 负责纪律，`InvestmentPlan` 负责执行步骤，`DataTrustScore` 负责可信度解释，`EngineTelemetry` 负责运行治理，`EngineCostGuardrail` 负责成本阈值和告警，`DataContext` / `data_sources` / `engine_mode` 负责证据和来源。事件优先级已经开始影响计划方向和仓位，结构化事件也已经能区分命中来自标题、正文还是两者，并给出原文证据片段；正文命中片段现在也能直接读懂，股东增持信号也已纳入，后续若再扩展计划层，需要新的问题域，而不是再加一次同义字段。
 
 ## 想法池
 
@@ -103,4 +159,5 @@ HTTP API 模式：启动 server 后打开 `apps/web/index.html?api=http://127.0.
 - 借鉴 daily_stock_analysis 的数据源 fallback 和报告管理。
 - 借鉴 go-stock 的行情图表、桌面体验和工具分组。
 - 为每次分析保存输入数据摘要，便于后续复盘和对比。
+- 设计投资计划输出契约、数据可信度评分、模型/引擎成本治理和合规边界展示。
 - 后续 README 可增加英文文档链接，例如 `docs/README_EN.md`。
