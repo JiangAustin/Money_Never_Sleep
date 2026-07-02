@@ -21,7 +21,7 @@ def test_build_context_collects_available_data() -> None:
         quote={"price": 1688.0},
         technicals={"ma5": 1660.0},
         fundamentals={"pe_ttm": 28.5},
-        news=[{"title": "业绩稳定"}],
+        news=[{"title": "示例公司发布2026年半年度业绩预告", "content": "预计同比增长"}],
     )
 
     context = DataContextBuilder(provider).build(stock)
@@ -30,7 +30,9 @@ def test_build_context_collects_available_data() -> None:
     assert context.quote["price"] == 1688.0
     assert context.technicals["ma5"] == 1660.0
     assert context.fundamentals["pe_ttm"] == 28.5
-    assert context.news == [{"title": "业绩稳定"}]
+    assert context.news == [{"title": "示例公司发布2026年半年度业绩预告", "content": "预计同比增长"}]
+    assert context.events[0].event_type.value == "earnings_forecast"
+    assert context.events[0].summary.startswith("识别为业绩预告类事件")
     assert context.gaps == []
     assert context.diagnostics == [
         {"kind": "quote", "source": "static", "ok": True, "error_type": None, "error_message": None, "fetched_at": None, "is_stale": False},
@@ -88,3 +90,4 @@ def test_static_provider_returns_shallow_copies() -> None:
     assert second.technicals == {"ma5": 1660.0}
     assert second.fundamentals == {"pe_ttm": 28.5}
     assert second.news == [{"title": "业绩稳定"}]
+    assert second.events == []

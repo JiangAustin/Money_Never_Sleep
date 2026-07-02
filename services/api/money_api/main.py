@@ -42,6 +42,54 @@ def build_portfolio_risk_budget(task_ids: list[str] | None = None, limit: int = 
     return build_portfolio_risk_budget_v1(task_ids=task_ids, limit=limit)
 
 
+def get_research_context(symbol: str) -> dict[str, object]:
+    from money_api.api.v1.router import get_research_context as get_research_context_v1
+
+    return get_research_context_v1(symbol)
+
+
+def get_research_quote(symbol: str) -> dict[str, object]:
+    from money_api.api.v1.router import get_research_quote as get_research_quote_v1
+
+    return get_research_quote_v1(symbol)
+
+
+def get_research_technicals(symbol: str) -> dict[str, object]:
+    from money_api.api.v1.router import get_research_technicals as get_research_technicals_v1
+
+    return get_research_technicals_v1(symbol)
+
+
+def get_research_fundamentals(symbol: str) -> dict[str, object]:
+    from money_api.api.v1.router import get_research_fundamentals as get_research_fundamentals_v1
+
+    return get_research_fundamentals_v1(symbol)
+
+
+def get_research_news(symbol: str) -> dict[str, object]:
+    from money_api.api.v1.router import get_research_news as get_research_news_v1
+
+    return get_research_news_v1(symbol)
+
+
+def get_research_capital_flow(symbol: str) -> dict[str, object]:
+    from money_api.api.v1.router import get_research_capital_flow as get_research_capital_flow_v1
+
+    return get_research_capital_flow_v1(symbol)
+
+
+def get_research_longhubang(symbol: str) -> dict[str, object]:
+    from money_api.api.v1.router import get_research_longhubang as get_research_longhubang_v1
+
+    return get_research_longhubang_v1(symbol)
+
+
+def get_research_unlocks(symbol: str) -> dict[str, object]:
+    from money_api.api.v1.router import get_research_unlocks as get_research_unlocks_v1
+
+    return get_research_unlocks_v1(symbol)
+
+
 def run_http_server(host: str = "127.0.0.1", port: int = 8000) -> None:
     from money_api.api.http import run_http_server as run_http_server_v1
 

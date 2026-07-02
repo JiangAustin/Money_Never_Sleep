@@ -5,7 +5,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from urllib.parse import parse_qs, urlparse
 
-from money_api.api.v1.router import build_runtime_analysis_service
+from money_api.api.v1.router import build_default_research_tool_service, build_runtime_analysis_service, build_runtime_research_tool_service
 from money_api.core.config import settings
 from money_api.domains.analysis.contracts import BacktestOptions
 from money_api.domains.analysis.service import AnalysisService
@@ -22,10 +22,17 @@ class HttpResponse:
 
 
 class HttpApiApp:
-    def __init__(self, service: AnalysisService, price_providers: dict[str, object] | None = None, task_queue: InMemoryAnalysisTaskQueue | None = None):
+    def __init__(
+        self,
+        service: AnalysisService,
+        price_providers: dict[str, object] | None = None,
+        task_queue: InMemoryAnalysisTaskQueue | None = None,
+        research_tools: object | None = None,
+    ):
         self.service = service
         self.price_providers = price_providers or {"sina": SinaKLineProvider()}
         self.task_queue = task_queue or InMemoryAnalysisTaskQueue(service=service, repository=JsonFileAnalysisTaskRepository(settings.analysis_tasks_dir))
+        self.research_tools = research_tools or build_default_research_tool_service()
 
     def handle(self, method: str, target: str, body: bytes) -> HttpResponse:
         parsed = urlparse(target)
@@ -59,6 +66,22 @@ class HttpApiApp:
         if method == "GET" and path == "/reports":
             limit = self._parse_limit(query.get("limit", ["20"])[0])
             return self._json(200, [record.to_dict() for record in self.service.list_reports(limit=limit)])
+        if method == "POST" and path == "/research/context":
+            return self._research_context(body)
+        if method == "POST" and path == "/research/quote":
+            return self._research_quote(body)
+        if method == "POST" and path == "/research/technicals":
+            return self._research_technicals(body)
+        if method == "POST" and path == "/research/fundamentals":
+            return self._research_fundamentals(body)
+        if method == "POST" and path == "/research/news":
+            return self._research_news(body)
+        if method == "POST" and path == "/research/capital-flow":
+            return self._research_capital_flow(body)
+        if method == "POST" and path == "/research/longhubang":
+            return self._research_longhubang(body)
+        if method == "POST" and path == "/research/unlocks":
+            return self._research_unlocks(body)
         if method == "GET" and path.startswith("/tasks/"):
             task_id = path.removeprefix("/tasks/")
             task = self.task_queue.get_task(task_id)
@@ -159,6 +182,65 @@ class HttpApiApp:
         )
         return self._json(200, budget.to_dict())
 
+    def _research_context(self, body: bytes) -> HttpResponse:
+        symbol, error = self._parse_symbol(body)
+        if error:
+            return error
+        return self._json(200, self.research_tools.build_context(symbol).to_dict())
+
+    def _research_quote(self, body: bytes) -> HttpResponse:
+        symbol, error = self._parse_symbol(body)
+        if error:
+            return error
+        return self._json(200, self.research_tools.get_quote(symbol))
+
+    def _research_technicals(self, body: bytes) -> HttpResponse:
+        symbol, error = self._parse_symbol(body)
+        if error:
+            return error
+        return self._json(200, self.research_tools.get_technicals(symbol))
+
+    def _research_fundamentals(self, body: bytes) -> HttpResponse:
+        symbol, error = self._parse_symbol(body)
+        if error:
+            return error
+        return self._json(200, self.research_tools.get_fundamentals(symbol))
+
+    def _research_news(self, body: bytes) -> HttpResponse:
+        symbol, error = self._parse_symbol(body)
+        if error:
+            return error
+        return self._json(200, self.research_tools.get_news(symbol))
+
+    def _research_capital_flow(self, body: bytes) -> HttpResponse:
+        symbol, error = self._parse_symbol(body)
+        if error:
+            return error
+        return self._json(200, self.research_tools.get_capital_flow(symbol))
+
+    def _research_longhubang(self, body: bytes) -> HttpResponse:
+        symbol, error = self._parse_symbol(body)
+        if error:
+            return error
+        return self._json(200, self.research_tools.get_longhubang(symbol))
+
+    def _research_unlocks(self, body: bytes) -> HttpResponse:
+        symbol, error = self._parse_symbol(body)
+        if error:
+            return error
+        return self._json(200, self.research_tools.get_unlocks(symbol))
+
+    def _parse_symbol(self, body: bytes) -> tuple[str, HttpResponse | None]:
+        try:
+            payload = json.loads(body.decode("utf-8") or "{}")
+        except json.JSONDecodeError:
+            return "", self._json(400, {"error": "invalid json"})
+
+        symbol = payload.get("symbol")
+        if not isinstance(symbol, str) or not symbol.strip():
+            return "", self._json(400, {"error": "symbol is required"})
+        return symbol, None
+
     def _parse_limit(self, value: str) -> int:
         try:
             limit = int(value)
@@ -180,7 +262,10 @@ class HttpApiApp:
 
 
 def run_http_server(host: str = "127.0.0.1", port: int = 8000, app: HttpApiApp | None = None) -> None:
-    api_app = app or HttpApiApp(service=build_runtime_analysis_service())
+    api_app = app or HttpApiApp(
+        service=build_runtime_analysis_service(),
+        research_tools=build_runtime_research_tool_service(),
+    )
 
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:

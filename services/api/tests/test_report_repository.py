@@ -1,3 +1,5 @@
+import json
+
 from money_api.domains.analysis.contracts import (
     AnalysisReport,
     AnalysisStatus,
@@ -70,6 +72,36 @@ def test_json_repository_lists_recent_reports(tmp_path) -> None:
 
     assert {record.task_id for record in records} == {"task-1", "task-2"}
     assert records[0].created_at >= records[1].created_at
+
+
+def test_json_repository_lists_legacy_reports_with_inner_provenance(tmp_path) -> None:
+    repository = JsonFileAnalysisReportRepository(tmp_path)
+    report = build_report("legacy-task").to_dict()
+    report["data_sources"] = ["tencent", "eastmoney-news"]
+    report["engine_source"] = "tradingagents"
+    report["engine_mode"] = "auto"
+    report["fallback_reason"] = "runner unavailable"
+    (tmp_path / "legacy-task.json").write_text(
+        """
+{
+  "task_id": "legacy-task",
+  "created_at": "2026-07-02T00:00:00+00:00",
+  "stock": {"code": "600519", "name": "贵州茅台", "market": "cn"},
+  "status": "report_ready",
+  "summary": "legacy summary",
+  "report": %s
+}
+        """.strip()
+        % json.dumps(report, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    records = repository.list_recent(limit=1)
+
+    assert records[0].data_sources == ["tencent", "eastmoney-news"]
+    assert records[0].engine_source == "tradingagents"
+    assert records[0].engine_mode == "auto"
+    assert records[0].fallback_reason == "runner unavailable"
 
 
 def test_json_repository_skips_corrupt_files(tmp_path) -> None:

@@ -1,5 +1,5 @@
 from money_api.domains.analysis.contracts import StockIdentity
-from money_api.domains.market_data.sina_bulletin import SinaBulletinProvider, parse_sina_bulletin_html
+from money_api.domains.market_data.sina_bulletin import SinaBulletinProvider, parse_sina_bulletin_detail_html, parse_sina_bulletin_html
 
 
 def test_parse_sina_bulletin_html_returns_normalized_articles() -> None:
@@ -34,19 +34,49 @@ def test_parse_sina_bulletin_html_returns_normalized_articles() -> None:
     ]
 
 
-def test_sina_bulletin_provider_returns_provider_result() -> None:
+def test_parse_sina_bulletin_detail_html_returns_readable_body() -> None:
     html = """
+    <html><body>
+      <div id="artibody">
+        <p>第一段公告正文</p>
+        <p>第二段公告正文</p>
+        <script>ignore()</script>
+      </div>
+    </body></html>
+    """
+
+    content = parse_sina_bulletin_detail_html(html)
+
+    assert content == "第一段公告正文 第二段公告正文"
+
+
+def test_sina_bulletin_provider_returns_provider_result() -> None:
+    list_html = """
     <html><body><div class='datelist'><ul>
       <li>2026-05-09 <a href='https://vip.stock.finance.sina.com.cn/bulletin/1'>协鑫能科：关于对控股子公司提供担保的进展公告</a></li>
     </ul></div></body></html>
     """
-    provider = SinaBulletinProvider(transport=lambda url: html)
+    detail_html = """
+    <html><body>
+      <div id='artibody'>
+        <p>公司为控股子公司提供担保，担保事项已履行审议程序。</p>
+      </div>
+    </body></html>
+    """
+
+    def transport(url: str) -> str:
+        if url.endswith("/bulletin/1"):
+            return detail_html
+        return list_html
+
+    provider = SinaBulletinProvider(transport=transport)
 
     result = provider.get_news(StockIdentity(code="002015", name="协鑫能科"))
 
     assert result.ok is True
     assert result.source == "sina-bulletin"
     assert result.data[0]["source"] == "新浪公告"
+    assert "担保事项" in result.data[0]["content"]
 
 
 def test_sina_bulletin_provider_handles_transport_failure() -> None:

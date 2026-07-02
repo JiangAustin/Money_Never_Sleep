@@ -63,6 +63,8 @@ def test_tradingagents_engine_maps_success_result_to_report() -> None:
     assert report.summary == "贵州茅台 fake TradingAgents 分析完成。"
     assert report.agent_views[0].agent == "TradingAgents market"
     assert report.data_context.diagnostics[-1]["source"] == "fake-tradingagents"
+    assert report.engine_source == "fake-tradingagents"
+    assert report.engine_mode == "tradingagents"
 
 
 class FailingTradingAgentsRunner:
@@ -87,6 +89,9 @@ def test_tradingagents_engine_maps_failure_to_failed_report() -> None:
     assert report.confidence.value == "low"
     assert report.risks[0].message == "TradingAgents 执行失败: boom"
     assert report.data_context.diagnostics[-1]["ok"] is False
+    assert report.engine_source == "tradingagents"
+    assert report.engine_mode == "tradingagents"
+    assert report.fallback_reason == "boom"
 
 
 def test_auto_fallback_engine_returns_mock_report_when_tradingagents_fails() -> None:
@@ -103,3 +108,6 @@ def test_auto_fallback_engine_returns_mock_report_when_tradingagents_fails() -> 
     assert "回退" in report.summary
     assert report.data_context.diagnostics[-2]["source"] == "tradingagents"
     assert report.data_context.diagnostics[-1]["source"] == "mock-fallback"
+    assert report.engine_source == "mock"
+    assert report.engine_mode == "auto"
+    assert report.fallback_reason == "TradingAgents 执行失败: boom"

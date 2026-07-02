@@ -16,6 +16,10 @@ class AnalysisReportRecord:
     stock: dict[str, str]
     status: str
     summary: str
+    data_sources: list[str]
+    engine_source: str
+    engine_mode: str
+    fallback_reason: str | None
     report: dict[str, object]
 
     @classmethod
@@ -28,6 +32,10 @@ class AnalysisReportRecord:
             stock=report.stock.to_dict(),
             status=report.status.value,
             summary=report.summary,
+            data_sources=list(report.data_sources) or list(report.to_dict().get("data_sources", [])),
+            engine_source=report.engine_source,
+            engine_mode=report.engine_mode,
+            fallback_reason=report.fallback_reason,
             report=payload,
         )
 
@@ -38,6 +46,10 @@ class AnalysisReportRecord:
             "stock": dict(self.stock),
             "status": self.status,
             "summary": self.summary,
+            "data_sources": list(self.data_sources),
+            "engine_source": self.engine_source,
+            "engine_mode": self.engine_mode,
+            "fallback_reason": self.fallback_reason,
             "report": dict(self.report),
         }
 
@@ -100,6 +112,10 @@ class JsonFileAnalysisReportRepository:
         for path in self.reports_dir.glob("*.json"):
             try:
                 payload = json.loads(path.read_text(encoding="utf-8"))
+                report_payload = dict(payload.get("report", {}))
+                fallback_reason = payload.get("fallback_reason")
+                if fallback_reason is None:
+                    fallback_reason = report_payload.get("fallback_reason")
                 records.append(
                     AnalysisReportRecord(
                         task_id=str(payload["task_id"]),
@@ -107,7 +123,11 @@ class JsonFileAnalysisReportRepository:
                         stock=dict(payload.get("stock", {})),
                         status=str(payload.get("status", "")),
                         summary=str(payload.get("summary", "")),
-                        report=dict(payload.get("report", {})),
+                        data_sources=[str(item) for item in payload.get("data_sources") or report_payload.get("data_sources", [])],
+                        engine_source=str(payload.get("engine_source") or report_payload.get("engine_source", "")),
+                        engine_mode=str(payload.get("engine_mode") or report_payload.get("engine_mode", "")),
+                        fallback_reason=str(fallback_reason) if fallback_reason is not None else None,
+                        report=report_payload,
                     )
                 )
             except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):

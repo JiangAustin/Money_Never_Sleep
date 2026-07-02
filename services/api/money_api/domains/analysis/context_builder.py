@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from money_api.domains.analysis.contracts import DataContext, StockIdentity
+from money_api.domains.analysis.market_events import build_structured_market_events
 from money_api.domains.market_data.provider_results import ProviderResult
 
 
@@ -65,6 +66,7 @@ class DataContextBuilder:
             fundamentals_result.to_diagnostic(),
             news_result.to_diagnostic(),
         ]
+        events = build_structured_market_events(news)
 
         gaps = []
         for result, data in (
@@ -82,6 +84,7 @@ class DataContextBuilder:
             technicals=technicals,
             fundamentals=fundamentals,
             news=news,
+            events=events,
             gaps=gaps,
             diagnostics=diagnostics,
         )

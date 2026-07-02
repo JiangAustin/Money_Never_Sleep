@@ -251,6 +251,25 @@ textarea {
   line-height: 1.6;
 }
 
+.event-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 10px;
+  background: linear-gradient(180deg, rgba(47, 111, 94, 0.05), rgba(255, 255, 255, 0.96));
+}
+
+.event-card p {
+  margin: 6px 0 0;
+  line-height: 1.6;
+}
+
+.event-card small {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+}
+
 .diagnostic-row {
   display: grid;
   grid-template-columns: 12px 1fr auto;
@@ -283,6 +302,23 @@ textarea {
   background: #f7f7f2;
   font-size: 12px;
   line-height: 1.5;
+}
+
+.research-tool-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #fbfbf8;
+}
+
+.research-tool-card summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.research-tool-card .empty-state {
+  margin: 8px 0 10px;
 }
 
 @media (max-width: 1040px) {

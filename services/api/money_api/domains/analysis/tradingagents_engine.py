@@ -48,6 +48,7 @@ class TradingAgentsRunRequest:
                 "technicals": dict(context.technicals),
                 "fundamentals": dict(context.fundamentals),
                 "news": list(context.news),
+                "events": [event.to_dict() for event in context.events],
                 "gaps": list(context.gaps),
             },
             diagnostics=list(context.diagnostics),
@@ -102,6 +103,7 @@ class TradingAgentsDeepResearchEngine:
             technicals=dict(context.technicals),
             fundamentals=dict(context.fundamentals),
             news=list(context.news),
+            events=list(context.events),
             gaps=list(context.gaps),
             diagnostics=diagnostics,
         )
@@ -120,6 +122,8 @@ class TradingAgentsDeepResearchEngine:
                     for name, report in result.agent_reports.items()
                 ],
                 data_context=report_context,
+                engine_source=result.source,
+                engine_mode="tradingagents",
             )
         return self._failed_report(task_id, context, result, report_context)
 
@@ -142,11 +146,14 @@ class TradingAgentsDeepResearchEngine:
             risks=[RiskFinding(level="high", message=f"TradingAgents 执行失败: {message}")],
             agent_views=[AgentView(agent="TradingAgents", conclusion="真实深度投研未完成")],
             data_context=report_context,
+            engine_source=result.source,
+            engine_mode="tradingagents",
+            fallback_reason=message,
         )
 
 
 class AutoFallbackDeepResearchEngine:
-    def __init__(self, primary: TradingAgentsDeepResearchEngine, fallback: MockDeepResearchEngine | None = None):
+    def __init__(self, primary: TradingAgentsDeepResearchEngine, fallback: Any | None = None):
         self.primary = primary
         self.fallback = fallback or MockDeepResearchEngine()
 
@@ -159,7 +166,7 @@ class AutoFallbackDeepResearchEngine:
         diagnostics.append(
             {
                 "kind": "deep_engine",
-                "source": "mock-fallback",
+                "source": "tool-driven",
                 "ok": True,
                 "error_type": primary_report.data_context.diagnostics[-1].get("error_type") if primary_report.data_context.diagnostics else None,
                 "error_message": primary_report.data_context.diagnostics[-1].get("error_message") if primary_report.data_context.diagnostics else None,
@@ -173,12 +180,16 @@ class AutoFallbackDeepResearchEngine:
             technicals=dict(context.technicals),
             fundamentals=dict(context.fundamentals),
             news=list(context.news),
+            events=list(context.events),
             gaps=list(context.gaps),
             diagnostics=diagnostics,
         )
         fallback_report = self.fallback.analyze(task_id, fallback_context)
         return replace(
             fallback_report,
-            summary="TradingAgents 不可用，已回退到 mock 分析。",
-            reasons=["TradingAgents auto 模式失败后已回退到 mock 分析", *fallback_report.reasons],
+            summary="TradingAgents 不可用，已回退到工具驱动分析。",
+            reasons=["TradingAgents auto 模式失败后已回退到工具驱动分析", *fallback_report.reasons],
+            engine_source=fallback_report.engine_source,
+            engine_mode="auto",
+            fallback_reason=primary_report.risks[0].message if primary_report.risks else "TradingAgents 不可用",
         )

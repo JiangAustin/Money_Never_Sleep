@@ -46,7 +46,15 @@ Money_Never_sleep/
 4. 通过 Agent 引擎适配器生成结构化 dry-run 报告。
 5. 暴露 Python 级 API 函数，供测试和早期集成使用。
 
-当前阶段已经完成真实 A 股数据层、TradingAgents 深度引擎边界、报告历史能力、Web 工作台第一版、JSON HTTP API 层、HTTP 任务队列与状态轮询、任务持久化与恢复、任务取消与重试控制、任务超时回收、任务 watchdog 与自动重试、Web 任务控制 UI、Web 任务历史视图、任务重试退避调度、任务重试策略细化、任务重试策略可观测性、真实个股新闻数据接入、runtime 默认深度引擎 auto 模式、runtime 市场快讯接入、runtime 公司公告标题流接入、Electron 桌面壳、桌面托管本地 API、桌面启动诊断、风控纪律层、回测接口、Sina 日线 K 线 provider、组合风险预算和回测成本参数：桌面默认会尝试拉起本地 API，界面可见当前启动模式和回退原因；Web/桌面在连接 HTTP API 时会优先走任务创建与状态轮询，服务端现在具备任务持久化、取消、重试、超时回收和带延迟退避的自动重试（含指数因子、抖动、timeout 倍率，以及延迟秒数/策略标签可观测字段）；runtime 分析默认已可组合真实腾讯 quote、东方财富个股新闻、CLS 市场快讯、公司公告标题，以及 `auto` 深度引擎模式下“优先 TradingAgents、失败回退 mock”的链路，回测可自动获取真实价格序列并计入成本/滑点，组合预算可基于多份报告生成总仓位、现金保留和单票预算。
+当前阶段已经完成真实 A 股数据层、TradingAgents 深度引擎边界、报告历史能力、Web 工作台第一版、JSON HTTP API 层、HTTP 任务队列与状态轮询、任务持久化与恢复、任务取消与重试控制、任务超时回收、任务 watchdog 与自动重试、Web 任务控制 UI、Web 任务历史视图、任务重试退避调度、任务重试策略细化、任务重试策略可观测性、真实个股新闻数据接入、runtime 默认深度引擎 auto 模式、runtime 市场快讯接入、runtime 公司公告标题流接入、agent 研究工具入口、Electron 桌面壳、桌面托管本地 API、桌面启动诊断、风控纪律层、回测接口、Sina 日线 K 线 provider、组合风险预算和回测成本参数：桌面默认会尝试拉起本地 API，界面可见当前启动模式和回退原因；Web/桌面在连接 HTTP API 时会优先走任务创建与状态轮询，服务端现在具备任务持久化、取消、重试、超时回收和带延迟退避的自动重试（含指数因子、抖动、timeout 倍率，以及延迟秒数/策略标签可观测字段）；runtime 分析默认已可组合真实腾讯 quote、Sina K 线技术指标、东方财富 F10 基本面、可选同花顺问财、东方财富个股新闻、CLS 市场快讯和公司公告标题，以及 `auto` 深度引擎模式下“优先 TradingAgents、失败回退工具驱动分析”的链路，回测可自动获取真实价格序列并计入成本/滑点，组合预算可基于多份报告生成总仓位、现金保留和单票预算。
+
+新任务开始前，请先读根目录的 [ARCHITECTURE.md](ARCHITECTURE.md)，再进入具体阶段或子任务。
+
+当前还新增了第一版结构化事件流和报告 provenance：`DataContext.events` 会从新闻/公告标题中抽取业绩预告、减持、担保、解禁等首批事件类型，报告与 Web 诊断面板会直接显示 `data_sources`、`engine_source`、`engine_mode` 和 `fallback_reason`，方便确认本次分析到底来自真实引擎还是回退路径。
+
+当前还新增了 agent 研究工具目录：`POST /research/context`、`/research/quote`、`/research/technicals`、`/research/fundamentals` 和 `/research/news` 可以直接取到在线研究输入，便于外部 agent 或上层工作流直接调用东财、同花顺和行情 provider，而不是只走整份分析报告。
+
+同一工具目录还补了 `POST /research/capital-flow`、`/research/longhubang` 和 `/research/unlocks`，用于直接查看主力资金、龙虎榜和解禁信息，后续可以继续往公告正文和更细的事件切片扩展。
 
 阶段拆分和后续计划见 [docs/stages.md](docs/stages.md)。该文件是活文档，会随阶段完成、新想法和优先级变化持续更新。
 

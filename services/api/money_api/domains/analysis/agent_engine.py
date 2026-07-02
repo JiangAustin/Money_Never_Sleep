@@ -46,4 +46,6 @@ class MockDeepResearchEngine:
             risks=risks,
             agent_views=[AgentView(agent="Mock Research Engine", conclusion="等待真实深度投研引擎接入")],
             data_context=context,
+            engine_source="mock",
+            engine_mode="mock",
         )
