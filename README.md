@@ -1,6 +1,7 @@
 # Money_Never_sleep
 
 Money_Never_sleep 是一个面向 A 股智能投研的平台型工作区，目标是在自有架构边界内吸收三个参考项目的优点：
+感谢这三个项目的开源，我也将开源，为社区作出贡献
 
 - `TradingAgents-astock`：多 Agent A 股投研流程。
 - `go-stock`：桌面应用、本地数据和应用打包经验。
